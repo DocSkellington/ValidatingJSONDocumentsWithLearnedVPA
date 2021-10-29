@@ -1,0 +1,15 @@
+{
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "children": {
+            "type": "array",
+            "maxItems": 1,
+            "items": {"$ref": "#"}
+        }
+    },
+    "required": ["name"],
+    "additionalProperties": false
+}

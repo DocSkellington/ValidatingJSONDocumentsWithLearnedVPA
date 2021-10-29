@@ -1,0 +1,37 @@
+{
+    "Title": "Fast",
+    "type": "object",
+    "required": ["string", "double", "integer", "boolean", "object", "array"],
+    "additionalProperties": false,
+    "properties": {
+        "string": {
+            "type": "string"
+        },
+        "double": {
+            "type": "number"
+        },
+        "integer": {
+            "type": "integer"
+        },
+        "boolean": {
+            "type": "boolean"
+        },
+        "object": {
+            "type": "object",
+            "required": ["anything"],
+            "additionalProperties": false,
+            "properties": {
+                "anything": {
+                    "type": ["number", "integer", "boolean", "string"]
+                }
+            }
+        },
+        "array": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "minItems": 2
+        }
+    }
+}
