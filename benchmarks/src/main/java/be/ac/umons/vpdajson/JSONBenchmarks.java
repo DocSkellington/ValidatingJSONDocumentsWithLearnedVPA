@@ -80,8 +80,6 @@ public class JSONBenchmarks {
             "Table time (ms)",
             "Finding descriptions (ms)",
             "Membership queries",
-            "Counter value queries",
-            "Partial equivalence queries",
             "Equivalence queries",
             "Rounds",
             "Result alphabet size",
@@ -108,7 +106,6 @@ public class JSONBenchmarks {
         SimpleProfiler.reset();
 
         GrowingVPDAlphabet<JSONSymbol> alphabet = extractSymbolsFromSchema(schema);
-        System.out.println(alphabet);
 
         MembershipOracle<JSONSymbol, Boolean> sul = new JSONMembershipOracle(schema);
         CounterOracle<JSONSymbol, Boolean> membershipOracle = new CounterOracle<>(sul, "membership queries");
@@ -214,6 +211,21 @@ public class JSONBenchmarks {
 
         extractSymbolsFromSchema(schema, alphabet);
 
+        if (schema.getTitle().equals("JSON schema for Codecov configuration files")) {
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"joined\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"required\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"ignore\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"paths\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"assume\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"url\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"branches\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"threshold\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"message\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"flags\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"only_pulls\""), SymbolType.INTERNAL);
+            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"paths\""), SymbolType.INTERNAL);
+        }
+
         return alphabet;
     }
 
@@ -223,6 +235,27 @@ public class JSONBenchmarks {
             alphabet.addNewSymbol(JSONSymbol.toSymbol("\"" + key + "\""), SymbolType.INTERNAL);
             if (entry.getValue().getProperties().size() != 0) {
                 extractSymbolsFromSchema(entry.getValue(), alphabet);
+            }
+            if (entry.getValue().getOneOf() != null) {
+                for (Schema sch : entry.getValue().getOneOf()) {
+                    if (sch.getProperties().size() != 0) {
+                        extractSymbolsFromSchema(sch, alphabet);
+                    }
+                }
+            }
+            if (entry.getValue().getAllOf() != null) {
+                for (Schema sch : entry.getValue().getAllOf()) {
+                    if (sch.getProperties().size() != 0) {
+                        extractSymbolsFromSchema(sch, alphabet);
+                    }
+                }
+            }
+            if (entry.getValue().getAnyOf() != null) {
+                for (Schema sch : entry.getValue().getAnyOf()) {
+                    if (sch.getProperties().size() != 0) {
+                        extractSymbolsFromSchema(sch, alphabet);
+                    }
+                }
             }
         }
     }

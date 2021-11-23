@@ -81,6 +81,7 @@ public class GrowingVPDAlphabet<I> extends AbstractVPDAlphabet<I> {
 
     @Override
     public SymbolType getSymbolType(I symbol) {
+        assert typeOfSymbol.containsKey(symbol) : symbol;
         return typeOfSymbol.get(symbol);
     }
 
