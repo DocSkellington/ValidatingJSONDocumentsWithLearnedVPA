@@ -27,3 +27,8 @@ Results/
 target/
 .classpath
 .project
+Dot/
+*.csv
+out_*
+error_*
+*.dot*
