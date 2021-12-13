@@ -18,23 +18,22 @@ import java.util.Collection;
 import java.util.Random;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import be.ac.umons.jsonroca.JSONSymbol;
 import be.ac.umons.jsonroca.WordConversion;
-import be.ac.umons.jsonroca.oracles.DefaultGeneratorConfiguration;
+import be.ac.umons.jsonschematools.DefaultGenerator;
+import be.ac.umons.jsonschematools.DefaultValidator;
+import be.ac.umons.jsonschematools.Generator;
+import be.ac.umons.jsonschematools.GeneratorException;
+import be.ac.umons.jsonschematools.JSONSchema;
+import be.ac.umons.jsonschematools.JSONSchemaException;
+import be.ac.umons.jsonschematools.Validator;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Word;
-import net.jimblackler.jsongenerator.Configuration;
-import net.jimblackler.jsongenerator.Generator;
-import net.jimblackler.jsongenerator.JsonGeneratorException;
-import net.jimblackler.jsonschemafriend.GenerationException;
-import net.jimblackler.jsonschemafriend.Schema;
-import net.jimblackler.jsonschemafriend.SchemaStore;
-import net.jimblackler.jsonschemafriend.ValidationException;
-import net.jimblackler.jsonschemafriend.Validator;
 
 /**
  * Equivalence oracle for JSON documents.
@@ -46,23 +45,19 @@ import net.jimblackler.jsonschemafriend.Validator;
 public class JSONEquivalenceOracle implements EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> {
 
     private final Generator generator;
-    private final Schema schema;
+    private final JSONSchema schema;
     private final Validator validator;
     private final int numberTests;
     private final boolean shuffleKeys;
     private final Random rand;
 
-    public JSONEquivalenceOracle(int numberTests, Schema schema, Configuration configuration, SchemaStore schemaStore, Random random, boolean shuffleKeys) throws GenerationException {
+    public JSONEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys) {
         this.numberTests = numberTests;
         this.schema = schema;
-        this.generator = new Generator(configuration, schemaStore, random);
-        this.validator = new Validator();
+        this.generator = new DefaultGenerator(maxProperties, maxItems);
+        this.validator = new DefaultValidator();
         this.shuffleKeys = shuffleKeys;
         this.rand = random;
-    }
-
-    public JSONEquivalenceOracle(int numberTests, Schema schema, SchemaStore schemaStore, Random random, boolean shuffleKeys) throws GenerationException {
-        this(numberTests, schema, new DefaultGeneratorConfiguration(), schemaStore, random, shuffleKeys);
     }
 
     @Override
@@ -77,13 +72,10 @@ public class JSONEquivalenceOracle implements EquivalenceOracle<OneSEVPA<?, JSON
                 JSONObject document = null;
                 try {
                     document = (JSONObject) generator.generate(schema, maxTreeSize);
-                    validator.validate(schema, document);
-                    correctForSchema = true;
-                } catch (JsonGeneratorException e) {
+                    correctForSchema = validator.validate(schema, document);
+                } catch (GeneratorException | JSONException | JSONSchemaException e) {
                     e.printStackTrace();
                     return null;
-                } catch (ValidationException e) {
-                    correctForSchema = false;
                 }
 
                 Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, shuffleKeys, rand);

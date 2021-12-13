@@ -20,11 +20,12 @@ import org.json.JSONObject;
 import be.ac.umons.jsonroca.JSONSymbol;
 import be.ac.umons.jsonroca.WordConversion;
 import be.ac.umons.jsonroca.oracles.Utils;
+import be.ac.umons.jsonschematools.DefaultValidator;
+import be.ac.umons.jsonschematools.JSONSchema;
+import be.ac.umons.jsonschematools.JSONSchemaException;
+import be.ac.umons.jsonschematools.Validator;
 import de.learnlib.api.oracle.SingleQueryOracle.SingleQueryOracleROCA;
 import net.automatalib.words.Word;
-import net.jimblackler.jsonschemafriend.Schema;
-import net.jimblackler.jsonschemafriend.ValidationException;
-import net.jimblackler.jsonschemafriend.Validator;
 
 /**
  * Membership oracle for JSON documents.
@@ -35,12 +36,12 @@ import net.jimblackler.jsonschemafriend.Validator;
  */
 public class JSONMembershipOracle implements SingleQueryOracleROCA<JSONSymbol> {
 
-    private final Schema schema;
+    private final JSONSchema schema;
     private final Validator validator;
 
-    public JSONMembershipOracle(Schema schema) {
+    public JSONMembershipOracle(JSONSchema schema) {
         this.schema = schema;
-        this.validator = new Validator();
+        this.validator = new DefaultValidator();
     }
 
     @Override
@@ -58,11 +59,11 @@ public class JSONMembershipOracle implements SingleQueryOracleROCA<JSONSymbol> {
         }
 
         try {
-            validator.validate(schema, json);
-        } catch (ValidationException e) {
+            return validator.validate(schema, json);
+        } catch (JSONSchemaException e) {
+            e.printStackTrace();
             return false;
         }
-        return true;
     }
 
     @Override

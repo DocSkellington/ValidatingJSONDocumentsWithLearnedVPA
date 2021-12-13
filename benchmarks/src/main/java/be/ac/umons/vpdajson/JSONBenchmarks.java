@@ -20,10 +20,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -38,7 +39,9 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
 import be.ac.umons.jsonroca.JSONSymbol;
-import be.ac.umons.vpdajson.algorithm.GrowingVPDAlphabet;
+import be.ac.umons.jsonschematools.AbstractConstants;
+import be.ac.umons.jsonschematools.JSONSchema;
+import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.vpdajson.oracles.JSONEquivalenceOracle;
 import be.ac.umons.vpdajson.oracles.JSONMembershipOracle;
 import de.learnlib.acex.analyzers.AcexAnalyzers;
@@ -54,10 +57,8 @@ import de.learnlib.util.Experiment;
 import de.learnlib.util.statistics.SimpleProfiler;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.serialization.dot.GraphDOT;
-import net.automatalib.words.VPDAlphabet.SymbolType;
-import net.jimblackler.jsonschemafriend.GenerationException;
-import net.jimblackler.jsonschemafriend.Schema;
-import net.jimblackler.jsonschemafriend.SchemaStore;
+import net.automatalib.words.VPDAlphabet;
+import net.automatalib.words.impl.DefaultVPDAlphabet;
 
 /**
  * Benchmarks based on JSON documents and Schemas.
@@ -65,6 +66,9 @@ import net.jimblackler.jsonschemafriend.SchemaStore;
  * @author Gaëtan Staquet
  */
 public class JSONBenchmarks {
+    private final static int MAX_PROPERTIES = 10;
+    private final static int MAX_ITEMS = 10;
+
     private final CSVPrinter csvPrinter;
     private final int nColumns;
     private final Duration timeout;
@@ -92,26 +96,26 @@ public class JSONBenchmarks {
         csvPrinter.flush();
     }
 
-    public void runBenchmarks(final Random rand, final Schema schema, final String schemaName, final SchemaStore schemaStore, final int nTests,
-            final int nRepetitions, final boolean shuffleKeys) throws GenerationException, InterruptedException, IOException {
+    public void runBenchmarks(final Random rand, final JSONSchema schema, final String schemaName, final int nTests,
+            final int nRepetitions, final boolean shuffleKeys) throws InterruptedException, IOException, JSONSchemaException {
         for (int i = 0; i < nRepetitions; i++) {
             System.out.println((i + 1) + "/" + nRepetitions);
-            runExperiment(rand, schema, schemaName, schemaStore, nTests, shuffleKeys, i);
+            runExperiment(rand, schema, schemaName, nTests, shuffleKeys, i);
         }
     }
 
-    private void runExperiment(final Random rand, final Schema schema, final String schemaName, final SchemaStore schemaStore, final int nTests, final boolean shuffleKeys, final int currentId)
-            throws GenerationException, InterruptedException, IOException {
+    private void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests, final boolean shuffleKeys, final int currentId)
+            throws InterruptedException, IOException, JSONSchemaException {
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         SimpleProfiler.reset();
 
-        GrowingVPDAlphabet<JSONSymbol> alphabet = extractSymbolsFromSchema(schema);
+        VPDAlphabet<JSONSymbol> alphabet = extractSymbolsFromSchema(schema);
+        System.out.println(alphabet);
 
         MembershipOracle<JSONSymbol, Boolean> sul = new JSONMembershipOracle(schema);
         CounterOracle<JSONSymbol, Boolean> membershipOracle = new CounterOracle<>(sul, "membership queries");
 
-        EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> eqOracle = new JSONEquivalenceOracle(nTests, schema,
-                schemaStore, rand, shuffleKeys);
+        EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> eqOracle = new JSONEquivalenceOracle(nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys);
         CounterEQOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> equivalenceOracle = new CounterEQOracle<>(eqOracle, "equivalence queries");
 
         TTTLearnerVPDA<JSONSymbol> learner = new TTTLearnerVPDA<>(alphabet, membershipOracle, AcexAnalyzers.LINEAR_FWD);
@@ -189,74 +193,34 @@ public class JSONBenchmarks {
         }
     }
 
-    private static GrowingVPDAlphabet<JSONSymbol> extractSymbolsFromSchema(final Schema schema) {
-        GrowingVPDAlphabet<JSONSymbol> alphabet = new GrowingVPDAlphabet<>();
-        alphabet.addNewSymbol(JSONSymbol.toSymbol("{"), SymbolType.CALL);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol(":{"), SymbolType.CALL);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol("["), SymbolType.CALL);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol(":["), SymbolType.CALL);
+    private static VPDAlphabet<JSONSymbol> extractSymbolsFromSchema(final JSONSchema schema) throws JSONSchemaException {
+        final Set<JSONSymbol> internalSymbols = new HashSet<>();
+        final Set<JSONSymbol> callSymbols = new HashSet<>();
+        final Set<JSONSymbol> returnSymbols = new HashSet<>();
 
-        alphabet.addNewSymbol(JSONSymbol.toSymbol("}"), SymbolType.RETURN);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol(":}"), SymbolType.RETURN);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol("]"), SymbolType.RETURN);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol(":]"), SymbolType.RETURN);
+        callSymbols.add(JSONSymbol.toSymbol("{"));
+        callSymbols.add(JSONSymbol.toSymbol(":{"));
+        callSymbols.add(JSONSymbol.toSymbol("["));
+        callSymbols.add(JSONSymbol.toSymbol(":["));
 
-        alphabet.addNewSymbol(JSONSymbol.toSymbol(","), SymbolType.INTERNAL);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol(":"), SymbolType.INTERNAL);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol("\"\\S\""), SymbolType.INTERNAL);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol("\"\\I\""), SymbolType.INTERNAL);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol("\"\\D\""), SymbolType.INTERNAL);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol("true"), SymbolType.INTERNAL);
-        alphabet.addNewSymbol(JSONSymbol.toSymbol("false"), SymbolType.INTERNAL);
+        returnSymbols.add(JSONSymbol.toSymbol("}"));
+        returnSymbols.add(JSONSymbol.toSymbol("]"));
 
-        extractSymbolsFromSchema(schema, alphabet);
+        internalSymbols.add(JSONSymbol.toSymbol(","));
+        internalSymbols.add(JSONSymbol.toSymbol(":"));
+        internalSymbols.add(JSONSymbol.toSymbol("true"));
+        internalSymbols.add(JSONSymbol.toSymbol("false"));
+        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\""));
+        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.integerConstant + "\""));
+        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.numberConstant + "\""));
+        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.enumConstant + "\""));
 
-        if (schema.getTitle().equals("JSON schema for Codecov configuration files")) {
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"joined\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"required\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"ignore\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"paths\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"assume\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"url\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"branches\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"threshold\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"message\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"flags\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"only_pulls\""), SymbolType.INTERNAL);
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"paths\""), SymbolType.INTERNAL);
-        }
+        schema.getAllKeysDefinedInSchema().
+            stream().
+            map(k -> "\"" + k + "\"").
+            map(k -> JSONSymbol.toSymbol(k)).
+            forEach(k -> internalSymbols.add(k));
 
-        return alphabet;
-    }
-
-    private static void extractSymbolsFromSchema(final Schema schema, GrowingVPDAlphabet<JSONSymbol> alphabet) {
-        for (Map.Entry<String, Schema> entry : schema.getProperties().entrySet()) {
-            String key = entry.getKey();
-            alphabet.addNewSymbol(JSONSymbol.toSymbol("\"" + key + "\""), SymbolType.INTERNAL);
-            if (entry.getValue().getProperties().size() != 0) {
-                extractSymbolsFromSchema(entry.getValue(), alphabet);
-            }
-            if (entry.getValue().getOneOf() != null) {
-                for (Schema sch : entry.getValue().getOneOf()) {
-                    if (sch.getProperties().size() != 0) {
-                        extractSymbolsFromSchema(sch, alphabet);
-                    }
-                }
-            }
-            if (entry.getValue().getAllOf() != null) {
-                for (Schema sch : entry.getValue().getAllOf()) {
-                    if (sch.getProperties().size() != 0) {
-                        extractSymbolsFromSchema(sch, alphabet);
-                    }
-                }
-            }
-            if (entry.getValue().getAnyOf() != null) {
-                for (Schema sch : entry.getValue().getAnyOf()) {
-                    if (sch.getProperties().size() != 0) {
-                        extractSymbolsFromSchema(sch, alphabet);
-                    }
-                }
-            }
-        }
+        return new DefaultVPDAlphabet<>(internalSymbols, callSymbols, returnSymbols);
     }
 }
