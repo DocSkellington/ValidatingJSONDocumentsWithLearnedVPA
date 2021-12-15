@@ -78,11 +78,6 @@ public class JSONBenchmarks {
         // @formatter:off
         List<String> header = Arrays.asList(
             "Total time (ms)",
-            "ROCA counterexample time (ms)",
-            "DFA counterexample time (ms)",
-            "Learning DFA time (ms)",
-            "Table time (ms)",
-            "Finding descriptions (ms)",
             "Membership queries",
             "Equivalence queries",
             "Rounds",
@@ -154,11 +149,6 @@ public class JSONBenchmarks {
             OneSEVPA<?, JSONSymbol> learntROCA = experiment.getFinalHypothesis();
 
             results.add(watch.elapsed().toMillis());
-            results.add(getProfilerTime(ROCAExperiment.COUNTEREXAMPLE_PROFILE_KEY));
-            results.add(getProfilerTime(LStarROCA.COUNTEREXAMPLE_DFA_PROFILE_KEY));
-            results.add(getProfilerTime(ROCAExperiment.LEARNING_ROCA_PROFILE_KEY));
-            results.add(getProfilerTime(LStarROCA.CLOSED_TABLE_PROFILE_KEY));
-            results.add(getProfilerTime(LStarROCA.FINDING_PERIODIC_DESCRIPTIONS));
             results.add(membershipOracle.getStatisticalData().getCount());
             results.add(equivalenceOracle.getStatisticalData().getCount());
             results.add(experiment.getRounds().getCount());
@@ -210,6 +200,7 @@ public class JSONBenchmarks {
         internalSymbols.add(JSONSymbol.toSymbol(":"));
         internalSymbols.add(JSONSymbol.toSymbol("true"));
         internalSymbols.add(JSONSymbol.toSymbol("false"));
+        internalSymbols.add(JSONSymbol.toSymbol("null"));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\""));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.integerConstant + "\""));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.numberConstant + "\""));
