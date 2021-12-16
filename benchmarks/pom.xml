@@ -110,11 +110,6 @@ limitations under the License.
             <version>${jsonroca.version}</version>
         </dependency>
         <dependency>
-            <groupId>be.ac.umons.jsonroca</groupId>
-            <artifactId>jsonroca-algorithm</artifactId>
-            <version>${jsonroca.version}</version>
-        </dependency>
-        <dependency>
             <groupId>be.ac.umons.jsonschematools</groupId>
             <artifactId>jsonschematools-tools</artifactId>
             <version>${jsonschema.version}</version>
@@ -142,6 +137,16 @@ limitations under the License.
             <artifactId>learnlib-distribution</artifactId>
             <version>${learnlib.version}</version>
             <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>de.learnlib</groupId>
+            <artifactId>learnlib-lstar-roca</artifactId>
+            <version>${learnlib.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.learnlib</groupId>
+            <artifactId>learnlib-lstar-vca</artifactId>
+            <version>${learnlib.version}</version>
         </dependency>
 
         <!-- CSV -->

@@ -42,7 +42,7 @@ import net.automatalib.words.Word;
  * 
  * @author Gaëtan Staquet
  */
-public class JSONEquivalenceOracle implements EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> {
+public class VPDAJSONEquivalenceOracle implements EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> {
 
     private final Generator generator;
     private final JSONSchema schema;
@@ -51,7 +51,7 @@ public class JSONEquivalenceOracle implements EquivalenceOracle<OneSEVPA<?, JSON
     private final boolean shuffleKeys;
     private final Random rand;
 
-    public JSONEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys) {
+    public VPDAJSONEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys) {
         this.numberTests = numberTests;
         this.schema = schema;
         this.generator = new DefaultGenerator(maxProperties, maxItems);

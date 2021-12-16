@@ -20,11 +20,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -35,22 +33,15 @@ import java.util.concurrent.TimeoutException;
 
 import com.google.common.base.Stopwatch;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
-
 import be.ac.umons.jsonroca.JSONSymbol;
-import be.ac.umons.jsonschematools.AbstractConstants;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.vpdajson.oracles.JSONEquivalenceOracle;
 import be.ac.umons.vpdajson.oracles.JSONMembershipOracle;
+import be.ac.umons.vpdajson.oracles.VPDAJSONEquivalenceOracle;
 import de.learnlib.acex.analyzers.AcexAnalyzers;
-import de.learnlib.algorithms.lstar.roca.LStarROCA;
-import de.learnlib.algorithms.lstar.roca.ROCAExperiment;
 import de.learnlib.algorithms.ttt.vpda.TTTLearnerVPDA;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.oracle.MembershipOracle;
-import de.learnlib.filter.statistic.Counter;
 import de.learnlib.filter.statistic.oracle.CounterEQOracle;
 import de.learnlib.filter.statistic.oracle.CounterOracle;
 import de.learnlib.util.Experiment;
@@ -58,25 +49,22 @@ import de.learnlib.util.statistics.SimpleProfiler;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.serialization.dot.GraphDOT;
 import net.automatalib.words.VPDAlphabet;
-import net.automatalib.words.impl.DefaultVPDAlphabet;
 
 /**
  * Benchmarks based on JSON documents and Schemas.
  * 
  * @author Gaëtan Staquet
  */
-public class JSONBenchmarks {
-    private final static int MAX_PROPERTIES = 10;
-    private final static int MAX_ITEMS = 10;
+public class VPDABenchmarks extends ABenchmarks {
 
-    private final CSVPrinter csvPrinter;
-    private final int nColumns;
-    private final Duration timeout;
+    public VPDABenchmarks(final Path pathToCSVFile, final Duration timeout) throws IOException {
+        super(pathToCSVFile, timeout);
+    }
 
-    public JSONBenchmarks(final Path pathToCSVFile, final Duration timeout) throws IOException {
-        csvPrinter = new CSVPrinter(new FileWriter(pathToCSVFile.toFile()), CSVFormat.DEFAULT);
+    @Override
+    protected List<String> getHeader() {
         // @formatter:off
-        List<String> header = Arrays.asList(
+        return Arrays.asList(
             "Total time (ms)",
             "Membership queries",
             "Equivalence queries",
@@ -85,21 +73,10 @@ public class JSONBenchmarks {
             "Result ROCA size"
         );
         // @formatter:on
-        this.nColumns = header.size();
-        csvPrinter.printRecord(header);
-        this.timeout = timeout;
-        csvPrinter.flush();
     }
 
-    public void runBenchmarks(final Random rand, final JSONSchema schema, final String schemaName, final int nTests,
-            final int nRepetitions, final boolean shuffleKeys) throws InterruptedException, IOException, JSONSchemaException {
-        for (int i = 0; i < nRepetitions; i++) {
-            System.out.println((i + 1) + "/" + nRepetitions);
-            runExperiment(rand, schema, schemaName, nTests, shuffleKeys, i);
-        }
-    }
-
-    private void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests, final boolean shuffleKeys, final int currentId)
+    @Override
+    protected void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests, final boolean shuffleKeys, final int currentId)
             throws InterruptedException, IOException, JSONSchemaException {
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         SimpleProfiler.reset();
@@ -110,7 +87,7 @@ public class JSONBenchmarks {
         MembershipOracle<JSONSymbol, Boolean> sul = new JSONMembershipOracle(schema);
         CounterOracle<JSONSymbol, Boolean> membershipOracle = new CounterOracle<>(sul, "membership queries");
 
-        EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> eqOracle = new JSONEquivalenceOracle(nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys);
+        EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> eqOracle = new VPDAJSONEquivalenceOracle(nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys);
         CounterEQOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> equivalenceOracle = new CounterEQOracle<>(eqOracle, "equivalence queries");
 
         TTTLearnerVPDA<JSONSymbol> learner = new TTTLearnerVPDA<>(alphabet, membershipOracle, AcexAnalyzers.LINEAR_FWD);
@@ -172,46 +149,5 @@ public class JSONBenchmarks {
 
         csvPrinter.printRecord(results);
         csvPrinter.flush();
-    }
-
-    private long getProfilerTime(String key) {
-        Counter counter = SimpleProfiler.cumulated(key);
-        if (counter == null) {
-            return 0;
-        } else {
-            return counter.getCount();
-        }
-    }
-
-    private static VPDAlphabet<JSONSymbol> extractSymbolsFromSchema(final JSONSchema schema) throws JSONSchemaException {
-        final Set<JSONSymbol> internalSymbols = new HashSet<>();
-        final Set<JSONSymbol> callSymbols = new HashSet<>();
-        final Set<JSONSymbol> returnSymbols = new HashSet<>();
-
-        callSymbols.add(JSONSymbol.toSymbol("{"));
-        callSymbols.add(JSONSymbol.toSymbol(":{"));
-        callSymbols.add(JSONSymbol.toSymbol("["));
-        callSymbols.add(JSONSymbol.toSymbol(":["));
-
-        returnSymbols.add(JSONSymbol.toSymbol("}"));
-        returnSymbols.add(JSONSymbol.toSymbol("]"));
-
-        internalSymbols.add(JSONSymbol.toSymbol(","));
-        internalSymbols.add(JSONSymbol.toSymbol(":"));
-        internalSymbols.add(JSONSymbol.toSymbol("true"));
-        internalSymbols.add(JSONSymbol.toSymbol("false"));
-        internalSymbols.add(JSONSymbol.toSymbol("null"));
-        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\""));
-        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.integerConstant + "\""));
-        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.numberConstant + "\""));
-        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.enumConstant + "\""));
-
-        schema.getAllKeysDefinedInSchema().
-            stream().
-            map(k -> "\"" + k + "\"").
-            map(k -> JSONSymbol.toSymbol(k)).
-            forEach(k -> internalSymbols.add(k));
-
-        return new DefaultVPDAlphabet<>(internalSymbols, callSymbols, returnSymbols);
     }
 }

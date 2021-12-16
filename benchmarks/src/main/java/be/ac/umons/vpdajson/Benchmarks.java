@@ -14,25 +14,26 @@ import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.JSONSchemaStore;
 
 public class Benchmarks {
-        public static void main(String[] args) throws InterruptedException, IOException, JSONSchemaException {
-        final int timeLimit = Integer.valueOf(args[0]);
+    public static void main(String[] args) throws InterruptedException, IOException, JSONSchemaException {
+        final String type = args[0];
+        final int timeLimit = Integer.valueOf(args[1]);
 
         final Duration timeout = Duration.ofSeconds(timeLimit);
         final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm");
         final LocalDateTime now = LocalDateTime.now();
 
         final Random rand = new Random();
-        final Path filePath = Paths.get(args[1]);
+        final Path filePath = Paths.get(args[2]);
         final String schemaName = filePath.getFileName().toString();
         int nTests = 1000;
         int nRepetitions = 1000;
         boolean shuffleKeys = true;
         if (args.length >= 3) {
-            nTests = Integer.valueOf(args[2]);
+            nTests = Integer.valueOf(args[3]);
             if (args.length >= 4) {
-                nRepetitions = Integer.valueOf(args[3]);
+                nRepetitions = Integer.valueOf(args[4]);
                 if (args.length >= 5) {
-                    shuffleKeys = Boolean.valueOf(args[4]);
+                    shuffleKeys = Boolean.valueOf(args[5]);
                 }
             }
         }
@@ -54,8 +55,20 @@ public class Benchmarks {
 
         Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON");
         pathToCSVFolder.toFile().mkdirs();
-        Path pathToCSVFile = pathToCSVFolder.resolve("" + timeLimit + "s-" + schemaName + "-" + nTests + "-" + nRepetitions + "-" + shuffleKeys + "-" + dtf.format(now) + ".csv");
-        JSONBenchmarks jsonBenchmarks = new JSONBenchmarks(pathToCSVFile, timeout);
-        jsonBenchmarks.runBenchmarks(rand, schema, schemaName, nTests, nRepetitions, shuffleKeys);
+        Path pathToCSVFile = pathToCSVFolder.resolve("" + timeLimit + "s-" + schemaName + "-" + type + "-" + nTests + "-" + nRepetitions + "-" + shuffleKeys + "-" + dtf.format(now) + ".csv");
+        ABenchmarks benchmarks;
+        if (type.toLowerCase().equals("vpda")) {
+            benchmarks = new VPDABenchmarks(pathToCSVFile, timeout);
+        }
+        else if (type.toLowerCase().equals("vca")) {
+            benchmarks = new VCABenchmarks(pathToCSVFile, timeout);
+        }
+        else if (type.toLowerCase().equals("roca")) {
+            benchmarks = new ROCABenchmarks(pathToCSVFile, timeout);
+        }
+        else {
+            throw new Error("Invalid automaton type " + type);
+        }
+        benchmarks.runBenchmarks(rand, schema, schemaName, nTests, nRepetitions, shuffleKeys);
     }
 }
