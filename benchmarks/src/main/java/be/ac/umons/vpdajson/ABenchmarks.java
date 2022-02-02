@@ -3,6 +3,7 @@ package be.ac.umons.vpdajson;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,9 @@ import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import de.learnlib.filter.statistic.Counter;
 import de.learnlib.util.statistics.SimpleProfiler;
+import net.automatalib.graphs.Graph;
+import net.automatalib.graphs.concepts.GraphViewable;
+import net.automatalib.serialization.dot.GraphDOT;
 import net.automatalib.words.VPDAlphabet;
 import net.automatalib.words.impl.DefaultVPDAlphabet;
 
@@ -78,6 +82,7 @@ public abstract class ABenchmarks {
         internalSymbols.add(JSONSymbol.toSymbol("true"));
         internalSymbols.add(JSONSymbol.toSymbol("false"));
         internalSymbols.add(JSONSymbol.toSymbol("null"));
+        internalSymbols.add(JSONSymbol.toSymbol("\"null\""));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\""));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.integerConstant + "\""));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.numberConstant + "\""));
@@ -90,5 +95,21 @@ public abstract class ABenchmarks {
             forEach(k -> internalSymbols.add(k));
 
         return new DefaultVPDAlphabet<>(internalSymbols, callSymbols, returnSymbols);
+    }
+
+    protected void writeModelToDot(Graph<?, ?> automaton, String schemaName, int currentId, String modelType) throws IOException {
+        Path pathToDOTFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON", "Dot", modelType);
+        pathToDOTFolder.toFile().mkdirs();
+        Path pathToDotFile = pathToDOTFolder.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
+        FileWriter writer = new FileWriter(pathToDotFile.toFile());
+        GraphDOT.write(automaton, writer);
+    }
+
+    protected void writeModelToDot(GraphViewable automaton, String schemaName, int currentId, String modelType) throws IOException {
+        Path pathToDOTFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON", "Dot", modelType);
+        pathToDOTFolder.toFile().mkdirs();
+        Path pathToDotFile = pathToDOTFolder.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
+        FileWriter writer = new FileWriter(pathToDotFile.toFile());
+        GraphDOT.write(automaton, writer);
     }
 }

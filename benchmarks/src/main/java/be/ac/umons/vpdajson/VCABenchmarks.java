@@ -1,9 +1,7 @@
 package be.ac.umons.vpdajson;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -36,7 +34,6 @@ import de.learnlib.filter.statistic.oracle.vca.VCACounterEQOracle;
 import de.learnlib.oracle.equivalence.roca.RestrictedAutomatonCounterEQOracle;
 import de.learnlib.util.statistics.SimpleProfiler;
 import net.automatalib.automata.oca.ROCA;
-import net.automatalib.serialization.dot.GraphDOT;
 import net.automatalib.words.VPDAlphabet;
 
 public class VCABenchmarks extends ABenchmarks {
@@ -114,7 +111,7 @@ public class VCABenchmarks extends ABenchmarks {
 
         List<Object> results = new LinkedList<>();
         if (finished) {
-            ROCA<?, JSONSymbol> learntROCA = experiment.getFinalHypothesis();
+            ROCA<?, JSONSymbol> learntVCA = experiment.getFinalHypothesis();
             StratifiedObservationTableWithCounterValues<JSONSymbol, Boolean> table = lstar_vca.getObservationTable();
 
             results.add(watch.elapsed().toMillis());
@@ -125,13 +122,9 @@ public class VCABenchmarks extends ABenchmarks {
             results.add(table.numberOfShortPrefixRows());
             results.add(table.numberOfSuffixes());
             results.add(alphabet.size());
-            results.add(learntROCA.size());
+            results.add(learntVCA.size());
 
-            Path pathToDOTFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON", "Dot");
-            pathToDOTFolder.toFile().mkdirs();
-            Path pathToDotFile = pathToDOTFolder.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
-            FileWriter writer = new FileWriter(pathToDotFile.toFile());
-            GraphDOT.write(learntROCA, writer);
+            writeModelToDot(learntVCA, schemaName, currentId, "VCA");
         } else if (error) {
             for (int i = results.size(); i < nColumns; i++) {
                 results.add("Error");
