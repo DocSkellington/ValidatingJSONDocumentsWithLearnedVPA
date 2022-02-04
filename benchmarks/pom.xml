@@ -23,7 +23,7 @@ limitations under the License.
     -->
     <groupId>be.ac.umons.vpdajson</groupId>
     <artifactId>vpdajson</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 
     <name>ROCA benchmarks</name>
     <description>Benchmarks for L*-based learning algorithm for ROCAs</description>

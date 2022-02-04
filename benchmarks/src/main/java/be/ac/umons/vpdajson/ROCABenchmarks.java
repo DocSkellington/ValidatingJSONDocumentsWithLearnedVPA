@@ -1,9 +1,7 @@
 package be.ac.umons.vpdajson;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -39,7 +37,6 @@ import de.learnlib.filter.statistic.oracle.roca.ROCACounterEQOracle;
 import de.learnlib.oracle.equivalence.roca.RestrictedAutomatonCounterEQOracle;
 import de.learnlib.util.statistics.SimpleProfiler;
 import net.automatalib.automata.oca.ROCA;
-import net.automatalib.serialization.dot.GraphDOT;
 import net.automatalib.words.VPDAlphabet;
 
 public class ROCABenchmarks extends ABenchmarks {
@@ -147,11 +144,7 @@ public class ROCABenchmarks extends ABenchmarks {
             results.add(alphabet.size());
             results.add(learntROCA.size());
 
-            Path pathToDOTFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON", "Dot");
-            pathToDOTFolder.toFile().mkdirs();
-            Path pathToDotFile = pathToDOTFolder.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
-            FileWriter writer = new FileWriter(pathToDotFile.toFile());
-            GraphDOT.write(learntROCA, writer);
+            writeModelToDot(learntROCA, schemaName, currentId, "ROCA");
         } else if (error) {
             for (int i = results.size(); i < nColumns; i++) {
                 results.add("Error");
