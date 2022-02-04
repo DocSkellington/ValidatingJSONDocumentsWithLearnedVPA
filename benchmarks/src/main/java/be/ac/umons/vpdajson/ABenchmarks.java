@@ -40,11 +40,11 @@ public abstract class ABenchmarks {
 
     protected abstract List<String> getHeader();
 
-    public void runBenchmarks(final Random rand, final JSONSchema schema, final String schemaName, final int nTests,
+    public void runBenchmarks(final JSONSchema schema, final String schemaName, final int nTests,
             final int nRepetitions, final boolean shuffleKeys) throws InterruptedException, IOException, JSONSchemaException {
         for (int i = 0; i < nRepetitions; i++) {
             System.out.println((i + 1) + "/" + nRepetitions);
-            runExperiment(rand, schema, schemaName, nTests, shuffleKeys, i);
+            runExperiment(new Random(100), schema, schemaName, nTests, shuffleKeys, i);
         }
     }
 

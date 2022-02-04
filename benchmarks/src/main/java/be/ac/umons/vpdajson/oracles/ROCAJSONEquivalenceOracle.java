@@ -71,7 +71,7 @@ public class ROCAJSONEquivalenceOracle implements EquivalenceOracle.ROCAEquivale
                 boolean correctForSchema;
                 JSONObject document = null;
                 try {
-                    document = (JSONObject) generator.generate(schema, maxTreeSize);
+                    document = (JSONObject) generator.generate(schema, maxTreeSize, rand);
                     correctForSchema = validator.validate(schema, document);
                 } catch (GeneratorException | JSONException | JSONSchemaException e) {
                     e.printStackTrace();

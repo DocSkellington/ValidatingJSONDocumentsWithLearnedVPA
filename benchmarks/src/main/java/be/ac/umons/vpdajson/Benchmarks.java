@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Random;
 
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
@@ -22,7 +21,6 @@ public class Benchmarks {
         final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm");
         final LocalDateTime now = LocalDateTime.now();
 
-        final Random rand = new Random();
         final Path filePath = Paths.get(args[2]);
         final String schemaName = filePath.getFileName().toString();
         int nTests = 1000;
@@ -69,6 +67,6 @@ public class Benchmarks {
         else {
             throw new Error("Invalid automaton type " + type);
         }
-        benchmarks.runBenchmarks(rand, schema, schemaName, nTests, nRepetitions, shuffleKeys);
+        benchmarks.runBenchmarks(schema, schemaName, nTests, nRepetitions, shuffleKeys);
     }
 }
