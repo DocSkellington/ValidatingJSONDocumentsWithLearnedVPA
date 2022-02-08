@@ -17,13 +17,13 @@ import java.util.concurrent.TimeoutException;
 
 import com.google.common.base.Stopwatch;
 
-import be.ac.umons.jsonroca.JSONSymbol;
-import be.ac.umons.jsonroca.oracles.JSONCounterValueOracle;
-import be.ac.umons.jsonroca.oracles.JSONMembershipOracle;
-import be.ac.umons.jsonroca.oracles.JSONPartialEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.vpdajson.oracles.ROCAJSONEquivalenceOracle;
+import be.ac.umons.learningjson.JSONSymbol;
+import be.ac.umons.learningjson.oracles.JSONCounterValueOracle;
+import be.ac.umons.learningjson.oracles.JSONMembershipOracle;
+import be.ac.umons.learningjson.oracles.JSONPartialEquivalenceOracle;
+import be.ac.umons.learningjson.oracles.ROCAJSONEquivalenceOracle;
 import de.learnlib.algorithms.lstar.roca.LStarROCA;
 import de.learnlib.algorithms.lstar.roca.ObservationTableWithCounterValuesROCA;
 import de.learnlib.algorithms.lstar.roca.ROCAExperiment;

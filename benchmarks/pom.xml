@@ -21,12 +21,12 @@ limitations under the License.
     <!--
     ================================= PROJECT INFO ==============================
     -->
-    <groupId>be.ac.umons.vpdajson</groupId>
-    <artifactId>vpdajson</artifactId>
+    <groupId>be.ac.umons.learningjson</groupId>
+    <artifactId>benchmarks</artifactId>
     <version>1.1</version>
 
-    <name>ROCA benchmarks</name>
-    <description>Benchmarks for L*-based learning algorithm for ROCAs</description>
+    <name>JSON schema learning benchmarks</name>
+    <description>Benchmarks for learning algorithms for JSON Schemas.</description>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -41,7 +41,7 @@ limitations under the License.
             <id>DocSkellington</id>
             <name>Gaëtan Staquet</name>
             <email>gaetan.staquet@umons.ac.be</email>
-            <organization>University of Mons and University of Antwerp, PhD Student</organization>
+            <organization>F.R.S.-FNRS, University of Mons, and University of Antwerp, PhD Student</organization>
             <organizationUrl>https://web.umons.ac.be/en/ and https://www.uantwerpen.be/en/</organizationUrl>
             <roles>
                 <role>Developer</role>
@@ -54,13 +54,13 @@ limitations under the License.
     ===============================	SCM =======================
     -->
     <scm>
-        <connection>scm:git:git@github.com:DocSkellington/ROCA-JSON-Benchmarks.git</connection>
-        <developerConnection>scm:git:git@github.com:DocSkellington/ROCA-JSON-Benchmarks.git</developerConnection>
-        <url>https://github.com/DocSkellington/ROCA-JSON-Benchmarks/tree/main</url>
+        <connection>scm:git:git@github.com:DocSkellington/LearningJSONSchema.git</connection>
+        <developerConnection>scm:git:git@github.com:DocSkellington/LearningJSONSchema.git</developerConnection>
+        <url>https://github.com/DocSkellington/LearningJSONSchema/tree/main</url>
         <tag>HEAD</tag>
     </scm>
     <issueManagement>
-        <url>https://github.com/DocSkellington/ROCA-JSON-Benchmarks/issues</url>
+        <url>https://github.com/DocSkellington/LearningJSONSchema/issues</url>
         <system>GitHub Issues</system>
     </issueManagement>
 
@@ -78,7 +78,7 @@ limitations under the License.
         <javadoc-plugin.conf.release>8</javadoc-plugin.conf.release>
 
         <!-- Dependency versions -->
-        <jsonroca.version>2.0</jsonroca.version>
+        <learningoracles.version>1.0</learningoracles.version>
         <jsonschema.version>1.0</jsonschema.version>
         <automatalib.version>0.11.0-SNAPSHOT</automatalib.version>
         <learnlib.version>0.17.0-SNAPSHOT</learnlib.version>
@@ -105,9 +105,9 @@ limitations under the License.
     <dependencies>
         <!-- Internal dependencies -->
         <dependency>
-            <groupId>be.ac.umons.jsonroca</groupId>
-            <artifactId>jsonroca-oracles</artifactId>
-            <version>${jsonroca.version}</version>
+            <groupId>be.ac.umons.learningjson</groupId>
+            <artifactId>oracles</artifactId>
+            <version>${learningoracles.version}</version>
         </dependency>
         <dependency>
             <groupId>be.ac.umons.jsonschematools</groupId>
@@ -154,6 +154,12 @@ limitations under the License.
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
             <version>${csv.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.10</version>
         </dependency>
 
         <!-- TestNG -->

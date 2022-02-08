@@ -31,11 +31,11 @@ import java.util.concurrent.TimeoutException;
 
 import com.google.common.base.Stopwatch;
 
-import be.ac.umons.jsonroca.JSONSymbol;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.vpdajson.oracles.JSONMembershipOracle;
-import be.ac.umons.vpdajson.oracles.VPDAJSONEquivalenceOracle;
+import be.ac.umons.learningjson.JSONSymbol;
+import be.ac.umons.learningjson.oracles.JSONMembershipOracle;
+import be.ac.umons.learningjson.oracles.VPDAJSONEquivalenceOracle;
 import de.learnlib.acex.analyzers.AcexAnalyzers;
 import de.learnlib.algorithms.ttt.vpda.TTTLearnerVPDA;
 import de.learnlib.api.oracle.EquivalenceOracle;

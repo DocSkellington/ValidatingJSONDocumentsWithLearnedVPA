@@ -23,6 +23,7 @@ import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.Validator;
 import be.ac.umons.learningjson.JSONSymbol;
 import be.ac.umons.learningjson.WordConversion;
+import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.oracle.SingleQueryOracle.SingleQueryOracleROCA;
 import net.automatalib.words.Word;
 
@@ -38,6 +39,8 @@ public class JSONMembershipOracle implements SingleQueryOracleROCA<JSONSymbol> {
     private final JSONSchema schema;
     private final Validator validator;
 
+    private final static LearnLogger LOGGER = LearnLogger.getLogger(JSONMembershipOracle.class);
+
     public JSONMembershipOracle(JSONSchema schema) {
         this.schema = schema;
         this.validator = new DefaultValidator();
@@ -46,20 +49,33 @@ public class JSONMembershipOracle implements SingleQueryOracleROCA<JSONSymbol> {
     @Override
     public Boolean answerQuery(Word<JSONSymbol> input) {
         String string = WordConversion.fromJSONSymbolWordToString(input);
+        LOGGER.logEvent("Membership oracle on " + string);
         if (!Utils.validWord(string)) {
+            LOGGER.logEvent("Invalid word");
             return false;
         }
         string = escapeSymbolsForJSON(string);
+        LOGGER.logEvent("Escaped symbols: " + string);
         JSONObject json;
         try {
             json = new JSONObject(string);
         } catch (JSONException e) {
+            LOGGER.logEvent("String could not be parsed");
             return false;
         }
+        LOGGER.logEvent("Document: " + json.toString());
 
         try {
-            return validator.validate(schema, json);
+            boolean valid = validator.validate(schema, json);
+            if (valid) {
+                LOGGER.logEvent("Valid document");
+            }
+            else {
+                LOGGER.logEvent("Invalid document");
+            }
+            return valid;
         } catch (JSONSchemaException e) {
+            LOGGER.logEvent("Error while validating");
             e.printStackTrace(System.err);
             return false;
         }
@@ -72,8 +88,8 @@ public class JSONMembershipOracle implements SingleQueryOracleROCA<JSONSymbol> {
 
     public static String escapeSymbolsForJSON(String string) {
         // We escape the "\S", "\E", "\I", and "\D" symbols in the document (to avoid errors from JSONObject)
-        // That means we replace every \\([SID]) by \\\\$1. We need to escape each \ in the Java code
+        // That means we replace every \\([SIDE]) by \\\\$1. We need to escape each \ in the Java code
         // We also want to replace only the symbols in the values (not in the keys). So, we add a positive look-ahead check
-        return string.replaceAll("\\\\([SIDE])((?=[,\\]}\\s])|(?=\"[,}\\]]))", "\\\\\\\\$1");
+        return string.replaceAll("\\\\([SIDE])", "\\\\\\\\$1");
     }
 }
