@@ -1,0 +1,13 @@
+{
+    "title": "Testing numbers",
+    "type": "object",
+    "required": ["integer", "double"],
+    "properties": {
+        "integer": {
+            "type": "integer"
+        },
+        "double": {
+            "type": "number"
+        }
+    }
+}
