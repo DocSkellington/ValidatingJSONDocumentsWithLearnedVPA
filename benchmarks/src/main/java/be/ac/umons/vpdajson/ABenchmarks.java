@@ -13,10 +13,10 @@ import java.util.Set;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
-import be.ac.umons.jsonroca.JSONSymbol;
 import be.ac.umons.jsonschematools.AbstractConstants;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
+import be.ac.umons.learningjson.JSONSymbol;
 import de.learnlib.filter.statistic.Counter;
 import de.learnlib.util.statistics.SimpleProfiler;
 import net.automatalib.graphs.Graph;
@@ -70,9 +70,7 @@ public abstract class ABenchmarks {
         final Set<JSONSymbol> returnSymbols = new HashSet<>();
 
         callSymbols.add(JSONSymbol.toSymbol("{"));
-        callSymbols.add(JSONSymbol.toSymbol(":{"));
         callSymbols.add(JSONSymbol.toSymbol("["));
-        callSymbols.add(JSONSymbol.toSymbol(":["));
 
         returnSymbols.add(JSONSymbol.toSymbol("}"));
         returnSymbols.add(JSONSymbol.toSymbol("]"));
@@ -82,7 +80,6 @@ public abstract class ABenchmarks {
         internalSymbols.add(JSONSymbol.toSymbol("true"));
         internalSymbols.add(JSONSymbol.toSymbol("false"));
         internalSymbols.add(JSONSymbol.toSymbol("null"));
-        internalSymbols.add(JSONSymbol.toSymbol("\"null\""));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\""));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.integerConstant + "\""));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.numberConstant + "\""));

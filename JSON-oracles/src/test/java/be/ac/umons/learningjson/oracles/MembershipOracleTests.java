@@ -45,7 +45,7 @@ public class MembershipOracleTests {
     public void testEscape() {
         String document = "{\"object\":{\"str1\": \"\\S\", \"in\\t\": \\I}, \"\\D\": \\D}";
         String escaped = JSONMembershipOracle.escapeSymbolsForJSON(document);
-        Assert.assertEquals(escaped, "{\"object\":{\"str1\": \"\\\\S\", \"in\\t\": \\\\I}, \"\\D\": \\\\D}");
+        Assert.assertEquals(escaped, "{\"object\":{\"str1\": \"\\\\S\", \"in\\t\": \\\\I}, \"\\\\D\": \\\\D}");
     }
 
     @Test

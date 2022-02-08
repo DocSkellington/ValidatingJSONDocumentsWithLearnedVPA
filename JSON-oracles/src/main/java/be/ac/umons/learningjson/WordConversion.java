@@ -19,6 +19,7 @@ import static be.ac.umons.learningjson.JSONSymbol.toSymbol;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import org.json.JSONArray;
@@ -74,7 +75,12 @@ public class WordConversion {
             }
             else {
                 wordBuilder.add(toSymbol(":"));
-                wordBuilder.add(toSymbol("\"" + o.toString() + "\""));
+                if (Objects.equals(o, JSONObject.NULL)) {
+                    wordBuilder.add(toSymbol(o.toString()));
+                }
+                else {
+                    wordBuilder.add(toSymbol("\"" + o.toString() + "\""));
+                }
             }
         }
     }
@@ -99,11 +105,11 @@ public class WordConversion {
             else if (o instanceof Boolean) {
                 wordBuilder.add(toSymbol(o.toString()));
             }
-            else if (o != null) {
-                wordBuilder.add(toSymbol("\"" + o.toString() + "\""));
+            else if (Objects.equals(o, JSONObject.NULL)) {
+                wordBuilder.add(toSymbol(o.toString()));
             }
             else {
-                wordBuilder.add(toSymbol("null"));
+                wordBuilder.add(toSymbol("\"" + o.toString() + "\""));
             }
         }
     }
