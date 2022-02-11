@@ -39,8 +39,6 @@ public class JSONMembershipOracle implements SingleQueryOracleROCA<JSONSymbol> {
     private final JSONSchema schema;
     private final Validator validator;
 
-    private final static LearnLogger LOGGER = LearnLogger.getLogger(JSONMembershipOracle.class);
-
     public JSONMembershipOracle(JSONSchema schema) {
         this.schema = schema;
         this.validator = new DefaultValidator();
@@ -49,33 +47,20 @@ public class JSONMembershipOracle implements SingleQueryOracleROCA<JSONSymbol> {
     @Override
     public Boolean answerQuery(Word<JSONSymbol> input) {
         String string = WordConversion.fromJSONSymbolWordToString(input);
-        LOGGER.logEvent("Membership oracle on " + string);
         if (!Utils.validWord(string)) {
-            LOGGER.logEvent("Invalid word");
             return false;
         }
         string = escapeSymbolsForJSON(string);
-        LOGGER.logEvent("Escaped symbols: " + string);
         JSONObject json;
         try {
             json = new JSONObject(string);
         } catch (JSONException e) {
-            LOGGER.logEvent("String could not be parsed");
             return false;
         }
-        LOGGER.logEvent("Document: " + json.toString());
 
         try {
-            boolean valid = validator.validate(schema, json);
-            if (valid) {
-                LOGGER.logEvent("Valid document");
-            }
-            else {
-                LOGGER.logEvent("Invalid document");
-            }
-            return valid;
+            return validator.validate(schema, json);
         } catch (JSONSchemaException e) {
-            LOGGER.logEvent("Error while validating");
             e.printStackTrace(System.err);
             return false;
         }

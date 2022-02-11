@@ -79,7 +79,6 @@ public class VPDABenchmarks extends ABenchmarks {
         SimpleProfiler.reset();
 
         VPDAlphabet<JSONSymbol> alphabet = extractSymbolsFromSchema(schema);
-        System.out.println(alphabet);
 
         MembershipOracle<JSONSymbol, Boolean> sul = new JSONMembershipOracle(schema);
         CounterOracle<JSONSymbol, Boolean> membershipOracle = new CounterOracle<>(sul, "membership queries");

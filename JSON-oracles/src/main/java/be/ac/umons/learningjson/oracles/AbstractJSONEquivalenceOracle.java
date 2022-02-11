@@ -54,7 +54,6 @@ public abstract class AbstractJSONEquivalenceOracle<A extends DeterministicAccep
                 }
 
                 Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, shuffleKeys, rand);
-                System.out.println(word);
                 boolean correctForHypo = hypo.accepts(word);
 
                 if (correctForSchema != correctForHypo) {
