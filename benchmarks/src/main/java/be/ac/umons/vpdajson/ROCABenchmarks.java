@@ -69,7 +69,8 @@ public class ROCABenchmarks extends ABenchmarks {
     }
 
     @Override
-    protected void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests, final boolean shuffleKeys, final int currentId)
+    protected void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests,
+            final boolean shuffleKeys, final int currentId)
             throws InterruptedException, IOException, JSONSchemaException {
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         SimpleProfiler.reset();
@@ -85,14 +86,16 @@ public class ROCABenchmarks extends ABenchmarks {
                 "counter value queries");
 
         EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> partialEqOracle = new JSONPartialEquivalenceOracle(
-                nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys);
+                nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys, alphabet);
         RestrictedAutomatonCounterEQOracle<JSONSymbol> partialEquivalenceOracle = new RestrictedAutomatonCounterEQOracle<>(
                 partialEqOracle, "partial equivalence queries");
 
-        EquivalenceOracle.ROCAEquivalenceOracle<JSONSymbol> eqOracle = new ROCAJSONEquivalenceOracle(nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys);
+        EquivalenceOracle.ROCAEquivalenceOracle<JSONSymbol> eqOracle = new ROCAJSONEquivalenceOracle(nTests,
+                MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys, alphabet);
         ROCACounterEQOracle<JSONSymbol> equivalenceOracle = new ROCACounterEQOracle<>(eqOracle, "equivalence queries");
 
-        LStarROCA<JSONSymbol> lstar_roca = new LStarROCA<>(membershipOracle, counterValueOracle, partialEquivalenceOracle, alphabet);
+        LStarROCA<JSONSymbol> lstar_roca = new LStarROCA<>(membershipOracle, counterValueOracle,
+                partialEquivalenceOracle, alphabet);
         ROCAExperiment<JSONSymbol> experiment = new ROCAExperiment<>(lstar_roca, equivalenceOracle, alphabet);
         experiment.setLogModels(false);
         experiment.setProfile(true);

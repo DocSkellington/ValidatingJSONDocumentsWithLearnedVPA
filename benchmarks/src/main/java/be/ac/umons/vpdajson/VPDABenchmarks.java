@@ -73,7 +73,8 @@ public class VPDABenchmarks extends ABenchmarks {
     }
 
     @Override
-    protected void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests, final boolean shuffleKeys, final int currentId)
+    protected void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests,
+            final boolean shuffleKeys, final int currentId)
             throws InterruptedException, IOException, JSONSchemaException {
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         SimpleProfiler.reset();
@@ -83,8 +84,10 @@ public class VPDABenchmarks extends ABenchmarks {
         MembershipOracle<JSONSymbol, Boolean> sul = new JSONMembershipOracle(schema);
         CounterOracle<JSONSymbol, Boolean> membershipOracle = new CounterOracle<>(sul, "membership queries");
 
-        EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> eqOracle = new VPDAJSONEquivalenceOracle(nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys);
-        CounterEQOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> equivalenceOracle = new CounterEQOracle<>(eqOracle, "equivalence queries");
+        EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> eqOracle = new VPDAJSONEquivalenceOracle(nTests,
+                MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys, alphabet);
+        CounterEQOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> equivalenceOracle = new CounterEQOracle<>(
+                eqOracle, "equivalence queries");
 
         TTTLearnerVPDA<JSONSymbol> learner = new TTTLearnerVPDA<>(alphabet, membershipOracle, AcexAnalyzers.LINEAR_FWD);
         Experiment<OneSEVPA<?, JSONSymbol>> experiment = new Experiment<>(learner, equivalenceOracle, alphabet);

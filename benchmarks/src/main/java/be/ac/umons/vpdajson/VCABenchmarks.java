@@ -60,7 +60,8 @@ public class VCABenchmarks extends ABenchmarks {
     }
 
     @Override
-    protected void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests, final boolean shuffleKeys, final int currentId)
+    protected void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests,
+            final boolean shuffleKeys, final int currentId)
             throws InterruptedException, IOException, JSONSchemaException {
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         SimpleProfiler.reset();
@@ -71,11 +72,12 @@ public class VCABenchmarks extends ABenchmarks {
         ROCACounterOracle<JSONSymbol> membershipOracle = new ROCACounterOracle<>(sulCache, "membership queries");
 
         EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> partialEqOracle = new JSONPartialEquivalenceOracle(
-                nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys);
+                nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys, alphabet);
         RestrictedAutomatonCounterEQOracle<JSONSymbol> partialEquivalenceOracle = new RestrictedAutomatonCounterEQOracle<>(
                 partialEqOracle, "partial equivalence queries");
 
-        EquivalenceOracle.VCAEquivalenceOracle<JSONSymbol> eqOracle = new VCAJSONEquivalenceOracle(nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys);
+        EquivalenceOracle.VCAEquivalenceOracle<JSONSymbol> eqOracle = new VCAJSONEquivalenceOracle(nTests,
+                MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys, alphabet);
         VCACounterEQOracle<JSONSymbol> equivalenceOracle = new VCACounterEQOracle<>(eqOracle, "equivalence queries");
 
         LStarVCA<JSONSymbol> lstar_vca = new LStarVCA<>(membershipOracle, partialEquivalenceOracle, alphabet);

@@ -23,7 +23,6 @@ import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.Validator;
 import be.ac.umons.learningjson.JSONSymbol;
 import be.ac.umons.learningjson.WordConversion;
-import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.oracle.SingleQueryOracle.SingleQueryOracleROCA;
 import net.automatalib.words.Word;
 
@@ -72,9 +71,12 @@ public class JSONMembershipOracle implements SingleQueryOracleROCA<JSONSymbol> {
     }
 
     public static String escapeSymbolsForJSON(String string) {
-        // We escape the "\S", "\E", "\I", and "\D" symbols in the document (to avoid errors from JSONObject)
-        // That means we replace every \\([SIDE]) by \\\\$1. We need to escape each \ in the Java code
-        // We also want to replace only the symbols in the values (not in the keys). So, we add a positive look-ahead check
+        // We escape the "\S", "\E", "\I", and "\D" symbols in the document (to avoid
+        // errors from JSONObject)
+        // That means we replace every \\([SIDE]) by \\\\$1. We need to escape each \ in
+        // the Java code
+        // We also want to replace only the symbols in the values (not in the keys). So,
+        // we add a positive look-ahead check
         return string.replaceAll("\\\\([SIDE])", "\\\\\\\\$1");
     }
 }

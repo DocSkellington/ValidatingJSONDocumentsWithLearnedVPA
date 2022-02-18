@@ -10,13 +10,14 @@ import be.ac.umons.learningjson.JSONSymbol;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.oca.automatoncountervalues.ROCAFromDescription;
+import net.automatalib.words.Alphabet;
 
 public class ROCAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<ROCAFromDescription<?, JSONSymbol>>
         implements EquivalenceOracle.ROCAEquivalenceOracle<JSONSymbol> {
 
     public ROCAJSONEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema, Random random,
-            boolean shuffleKeys) {
-        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys);
+            boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
     }
 
     @Override

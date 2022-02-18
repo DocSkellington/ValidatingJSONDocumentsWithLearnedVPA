@@ -18,88 +18,41 @@ import java.util.Collection;
 import java.util.Random;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import be.ac.umons.jsonschematools.DefaultGenerator;
-import be.ac.umons.jsonschematools.DefaultValidator;
-import be.ac.umons.jsonschematools.Generator;
-import be.ac.umons.jsonschematools.GeneratorException;
 import be.ac.umons.jsonschematools.JSONSchema;
-import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonschematools.Validator;
 import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.learningjson.WordConversion;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.fsa.DFA;
-import net.automatalib.words.Word;
+import net.automatalib.words.Alphabet;
 
 /**
  * Partial equivalence oracle for JSON documents.
  * 
- * It tests whether the provided ROCA accepts the same sets of JSON documents than the JSON Schema, up to a tree depth that depends on the counter limit.
+ * It tests whether the provided ROCA accepts the same sets of JSON documents
+ * than the JSON Schema, up to a tree depth that depends on the counter limit.
  * 
  * @author Gaëtan Staquet
  */
-public class JSONPartialEquivalenceOracle implements EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> {
+public class JSONPartialEquivalenceOracle extends AbstractJSONConformance<DFA<?, JSONSymbol>>
+        implements EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> {
 
     private int counterLimit = 0;
-    private final Generator generator;
-    private final JSONSchema schema;
-    private final Validator validator;
-    private final int numberTests;
-    private final boolean shuffleKeys;
-    private final Random rand;
 
-    public JSONPartialEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys) {
-        this.numberTests = numberTests;
-        this.schema = schema;
-        this.generator = new DefaultGenerator(maxProperties, maxItems);
-        this.validator = new DefaultValidator();
-        this.shuffleKeys = shuffleKeys;
-        this.rand = random;
+    public JSONPartialEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema,
+            Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
     }
 
     @Override
-    public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(DFA<?, JSONSymbol> hypothesis, Collection<? extends JSONSymbol> inputs) {
-        if (counterLimit == 0) {
-            if (hypothesis.accepts(Word.epsilon())) {
-                return new DefaultQuery<>(Word.epsilon(), false);
-            }
-            else {
-                return null;
-            }
-        }
-
-        for (int i = 0 ; i < numberTests ; i++) {
-            if (Thread.interrupted()) {
-                Thread.currentThread().interrupt();
-                return null;
-            }
-            boolean correctForSchema;
-            JSONObject document;
-            try {
-                document = (JSONObject) generator.generate(schema, counterLimit, rand);
-                correctForSchema = validator.validate(schema, document);
-            } catch (GeneratorException | JSONException | JSONSchemaException e) {
-                e.printStackTrace(System.err);
-                return null;
-            }
-
-            Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, shuffleKeys, rand);
-            boolean correctForHypo = hypothesis.accepts(word);
-
-            if (correctForSchema != correctForHypo) {
-                return new DefaultQuery<>(word, correctForSchema);
-            }
-        }
-        return null;
+    public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(DFA<?, JSONSymbol> hypothesis,
+            Collection<? extends JSONSymbol> inputs) {
+        return findCounterExample(hypothesis, counterLimit);
     }
 
     @Override
     public void setCounterLimit(int counterLimit) {
         this.counterLimit = counterLimit;
     }
-    
+
 }

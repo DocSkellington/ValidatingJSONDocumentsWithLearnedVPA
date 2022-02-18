@@ -10,13 +10,14 @@ import be.ac.umons.learningjson.JSONSymbol;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.oca.automatoncountervalues.VCAFromDescription;
+import net.automatalib.words.Alphabet;
 
 public class VCAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<VCAFromDescription<?, JSONSymbol>>
         implements EquivalenceOracle.VCAEquivalenceOracle<JSONSymbol> {
 
     public VCAJSONEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema, Random random,
-            boolean shuffleKeys) {
-        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys);
+            boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
     }
 
     @Override

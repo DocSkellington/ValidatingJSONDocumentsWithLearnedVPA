@@ -10,12 +10,14 @@ import be.ac.umons.learningjson.JSONSymbol;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.OneSEVPA;
+import net.automatalib.words.Alphabet;
 
-public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<OneSEVPA<?, JSONSymbol>> implements EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> {
+public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<OneSEVPA<?, JSONSymbol>>
+        implements EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> {
 
     public VPDAJSONEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema, Random random,
-            boolean shuffleKeys) {
-        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys);
+            boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
     }
 
     @Override
@@ -23,5 +25,5 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
             Collection<? extends JSONSymbol> inputs) {
         return super.findCounterExample(hypo);
     }
-    
+
 }
