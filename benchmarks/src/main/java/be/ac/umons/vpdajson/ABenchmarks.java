@@ -48,7 +48,7 @@ public abstract class ABenchmarks {
             final int nRepetitions, final boolean shuffleKeys) throws InterruptedException, IOException, JSONSchemaException {
         for (int i = 0; i < nRepetitions; i++) {
             System.out.println((i + 1) + "/" + nRepetitions);
-            runExperiment(new Random(100), schema, schemaName, nTests, shuffleKeys, i);
+            runExperiment(new Random(i), schema, schemaName, nTests, shuffleKeys, i);
         }
     }
 
