@@ -72,25 +72,9 @@ public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<
             }
 
             Word<JSONSymbol> word = generateGibberish(rand);
-            String string = WordConversion.fromJSONSymbolWordToString(word);
-            if (!Utils.validWord(string)) {
-                // Since constructing the JSON object might resolve the reason why the word is
-                // invalid (such as missing quotes around a key), we handle this case explicitly
-                if (hypothesis.accepts(word)) {
-                    return new DefaultQuery<>(word, false);
-                }
-            } else {
-                try {
-                    document = new JSONObject(string);
-                    query = checkDocument(hypothesis, document);
-                    if (query != null) {
-                        return query;
-                    }
-                } catch (JSONException e) {
-                    if (hypothesis.accepts(word)) {
-                        return new DefaultQuery<>(word, false);
-                    }
-                }
+            query = checkWord(hypothesis, word);
+            if (query != null) {
+                return query;
             }
         }
         return null;
@@ -128,6 +112,43 @@ public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<
 
         if (correctForSchema != correctForHypo) {
             return new DefaultQuery<>(word, correctForSchema);
+        }
+        return null;
+    }
+
+    protected DefaultQuery<JSONSymbol, Boolean> checkWord(A hypothesis, Word<JSONSymbol> word) {
+        String string = WordConversion.fromJSONSymbolWordToString(word);
+        if (!Utils.validWord(string)) {
+            // Since constructing the JSON object might resolve the reason why the word is
+            // invalid (such as missing quotes around a key), we handle this case explicitly
+            if (hypothesis.accepts(word)) {
+                return new DefaultQuery<>(word, false);
+            }
+        } else {
+            JSONObject document = null;
+            try {
+                document = new JSONObject(string);
+            }
+            catch (JSONException e) {
+                if (hypothesis.accepts(word)) {
+                    return new DefaultQuery<>(word, false);
+                }
+            }
+
+            if (document != null) {
+                boolean correctForSchema;
+                try {
+                    correctForSchema = validator.validate(schema, document);
+                } catch (JSONSchemaException e) {
+                    e.printStackTrace(System.err);
+                    return null;
+                }
+                boolean correctForHypo = hypothesis.accepts(word);
+
+                if (correctForSchema != correctForHypo) {
+                    return new DefaultQuery<>(word, correctForSchema);
+                }
+            }
         }
         return null;
     }
