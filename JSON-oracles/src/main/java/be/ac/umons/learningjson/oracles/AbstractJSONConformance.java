@@ -22,7 +22,7 @@ import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 
 public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<?, JSONSymbol>> {
-    private static final int MAX_NUMBER_SYMBOLS_GIBBERISH = 100;
+    private static final int MAX_NUMBER_SYMBOLS_GIBBERISH = 5;
 
     private final Generator generatorValid;
     private final Generator generatorInvalid;
