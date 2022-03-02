@@ -118,6 +118,7 @@ public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<
 
     protected DefaultQuery<JSONSymbol, Boolean> checkWord(A hypothesis, Word<JSONSymbol> word) {
         String string = WordConversion.fromJSONSymbolWordToString(word);
+        string = Utils.escapeSymbolsForJSON(string);
         if (!Utils.validWord(string)) {
             // Since constructing the JSON object might resolve the reason why the word is
             // invalid (such as missing quotes around a key), we handle this case explicitly

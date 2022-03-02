@@ -104,4 +104,16 @@ public class Utils {
 
         return true;
     }
+
+    /**
+     * We escape the "\S", "\E", "\I", and "\D" symbols in the document (to avoid errors from JSONObject).
+     * 
+     * That means we replace every \\([SIDE]) by \\\\$1.
+     * @param string The string to escape
+     * @return The escaped string
+     */ 
+    public static String escapeSymbolsForJSON(String string) {
+        // We need to escape each \ in the Java code.
+        return string.replaceAll("\\\\([SIDE])", "\\\\\\\\$1");
+    }
 }
