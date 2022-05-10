@@ -76,7 +76,6 @@ public abstract class ABenchmarks {
         returnSymbols.add(JSONSymbol.toSymbol("]"));
 
         internalSymbols.add(JSONSymbol.toSymbol(","));
-        internalSymbols.add(JSONSymbol.toSymbol(":"));
         internalSymbols.add(JSONSymbol.toSymbol("true"));
         internalSymbols.add(JSONSymbol.toSymbol("false"));
         internalSymbols.add(JSONSymbol.toSymbol("null"));
@@ -85,9 +84,10 @@ public abstract class ABenchmarks {
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.numberConstant + "\""));
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.enumConstant + "\""));
 
+        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\":"));
         schema.getAllKeysDefinedInSchema().
             stream().
-            map(k -> "\"" + k + "\"").
+            map(k -> "\"" + k + "\":").
             map(k -> JSONSymbol.toSymbol(k)).
             forEach(k -> internalSymbols.add(k));
 

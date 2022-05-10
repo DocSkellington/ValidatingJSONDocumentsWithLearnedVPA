@@ -54,27 +54,23 @@ public class WordConversion {
                 wordBuilder.add(toSymbol(","));
             }
             first = false;
-            wordBuilder.add(toSymbol("\"" + key + "\""));
+            wordBuilder.add(toSymbol("\"" + key + "\":"));
 
             Object o = object.get(key);
             if (o instanceof JSONObject) {
-                wordBuilder.add(toSymbol(":"));
                 wordBuilder.add(toSymbol("{"));
                 fromJSONObjectToJSONWord((JSONObject) o, shuffleKeys, rand, wordBuilder);
                 wordBuilder.add(toSymbol("}"));
             }
             else if (o instanceof JSONArray) {
-                wordBuilder.add(toSymbol(":"));
                 wordBuilder.add(toSymbol("["));
                 fromJSONArrayToJSONWord((JSONArray) o, shuffleKeys, rand, wordBuilder);
                 wordBuilder.add(toSymbol("]"));
             }
             else if (o instanceof Boolean) {
-                wordBuilder.add(toSymbol(":"));
                 wordBuilder.add(toSymbol(o.toString()));
             }
             else {
-                wordBuilder.add(toSymbol(":"));
                 if (Objects.equals(o, JSONObject.NULL)) {
                     wordBuilder.add(toSymbol(o.toString()));
                 }
