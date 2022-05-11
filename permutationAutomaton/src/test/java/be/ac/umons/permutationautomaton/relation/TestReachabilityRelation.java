@@ -1,153 +1,17 @@
 package be.ac.umons.permutationautomaton.relation;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
-import net.automatalib.words.Alphabet;
 import net.automatalib.words.VPDAlphabet;
-import net.automatalib.words.impl.Alphabets;
-import net.automatalib.words.impl.DefaultVPDAlphabet;
 
 public class TestReachabilityRelation {
-    private static List<JSONSymbol> fromStringsToSymbols(String... symbols) {
-        List<JSONSymbol> jsonSymbols = new ArrayList<>(symbols.length);
-        for (String symbol : symbols) {
-            jsonSymbols.add(JSONSymbol.toSymbol(symbol));
-        }
-        return jsonSymbols;
-    }
-
-    private static VPDAlphabet<JSONSymbol> constructAlphabet(String... symbols) {
-        Alphabet<JSONSymbol> internalAlphabet = Alphabets.fromCollection(fromStringsToSymbols(symbols));
-        Alphabet<JSONSymbol> callAlphabet = Alphabets.fromCollection(fromStringsToSymbols("{", "["));
-        Alphabet<JSONSymbol> returnAlphabet = Alphabets.fromCollection(fromStringsToSymbols("}", "]"));
-        return new DefaultVPDAlphabet<>(internalAlphabet, callAlphabet, returnAlphabet);
-    }
-
-    private static DefaultOneSEVPA<JSONSymbol> constructStraightforwardAutomaton() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "k3", ",", "int", "str", "bool");
-        DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
-
-        Location q0 = automaton.addInitialLocation(false);
-        Location q1 = automaton.addLocation(false);
-        Location q2 = automaton.addLocation(false);
-        Location q3 = automaton.addLocation(false);
-        Location q4 = automaton.addLocation(false);
-        Location q5 = automaton.addLocation(false);
-        Location q6 = automaton.addLocation(true);
-
-        automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k1"), q1);
-
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("int"), q2);
-
-        automaton.setInternalSuccessor(q2, JSONSymbol.toSymbol(","), q3);
-
-        automaton.setInternalSuccessor(q3, JSONSymbol.toSymbol("k2"), q4);
-
-        automaton.setInternalSuccessor(q4, JSONSymbol.toSymbol("bool"), q5);
-
-        automaton.setReturnSuccessor(q5, JSONSymbol.toSymbol("}"),
-                automaton.encodeStackSym(q0, JSONSymbol.toSymbol("{")), q6);
-
-        return automaton;
-    }
-
-    private static DefaultOneSEVPA<JSONSymbol> constructSmallTwoBranchesAutomaton() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "k3", ",", "int", "str", "bool");
-        DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
-
-        Location q0 = automaton.addInitialLocation(false);
-        Location q1 = automaton.addLocation(false);
-        Location q2 = automaton.addLocation(false);
-        Location q3 = automaton.addLocation(false);
-        Location q4 = automaton.addLocation(false);
-        Location q5 = automaton.addLocation(false);
-        Location q6 = automaton.addLocation(true);
-        Location q7 = automaton.addLocation(false);
-        Location q8 = automaton.addLocation(false);
-        Location q9 = automaton.addLocation(false);
-
-        automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k1"), q1);
-
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("int"), q2);
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("str"), q7);
-
-        automaton.setInternalSuccessor(q2, JSONSymbol.toSymbol(","), q3);
-
-        automaton.setInternalSuccessor(q3, JSONSymbol.toSymbol("k2"), q4);
-
-        automaton.setInternalSuccessor(q4, JSONSymbol.toSymbol("bool"), q5);
-
-        automaton.setReturnSuccessor(q5, JSONSymbol.toSymbol("}"),
-                automaton.encodeStackSym(q0, JSONSymbol.toSymbol("{")), q6);
-
-        automaton.setInternalSuccessor(q7, JSONSymbol.toSymbol(","), q8);
-
-        automaton.setInternalSuccessor(q8, JSONSymbol.toSymbol("k2"), q9);
-
-        automaton.setInternalSuccessor(q9, JSONSymbol.toSymbol("str"), q5);
-
-        return automaton;
-    }
-
-    private static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithOptionalKeys() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "o1", "o2", ",", "int", "str", "bool");
-        DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
-
-        Location q0 = automaton.addInitialLocation(false);
-        Location q1 = automaton.addLocation(false);
-        Location q2 = automaton.addLocation(false);
-        Location q3 = automaton.addLocation(false);
-        Location q4 = automaton.addLocation(false);
-        Location q5 = automaton.addLocation(false);
-        Location q6 = automaton.addLocation(false);
-        Location q7 = automaton.addLocation(false);
-        Location q8 = automaton.addLocation(false);
-        Location q9 = automaton.addLocation(false);
-        Location q10 = automaton.addLocation(false);
-        Location q11 = automaton.addLocation(true);
-
-        int q0StackSymbol = automaton.encodeStackSym(q0, JSONSymbol.toSymbol("{"));
-        automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k1"), q1);
-        automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k2"), q5);
-
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("str"), q2);
-
-        automaton.setReturnSuccessor(q2, JSONSymbol.toSymbol("}"), q0StackSymbol, q11);
-        automaton.setInternalSuccessor(q2, JSONSymbol.toSymbol(","), q3);
-
-        automaton.setInternalSuccessor(q3, JSONSymbol.toSymbol("o1"), q4);
-
-        int q4StackSymbol = automaton.encodeStackSym(q4, JSONSymbol.toSymbol("{"));
-
-        automaton.setInternalSuccessor(q5, JSONSymbol.toSymbol("int"), q6);
-        
-        automaton.setReturnSuccessor(q6, JSONSymbol.toSymbol("}"), q4StackSymbol, q7);
-        automaton.setInternalSuccessor(q6, JSONSymbol.toSymbol(","), q3);
-
-        automaton.setReturnSuccessor(q7, JSONSymbol.toSymbol("}"), q0StackSymbol, q11);
-        automaton.setReturnSuccessor(q7, JSONSymbol.toSymbol("}"), q4StackSymbol, q7);
-        automaton.setInternalSuccessor(q7, JSONSymbol.toSymbol(","), q8);
-
-        automaton.setInternalSuccessor(q8, JSONSymbol.toSymbol("o2"), q9);
-
-        automaton.setInternalSuccessor(q9, JSONSymbol.toSymbol("bool"), q10);
-
-        automaton.setReturnSuccessor(q10, JSONSymbol.toSymbol("}"), q0StackSymbol, q11);
-        automaton.setReturnSuccessor(q10, JSONSymbol.toSymbol("}"), q4StackSymbol, q7);
-
-        return automaton;
-    }
-
     @Test
     public void testCompose() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("test");
+        VPDAlphabet<JSONSymbol> alphabet = Automata.constructAlphabet("test");
         Location q0 = new Location(alphabet, 0, false);
         Location q1 = new Location(alphabet, 1, false);
         Location q2 = new Location(alphabet, 2, false);
@@ -177,7 +41,7 @@ public class TestReachabilityRelation {
 
     @Test
     public void testStraightforwardAutomatonPost() {
-        DefaultOneSEVPA<JSONSymbol> automaton = constructStraightforwardAutomaton();
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
         JSONSymbol openingCurly = JSONSymbol.toSymbol("{");
         JSONSymbol closingCurly = JSONSymbol.toSymbol("}");
 
@@ -197,7 +61,7 @@ public class TestReachabilityRelation {
 
     @Test
     public void testAutomatonWithOptionalKeysPost() {
-        DefaultOneSEVPA<JSONSymbol> automaton = constructAutomatonWithOptionalKeys();
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
         JSONSymbol openingCurly = JSONSymbol.toSymbol("{");
         JSONSymbol closingCurly = JSONSymbol.toSymbol("}");
 
@@ -241,7 +105,7 @@ public class TestReachabilityRelation {
 
     @Test
     public void testSmallTwoBranchesAutomatonCommaRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = constructSmallTwoBranchesAutomaton();
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
         ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
         Assert.assertEquals(commaRelation.size(), 2);
         Assert.assertTrue(commaRelation.areInRelation(automaton.getLocation(2), automaton.getLocation(3)));
@@ -250,7 +114,7 @@ public class TestReachabilityRelation {
 
     @Test
     public void testSmallTwoBranchesAutomatonInternalRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = constructSmallTwoBranchesAutomaton();
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
         ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
         Assert.assertEquals(internalRelation.size(), 7);
         Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(1)));
@@ -264,7 +128,7 @@ public class TestReachabilityRelation {
 
     @Test
     public void testSmallTwoBranchesAutomatonWellMatchedRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = constructSmallTwoBranchesAutomaton();
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
         ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
         ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
         ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
@@ -276,7 +140,7 @@ public class TestReachabilityRelation {
 
     @Test
     public void testAutomatonWithOptionalKeysWellMatchedRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = constructAutomatonWithOptionalKeys();
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
 
         ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
         ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
