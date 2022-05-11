@@ -38,6 +38,11 @@ class InRelation {
         return Objects.hash(start, target);
     }
 
+    @Override
+    public String toString() {
+        return "(" + start + ", " + symbol + ", " + target + ")";
+    }
+
     public Location getStart() {
         return start;
     }
