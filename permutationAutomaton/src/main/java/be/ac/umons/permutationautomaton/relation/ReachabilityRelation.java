@@ -15,6 +15,14 @@ import net.automatalib.automata.vpda.Location;
 import net.automatalib.commons.util.Pair;
 import net.automatalib.words.Alphabet;
 
+/**
+ * A relation storing triplets {@code (s, k, s')} such that it is possible to go
+ * from {@code s} to {@code s'} by reading a well-matched word starting with
+ * {@code k}.
+ * 
+ * @see InRelation for the class used to store a triplet
+ * @author Gaëtan Staquet
+ */
 class ReachabilityRelation implements Iterable<InRelation> {
     private final Set<InRelation> relation;
 
@@ -22,6 +30,15 @@ class ReachabilityRelation implements Iterable<InRelation> {
         this.relation = new HashSet<>();
     }
 
+    /**
+     * Tests whether there is triplet in the relation equals to
+     * {@code (q, symbol, p)}.
+     * 
+     * @param q      The starting state in the triplet
+     * @param symbol The symbol in the triplet
+     * @param p      The target state in the triplet
+     * @return True iff there is such a triplet
+     */
     public boolean areInRelation(final Location q, final JSONSymbol symbol, final Location p) {
         return relation.contains(InRelation.of(q, symbol, p));
     }
@@ -50,8 +67,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
             return false;
         }
 
-        final ReachabilityRelation other = (ReachabilityRelation)obj;
-        // return Objects.equal(this.relation, other.relation);
+        final ReachabilityRelation other = (ReachabilityRelation) obj;
         return Objects.hash(this) == Objects.hash(other);
     }
 
@@ -63,16 +79,57 @@ class ReachabilityRelation implements Iterable<InRelation> {
         relation.add(inRel);
     }
 
+    /**
+     * Adds a new triplet in the relation.
+     * 
+     * @param q      The starting state in the triplet
+     * @param symbol The symbol in the triplet
+     * @param p      The target state in the triplet
+     */
     void add(final Location q, final JSONSymbol symbol, final Location p) {
         add(InRelation.of(q, symbol, p));
     }
 
-    void addAll(final ReachabilityRelation rel) {
+    /**
+     * Adds all the triplets from {@code rel} inside this relation.
+     * 
+     * @param rel The relation to take the triplets from
+     */
+    private void addAll(final ReachabilityRelation rel) {
         this.relation.addAll(rel.relation);
     }
 
-    ReachabilityRelation post(final DefaultOneSEVPA<JSONSymbol> automaton, final JSONSymbol callSymbol, final JSONSymbol returnSymbol) {
-        final ReachabilityRelation relation = new ReachabilityRelation();
+    /**
+     * Creates a new relation that is union of this relation and the provided
+     * relation.
+     * 
+     * @param other The other relation
+     * @return The union of this and other
+     */
+    public ReachabilityRelation union(ReachabilityRelation other) {
+        ReachabilityRelation newRelation = new ReachabilityRelation();
+        newRelation.addAll(this);
+        newRelation.addAll(other);
+        return newRelation;
+    }
+
+    /**
+     * Compute the result of the Post operation on this relation for the given call
+     * and return symbols.
+     * 
+     * The Post operation is defined as the reachability relation obtained from this
+     * relation such that the well-matched words we consider start with the call
+     * symbol and end with the return symbol (and the middle comes from this
+     * relation). That is, each time Post is applied, we allow one more nesting.
+     * 
+     * @param automaton    The VPA
+     * @param callSymbol   The call symbol to consider
+     * @param returnSymbol The return symbol to consider
+     * @return The new relation
+     */
+    ReachabilityRelation post(final DefaultOneSEVPA<JSONSymbol> automaton, final JSONSymbol callSymbol,
+            final JSONSymbol returnSymbol) {
+        final ReachabilityRelation newRelation = new ReachabilityRelation();
         final int callSymbolIndex = automaton.getInputAlphabet().getCallSymbolIndex(callSymbol);
         final int returnSymbolIndex = automaton.getInputAlphabet().getReturnSymbolIndex(returnSymbol);
 
@@ -88,13 +145,23 @@ class ReachabilityRelation implements Iterable<InRelation> {
                 .filter(inRel -> Objects.equals(inRel.getStart(), callTarget))
                 .map(inRel -> Pair.of(inRel.getSymbol(), inRel.getTarget().getReturnSuccessor(returnSymbolIndex, stackSym)))
                 .filter(pair -> pair.getSecond() != null)
-                .forEach(pair -> relation.add(start, callSymbol, pair.getSecond()));
+                .forEach(pair -> newRelation.add(start, callSymbol, pair.getSecond()));
             // @formatter:on
         }
 
-        return relation;
+        return newRelation;
     }
 
+    /**
+     * Compose this relation with the provided relation.
+     * 
+     * The composition operation creates a new relation that contains triplets
+     * {@code (q, k, p)} if and only if there is {@code (q, k, q')} in this relation
+     * and {@code (q', k', p)} in the other relation.
+     * 
+     * @param other The other relation
+     * @return The composed relation
+     */
     ReachabilityRelation compose(ReachabilityRelation other) {
         final ReachabilityRelation relation = new ReachabilityRelation();
 
@@ -109,6 +176,13 @@ class ReachabilityRelation implements Iterable<InRelation> {
         return relation;
     }
 
+    /**
+     * Compute the reachability relation where the well-matched words are restricted
+     * to the single comma symbol.
+     * 
+     * @param automaton The VPA
+     * @return The comma relation
+     */
     public static ReachabilityRelation computeCommaRelation(DefaultOneSEVPA<JSONSymbol> automaton) {
         final JSONSymbol symbol = JSONSymbol.commaSymbol;
         assert automaton.getInputAlphabet().getInternalAlphabet().contains(symbol);
@@ -125,6 +199,13 @@ class ReachabilityRelation implements Iterable<InRelation> {
         return relation;
     }
 
+    /**
+     * Compute the reachability relation where the well-matched words are restricted
+     * to a single internal symbol (except the comma).
+     * 
+     * @param automaton The VPA
+     * @return The internal relation
+     */
     public static ReachabilityRelation computeInternalRelation(DefaultOneSEVPA<JSONSymbol> automaton) {
         final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
         // @formatter:off
@@ -147,47 +228,58 @@ class ReachabilityRelation implements Iterable<InRelation> {
         return relation;
     }
 
-    public static ReachabilityRelation computeWellMatchedRelation(DefaultOneSEVPA<JSONSymbol> automaton, ReachabilityRelation commaRelation, ReachabilityRelation internalRelation) {
+    /**
+     * Compute the reachability relation where the well-matched words must contain
+     * at least one call and one return symbols.
+     * 
+     * @param automaton        The VPA
+     * @param commaRelation    The comma relation
+     * @param internalRelation The internal relation
+     * @return The well-matched relation
+     */
+    public static ReachabilityRelation computeWellMatchedRelation(DefaultOneSEVPA<JSONSymbol> automaton,
+            ReachabilityRelation commaRelation, ReachabilityRelation internalRelation) {
         final Set<ReachabilityRelation> relations = new HashSet<>();
 
-        Set<ReachabilityRelation> R_star = new HashSet<>();
-        R_star.add(getIdentityRelation(automaton));
-        Set<ReachabilityRelation> R_prime = new HashSet<>();
-        R_prime.add(commaRelation);
-        R_prime.add(internalRelation);
+        final Set<ReachabilityRelation> setIdentityRelation = new HashSet<>();
+        setIdentityRelation.add(getIdentityRelation(automaton));
+        final Set<ReachabilityRelation> setCommaAndInternalRelations = new HashSet<>();
+        setCommaAndInternalRelations.add(commaRelation);
+        setCommaAndInternalRelations.add(internalRelation);
 
-        final Set<ReachabilityRelation> initial = compositionClosure(R_star, R_prime);
+        final Set<ReachabilityRelation> initial = compositionClosure(setIdentityRelation, setCommaAndInternalRelations);
 
-        R_star = new HashSet<>();
-        R_star.addAll(initial);
-        R_prime = new HashSet<>();
+        Set<ReachabilityRelation> composedRelations = new HashSet<>();
+        composedRelations.addAll(initial);
 
         while (true) {
-            Set<ReachabilityRelation> newR = new HashSet<>();
-            for (ReachabilityRelation r : R_star) {
-                newR.add(r.post(automaton, JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.closingCurlyBraceSymbol));
-                newR.add(r.post(automaton, JSONSymbol.openingBracketSymbol, JSONSymbol.closingBracketSymbol));
+            final Set<ReachabilityRelation> newRelations = new HashSet<>();
+            for (ReachabilityRelation r : composedRelations) {
+                final ReachabilityRelation curlyPost = r.post(automaton, JSONSymbol.openingCurlyBraceSymbol,
+                        JSONSymbol.closingCurlyBraceSymbol);
+                final ReachabilityRelation bracketPost = r.post(automaton, JSONSymbol.openingBracketSymbol,
+                        JSONSymbol.closingBracketSymbol);
+
+                newRelations.add(curlyPost);
+                newRelations.add(bracketPost);
             }
-            newR.removeAll(relations);
+            newRelations.removeAll(relations);
 
-            relations.addAll(newR);
-            newR.removeAll(R_star);
-            R_prime = newR;
+            relations.addAll(newRelations);
+            newRelations.removeAll(composedRelations);
 
-            if (R_prime.isEmpty()) {
+            if (newRelations.isEmpty()) {
                 break;
-            }
-            else {
-                R_star = compositionClosure(R_star, R_prime);
+            } else {
+                composedRelations = compositionClosure(composedRelations, newRelations);
             }
         }
 
         relations.removeAll(initial);
 
-        ReachabilityRelation result = new ReachabilityRelation();
-        relations.stream()
-            .forEach(r -> result.addAll(r));
-        
+        final ReachabilityRelation result = new ReachabilityRelation();
+        relations.forEach(r -> result.addAll(r));
+
         return result;
     }
 
@@ -199,30 +291,29 @@ class ReachabilityRelation implements Iterable<InRelation> {
         return relation;
     }
 
-    private static Set<ReachabilityRelation> compositionClosure(Set<ReachabilityRelation> R_star, Set<ReachabilityRelation> R_prime) {
-        Set<ReachabilityRelation> relations = new HashSet<>(R_star);
-        Queue<ReachabilityRelation> toProcess = new LinkedList<>(R_prime);
+    private static Set<ReachabilityRelation> compositionClosure(final Set<ReachabilityRelation> composedRelations,
+            final Set<ReachabilityRelation> relationsToCompose) {
+        final Set<ReachabilityRelation> allComposedRelations = new HashSet<>(composedRelations);
+        final Queue<ReachabilityRelation> toProcess = new LinkedList<>(relationsToCompose);
 
         while (!toProcess.isEmpty()) {
-            ReachabilityRelation rel = toProcess.poll();
-            // newR_star.add(rel);
+            final ReachabilityRelation relationToCompose = toProcess.poll();
 
-            Set<ReachabilityRelation> newRelations = new HashSet<>();
-            for (ReachabilityRelation r : relations) {
-                newRelations.add(r.compose(rel));
-                newRelations.add(rel.compose(r));
+            final Set<ReachabilityRelation> newRelations = new HashSet<>();
+            for (final ReachabilityRelation relation : allComposedRelations) {
+                newRelations.add(relation.compose(relationToCompose));
+                newRelations.add(relationToCompose.compose(relation));
             }
 
-            for (ReachabilityRelation r : newRelations) {
-                if (!relations.contains(r) && !toProcess.contains(r)) {
-                    toProcess.add(r);
+            for (ReachabilityRelation relation : newRelations) {
+                if (!allComposedRelations.contains(relation) && !toProcess.contains(relation)) {
+                    toProcess.add(relation);
                 }
             }
 
-            relations.addAll(newRelations);
-
+            allComposedRelations.addAll(newRelations);
         }
 
-        return relations;
+        return allComposedRelations;
     }
 }

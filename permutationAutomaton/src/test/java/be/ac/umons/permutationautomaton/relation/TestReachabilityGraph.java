@@ -108,8 +108,6 @@ public class TestReachabilityGraph {
         Set<EndpointPair<NodeInGraph>> edges = graph.edges();
         ImmutableGraph<NodeInGraph> actualGraph = graph.getGraph();
 
-        DotWriter.write(graph, System.out);
-
         Location q0 = automaton.getLocation(0);
         Location q2 = automaton.getLocation(2);
         Location q3 = automaton.getLocation(3);

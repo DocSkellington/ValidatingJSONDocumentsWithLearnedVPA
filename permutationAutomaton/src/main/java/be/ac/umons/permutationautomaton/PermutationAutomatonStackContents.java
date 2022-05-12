@@ -9,18 +9,28 @@ import javax.annotation.Nullable;
 import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.Location;
 
-class AutomatonStackContents {
+/**
+ * The stack used in a {@link PermutationAutomatonState}.
+ * 
+ * It contains a list with the locations before the call symbol, the call
+ * symbol, the set with all the keys seen so far, and a pointer to the rest of
+ * the stack.
+ * 
+ * @author Gaëtan Staquet
+ */
+class PermutationAutomatonStackContents {
     private final List<Location> locations;
     private final JSONSymbol callSymbol;
     private final Set<JSONSymbol> seenKeys = new HashSet<>();
     private JSONSymbol currentKey = null;
-    private @Nullable final AutomatonStackContents rest;
+    private @Nullable final PermutationAutomatonStackContents rest;
 
-    private AutomatonStackContents(final List<Location> locations, final JSONSymbol symbol) {
+    private PermutationAutomatonStackContents(final List<Location> locations, final JSONSymbol symbol) {
         this(locations, symbol, null);
     }
 
-    private AutomatonStackContents(final List<Location> locations, final JSONSymbol symbol, final @Nullable AutomatonStackContents rest) {
+    private PermutationAutomatonStackContents(final List<Location> locations, final JSONSymbol symbol,
+            final @Nullable PermutationAutomatonStackContents rest) {
         this.locations = locations;
         this.callSymbol = symbol;
         this.rest = rest;
@@ -47,15 +57,12 @@ class AutomatonStackContents {
         return currentKey;
     }
 
-    public @Nullable AutomatonStackContents pop() {
+    public @Nullable PermutationAutomatonStackContents pop() {
         return rest;
     }
 
-    public AutomatonStackContents push(final List<Location> locations, final JSONSymbol symbol) {
-        return new AutomatonStackContents(locations, symbol, this);
-    }
-
-    public static AutomatonStackContents push(final List<Location> locations, final JSONSymbol symbol, final AutomatonStackContents rest) {
-        return new AutomatonStackContents(locations, symbol, rest);
+    public static PermutationAutomatonStackContents push(final List<Location> locations, final JSONSymbol symbol,
+            final PermutationAutomatonStackContents rest) {
+        return new PermutationAutomatonStackContents(locations, symbol, rest);
     }
 }

@@ -7,7 +7,20 @@ import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 
-public class NodeInGraph {
+/**
+ * A node in a {@link ReachabilityGraph}.
+ * 
+ * It is labeled by a triplet from the reachability relation. For each location
+ * {@code p} in the VPA, it has a boolean indicating whether the target state of
+ * the triplet can read a return symbol and pop the stack symbol corresponding
+ * to {@code p}.
+ * 
+ * It also has a stack storing whether the node is rejected for each stacked
+ * level.
+ * 
+ * @author Gaëtan Staquet
+ */
+class NodeInGraph {
 
     private final InRelation inRelation;
     private final BitSet acceptingForLocation;
@@ -20,7 +33,7 @@ public class NodeInGraph {
         final JSONSymbol callSymbol = JSONSymbol.openingCurlyBraceSymbol;
         final JSONSymbol returnSymbol = JSONSymbol.closingCurlyBraceSymbol;
         final int returnSymbolIndex = automaton.getInputAlphabet().getReturnSymbolIndex(returnSymbol);
-        for (int i = 0 ; i < automaton.size() ; i++) {
+        for (int i = 0; i < automaton.size(); i++) {
             final int stackSym = automaton.encodeStackSym(automaton.getLocation(i), callSymbol);
             if (inRelation.getTarget().getReturnSuccessor(returnSymbolIndex, stackSym) != null) {
                 acceptingForLocation.set(i);

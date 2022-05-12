@@ -1,20 +1,37 @@
 package be.ac.umons.permutationautomaton;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.permutationautomaton.relation.NodeInGraph;
 import be.ac.umons.permutationautomaton.relation.ReachabilityGraph;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.VPDAlphabet;
 
+/**
+ * An automaton that allows permutations of pairs key-value inside a JSON
+ * document.
+ *
+ * It is constructed from a visibly pushdown automaton (VPA). Such an automaton
+ * can be
+ * constructed by hand or learned through an active learning algorithm (see the
+ * other project in the repository).
+ * 
+ * A JSON document is accepted if there is a path from the initial location with
+ * empty stack to an accepting location with empty stack.
+ * 
+ * Due to the permutations, it is not possible in general to know the exact
+ * current locations in the VPA. Therefore, the permutation automaton performs a
+ * kind of subset construction. This means that the permutation automaton is
+ * deterministic, i.e., it is never required to backtrack while reading a
+ * document.
+ * 
+ * @author Gaëtan Staquet
+ */
 public class PermutationAutomaton {
     private final ReachabilityGraph graph;
     private final DefaultOneSEVPA<JSONSymbol> automaton;
@@ -26,7 +43,7 @@ public class PermutationAutomaton {
         this.alphabet = automaton.getInputAlphabet();
     }
 
-    PermutationAutomatonState getInitialState() {
+    private PermutationAutomatonState getInitialState() {
         return new PermutationAutomatonState(Collections.singletonList(automaton.getInitialLocation()), null);
     }
 
@@ -55,8 +72,7 @@ public class PermutationAutomaton {
                 if (state == null) {
                     return null;
                 }
-            }
-            else {
+            } else {
                 ready = true;
             }
             previousSymbol = symbol;
@@ -65,7 +81,8 @@ public class PermutationAutomaton {
         return state;
     }
 
-    PermutationAutomatonState getSuccessor(PermutationAutomatonState state, JSONSymbol currentSymbol, JSONSymbol nextSymbol) {
+    PermutationAutomatonState getSuccessor(PermutationAutomatonState state, JSONSymbol currentSymbol,
+            JSONSymbol nextSymbol) {
         if (state == null || state.getLocations().isEmpty()) {
             return null;
         }
@@ -82,8 +99,10 @@ public class PermutationAutomaton {
         }
     }
 
-    private PermutationAutomatonState getInternalSuccessor(PermutationAutomatonState state, JSONSymbol currentIntSymbol, JSONSymbol nextSymbol) {
-        if (currentIntSymbol.equals(JSONSymbol.commaSymbol) && state.getStack().peekCallSymbol().equals(JSONSymbol.openingCurlyBraceSymbol)) {
+    private PermutationAutomatonState getInternalSuccessor(PermutationAutomatonState state, JSONSymbol currentIntSymbol,
+            JSONSymbol nextSymbol) {
+        if (currentIntSymbol.equals(JSONSymbol.commaSymbol)
+                && state.getStack().peekCallSymbol().equals(JSONSymbol.openingCurlyBraceSymbol)) {
             return getCommaInObjectSuccessor(state, nextSymbol);
         }
 
@@ -92,8 +111,7 @@ public class PermutationAutomaton {
         for (Location location : state.getLocations()) {
             if (location == null) {
                 successorLocations.add(null);
-            }
-            else {
+            } else {
                 Location target = automaton.getInternalSuccessor(location, currentIntSymbol);
                 successorLocations.add(target);
                 if (target != null) {
@@ -103,45 +121,23 @@ public class PermutationAutomaton {
         }
         if (oneNotNull) {
             return new PermutationAutomatonState(successorLocations, state.getStack());
-        }
-        else {
+        } else {
             return null;
         }
     }
 
-    private void markNodesToReject(final List<Location> currentLocations, final JSONSymbol currentKey) {
-        final List<NodeInGraph> nodesForKey = graph.getNodesForKey(currentKey);
-        assert nodesForKey.size() == currentLocations.size();
-
-        final Iterator<Location> itrLocations = currentLocations.iterator();
-        final Iterator<NodeInGraph> itrNodes = nodesForKey.iterator();
-        
-        while (itrLocations.hasNext()) {
-            assert itrNodes.hasNext();
-
-            final Location location = itrLocations.next();
-            final NodeInGraph node = itrNodes.next();
-            if (location == null || !Objects.equals(node.getTargetLocation(), location)) {
-                node.markRejected();
-            }
-        }
-    }
-
-    private PermutationAutomatonState getCommaInObjectSuccessor(PermutationAutomatonState state, JSONSymbol nextSymbol) {
+    private PermutationAutomatonState getCommaInObjectSuccessor(PermutationAutomatonState state,
+            JSONSymbol nextSymbol) {
         final List<Location> currentLocations = state.getLocations();
-        final AutomatonStackContents currentStack = state.getStack();
+        final PermutationAutomatonStackContents currentStack = state.getStack();
         final JSONSymbol currentKey = currentStack.getCurrentKey();
 
-        markNodesToReject(currentLocations, currentKey);
+        graph.markNodesToReject(currentLocations, currentKey);
 
         if (!currentStack.addKey(nextSymbol)) {
             return null;
         }
-        // @formatter:off
-        List<Location> successorLocations = graph.getNodesForKey(nextSymbol).stream()
-            .map(node -> node.getStartLocation())
-            .collect(Collectors.toList());
-        // @formatter:on
+        final List<Location> successorLocations = graph.getLocationsReadingKey(nextSymbol);
 
         if (successorLocations.isEmpty()) {
             return null;
@@ -150,19 +146,19 @@ public class PermutationAutomaton {
         return new PermutationAutomatonState(successorLocations, currentStack);
     }
 
-    private PermutationAutomatonState getCallSuccessor(PermutationAutomatonState state, JSONSymbol currentCallSymbol, JSONSymbol nextSymbol) {
+    private PermutationAutomatonState getCallSuccessor(PermutationAutomatonState state, JSONSymbol currentCallSymbol,
+            JSONSymbol nextSymbol) {
         final List<Location> currentLocations = state.getLocations();
-        final AutomatonStackContents currentStack = state.getStack();
-        final AutomatonStackContents newStack = AutomatonStackContents.push(currentLocations, currentCallSymbol, currentStack);
+        final PermutationAutomatonStackContents currentStack = state.getStack();
+        final PermutationAutomatonStackContents newStack = PermutationAutomatonStackContents.push(currentLocations,
+                currentCallSymbol, currentStack);
 
-        final List<Location> successorLocations = new LinkedList<>();
+        final List<Location> successorLocations;
         if (currentCallSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
-            for (NodeInGraph node : graph.getNodesForKey(nextSymbol)) {
-                successorLocations.add(node.getStartLocation());
-            }
+            successorLocations = graph.getLocationsReadingKey(nextSymbol);
             newStack.addKey(nextSymbol);
-        }
-        else {
+        } else {
+            successorLocations = new LinkedList<>();
             successorLocations.add(automaton.getInitialLocation());
         }
 
@@ -177,7 +173,7 @@ public class PermutationAutomaton {
 
     private PermutationAutomatonState getReturnSuccessor(PermutationAutomatonState state, JSONSymbol retSymbol) {
         final List<Location> currentLocations = state.getLocations();
-        final AutomatonStackContents currentStack = state.getStack();
+        final PermutationAutomatonStackContents currentStack = state.getStack();
         if (currentStack == null) {
             return null;
         }
@@ -190,33 +186,36 @@ public class PermutationAutomaton {
         // @formatter:on
 
         final List<Location> successorLocations = new LinkedList<>();
-        
+
         if (retSymbol.equals(JSONSymbol.closingBracketSymbol)) {
             if (!callSymbol.equals(JSONSymbol.openingBracketSymbol)) {
                 return null;
             }
 
-            // If we have read an array, we take the transitions that pop the symbols that were added when reading [
+            // If we have read an array, we take the transitions that pop the symbols that
+            // were added when reading [
             for (Location location : currentLocations) {
                 for (int stackSym : stackSymbols) {
                     Location target = automaton.getReturnSuccessor(location, retSymbol, stackSym);
                     successorLocations.add(target);
                 }
             }
-        }
-        else if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
+        } else if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
             if (!callSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
                 return null;
             }
             final JSONSymbol currentKey = currentStack.getCurrentKey();
 
-            markNodesToReject(currentLocations, currentKey);
+            graph.markNodesToReject(currentLocations, currentKey);
 
-            final Set<NodeInGraph> acceptingNodes = graph.getNodesAcceptingForLocationsAndNotInRejectedPath(currentStack.getSeenKeys(), currentStack.peekLocations());
-            for (NodeInGraph acceptingNode : acceptingNodes) {
-                Location beforeRetLocation = acceptingNode.getTargetLocation();
-                for (int stackSym : stackSymbols) {
-                    Location afterRetLocation = automaton.getReturnSuccessor(beforeRetLocation, retSymbol, stackSym);
+            // TODO: check if the size and order of successorsLocations is correct, in a
+            // nested document
+            final Set<Location> acceptingNodes = graph.getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
+                    currentStack.getSeenKeys(), currentStack.peekLocations());
+            for (final Location beforeRetLocation : acceptingNodes) {
+                for (final int stackSym : stackSymbols) {
+                    final Location afterRetLocation = automaton.getReturnSuccessor(beforeRetLocation, retSymbol,
+                            stackSym);
                     if (afterRetLocation != null) {
                         successorLocations.add(afterRetLocation);
                     }
