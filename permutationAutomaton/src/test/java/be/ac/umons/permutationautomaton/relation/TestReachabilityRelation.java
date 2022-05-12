@@ -29,14 +29,11 @@ public class TestReachabilityRelation {
 
         ReachabilityRelation result = rel1.compose(rel2);
         Assert.assertEquals(result.size(), 2);
-        Assert.assertTrue(result.areInRelation(q0, q3));
         Assert.assertTrue(result.areInRelation(q0, JSONSymbol.toSymbol("a"), q3));
-        Assert.assertTrue(result.areInRelation(q1, q0));
         Assert.assertTrue(result.areInRelation(q1, JSONSymbol.toSymbol("b"), q0));
 
         result = rel2.compose(rel1);
         Assert.assertEquals(result.size(), 1);
-        Assert.assertTrue(result.areInRelation(q2, q1));
         Assert.assertTrue(result.areInRelation(q2, JSONSymbol.toSymbol("d"), q1));
     }
 
@@ -56,15 +53,12 @@ public class TestReachabilityRelation {
 
         ReachabilityRelation result = relation.post(automaton, openingCurly, closingCurly);
         Assert.assertEquals(result.size(), 1);
-        Assert.assertTrue(result.areInRelation(automaton.getLocation(0), automaton.getLocation(6)));
         Assert.assertTrue(result.areInRelation(automaton.getLocation(0), openingCurly, automaton.getLocation(6)));
     }
 
     @Test
     public void testAutomatonWithOptionalKeysPost() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
-        JSONSymbol openingCurly = JSONSymbol.openingCurlyBraceSymbol;
-        JSONSymbol closingCurly = JSONSymbol.closingCurlyBraceSymbol;
 
         ReachabilityRelation relation = new ReachabilityRelation();
         // We add all pairs (p, p)
@@ -98,10 +92,10 @@ public class TestReachabilityRelation {
 
         relation.add(automaton.getLocation(9), JSONSymbol.toSymbol(""), automaton.getLocation(10));
 
-        ReachabilityRelation result = relation.post(automaton, openingCurly, closingCurly);
+        ReachabilityRelation result = relation.post(automaton, JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.closingCurlyBraceSymbol);
         Assert.assertEquals(result.size(), 2);
-        Assert.assertTrue(result.areInRelation(automaton.getLocation(0), automaton.getLocation(11)));
-        Assert.assertTrue(result.areInRelation(automaton.getLocation(4), automaton.getLocation(7)));
+        Assert.assertTrue(result.areInRelation(automaton.getLocation(0), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(11)));
+        Assert.assertTrue(result.areInRelation(automaton.getLocation(4), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(7)));
     }
 
     @Test
@@ -109,8 +103,8 @@ public class TestReachabilityRelation {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
         ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
         Assert.assertEquals(commaRelation.size(), 2);
-        Assert.assertTrue(commaRelation.areInRelation(automaton.getLocation(2), automaton.getLocation(3)));
-        Assert.assertTrue(commaRelation.areInRelation(automaton.getLocation(7), automaton.getLocation(8)));
+        Assert.assertTrue(commaRelation.areInRelation(automaton.getLocation(2), JSONSymbol.commaSymbol, automaton.getLocation(3)));
+        Assert.assertTrue(commaRelation.areInRelation(automaton.getLocation(7), JSONSymbol.commaSymbol, automaton.getLocation(8)));
     }
 
     @Test
@@ -118,13 +112,13 @@ public class TestReachabilityRelation {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
         ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
         Assert.assertEquals(internalRelation.size(), 7);
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(1)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), automaton.getLocation(2)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), automaton.getLocation(7)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(3), automaton.getLocation(4)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(5)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(8), automaton.getLocation(9)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(9), automaton.getLocation(5)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(0), JSONSymbol.toSymbol("k1"), automaton.getLocation(1)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), JSONSymbol.toSymbol("int"), automaton.getLocation(2)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), JSONSymbol.toSymbol("str"), automaton.getLocation(7)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(3), JSONSymbol.toSymbol("k2"), automaton.getLocation(4)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(4), JSONSymbol.toSymbol("bool"), automaton.getLocation(5)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(8), JSONSymbol.toSymbol("k2"), automaton.getLocation(9)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(9), JSONSymbol.toSymbol("str"), automaton.getLocation(5)));
     }
 
     @Test
@@ -136,7 +130,7 @@ public class TestReachabilityRelation {
                 commaRelation, internalRelation);
 
         Assert.assertEquals(wellMatchedRelation.size(), 1);
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(6)));
+        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(6)));
     }
 
     @Test
@@ -149,7 +143,33 @@ public class TestReachabilityRelation {
                 commaRelation, internalRelation);
 
         Assert.assertEquals(wellMatchedRelation.size(), 2);
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(11)));
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(7)));
+        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(11)));
+        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(7)));
+    }
+
+    @Test
+    public void testAutomatonWithTwoKeysOnSameTransitionInternalRelation() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithTwoKeysOnSameTransition();
+
+        ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        Assert.assertEquals(internalRelation.size(), 5);
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(0), JSONSymbol.toSymbol("k1"), automaton.getLocation(1)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(0), JSONSymbol.toSymbol("k2"), automaton.getLocation(1)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), JSONSymbol.toSymbol("str"), automaton.getLocation(2)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), JSONSymbol.toSymbol("int"), automaton.getLocation(2)));
+        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(3), JSONSymbol.toSymbol("o1"), automaton.getLocation(4)));
+    }
+
+    @Test
+    public void testAutomatonWithTwoKeysOnSameTransitionWellMatchedRelation() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithTwoKeysOnSameTransition();
+
+        ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
+        ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton, commaRelation, internalRelation);
+
+        Assert.assertEquals(wellMatchedRelation.size(), 2);
+        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(6)));
+        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(5)));
     }
 }

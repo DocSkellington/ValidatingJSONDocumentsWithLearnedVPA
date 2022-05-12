@@ -18,8 +18,8 @@ import net.automatalib.words.Alphabet;
 class ReachabilityRelation implements Iterable<InRelation> {
     private final Set<InRelation> relation;
 
-    public boolean areInRelation(final Location q, final Location p) {
-        return areInRelation(q, JSONSymbol.toSymbol(""), p);
+    ReachabilityRelation() {
+        this.relation = new HashSet<>();
     }
 
     public boolean areInRelation(final Location q, final JSONSymbol symbol, final Location p) {
@@ -57,10 +57,6 @@ class ReachabilityRelation implements Iterable<InRelation> {
 
     public int size() {
         return this.relation.size();
-    }
-
-    ReachabilityRelation() {
-        this.relation = new HashSet<>();
     }
 
     private void add(final InRelation inRel) {

@@ -69,7 +69,7 @@ public class ReachabilityGraph {
         }
         for (final InRelation source : keyValueRelation) {
             for (final InRelation target : keyValueRelation) {
-                if (commaRelation.areInRelation(source.getTarget(), target.getStart())) {
+                if (commaRelation.areInRelation(source.getTarget(), JSONSymbol.commaSymbol, target.getStart())) {
                     builder.putEdge(relationToNode.get(source), relationToNode.get(target));
                 }
             }

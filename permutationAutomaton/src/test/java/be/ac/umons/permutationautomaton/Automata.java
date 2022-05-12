@@ -141,4 +141,36 @@ public class Automata {
 
         return automaton;
     }
+
+    public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithTwoKeysOnSameTransition() {
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "o1", ",", "int", "str");
+        DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
+
+        Location q0 = automaton.addInitialLocation(false);
+        Location q1 = automaton.addLocation(false);
+        Location q2 = automaton.addLocation(false);
+        Location q3 = automaton.addLocation(false);
+        Location q4 = automaton.addLocation(false);
+        Location q5 = automaton.addLocation(false);
+        Location q6 = automaton.addLocation(true);
+
+        int q0StackSymbol = automaton.encodeStackSym(q0, JSONSymbol.openingCurlyBraceSymbol);
+        int q4StackSymbol = automaton.encodeStackSym(q4, JSONSymbol.openingCurlyBraceSymbol);
+
+        automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k1"), q1);
+        automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k2"), q1);
+
+        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("int"), q2);
+        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("str"), q2);
+
+        automaton.setInternalSuccessor(q2, JSONSymbol.commaSymbol, q3);
+        automaton.setReturnSuccessor(q2, JSONSymbol.closingCurlyBraceSymbol, q4StackSymbol, q5);
+
+        automaton.setInternalSuccessor(q3, JSONSymbol.toSymbol("o1"), q4);
+
+        automaton.setReturnSuccessor(q5, JSONSymbol.closingCurlyBraceSymbol, q0StackSymbol, q6);
+        automaton.setReturnSuccessor(q5, JSONSymbol.closingCurlyBraceSymbol, q4StackSymbol, q5);
+
+        return automaton;
+    }
 }

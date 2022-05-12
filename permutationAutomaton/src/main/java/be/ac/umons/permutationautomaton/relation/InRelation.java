@@ -29,8 +29,8 @@ class InRelation {
             return false;
         }
 
-        InRelation other = (InRelation) obj;
-        return Objects.equals(this.start, other.start) && Objects.equals(this.target, other.target);
+        final InRelation other = (InRelation) obj;
+        return Objects.equals(this.start, other.start) && Objects.equals(this.symbol, other.symbol) && Objects.equals(this.target, other.target);
     }
 
     @Override
