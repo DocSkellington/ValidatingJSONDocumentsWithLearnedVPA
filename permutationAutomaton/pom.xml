@@ -82,18 +82,14 @@ limitations under the License.
         <learningoracles.version>1.0</learningoracles.version>
         <guava.version>31.1-jre</guava.version>
         <testng.version>7.4.0</testng.version>
-        <checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
-        <puppycrawl-plugin.version>8.10</puppycrawl-plugin.version>
-        <checkstyle-rules-plugin.version>1.1.0</checkstyle-rules-plugin.version>
-        <jacoco-plugin.version>0.8.1</jacoco-plugin.version>
-        <javadoc-plugin.version>3.2.0</javadoc-plugin.version>
+        <javadoc-plugin.version>3.4.0</javadoc-plugin.version>
         <source-plugin.version>3.2.1</source-plugin.version>
         <surefire-plugin.version>3.0.0-M5</surefire-plugin.version>
+        <project-reports.version>3.3.0</project-reports.version>
+        <site-plugin.version>4.0.0-M1</site-plugin.version>
 
         <!-- Javadoc links -->
         <java.apidocs>http://docs.oracle.com/javase/8/docs/api/</java.apidocs>
-        <automatalib.apidocs>http://learnlib.github.io/automatalib/maven-site/${automatalib.version}/apidocs/</automatalib.apidocs>
-        <learnlib.apidocs>http://learnlib.github.io/learnlib/maven-site/${learnlib.version}/apidocs/</learnlib.apidocs>
     </properties>
 
     <!--
@@ -121,6 +117,12 @@ limitations under the License.
             <artifactId>guava</artifactId>
             <version>${guava.version}</version>
         </dependency>
+        <dependency>
+            <groupId>info.scce</groupId>
+            <artifactId>addlib</artifactId>
+            <version>2.0.5-BETA</version>
+        </dependency>
+
 
         <!-- TestNG -->
         <dependency>
@@ -139,29 +141,13 @@ limitations under the License.
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>${checkstyle-plugin.version}</version>
-                    <dependencies>
-                        <dependency>
-                            <groupId>com.puppycrawl.tools</groupId>
-                            <artifactId>checkstyle</artifactId>
-                            <version>${puppycrawl-plugin.version}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>com.github.ngeor</groupId>
-                            <artifactId>checkstyle-rules</artifactId>
-                            <version>${checkstyle-rules-plugin.version}</version>
-                        </dependency>
-                    </dependencies>
-                    <configuration>
-                        <configLocation>com/github/ngeor/checkstyle.xml</configLocation>
-                        <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                    </configuration>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${source-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>${source-plugin.version}</version>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${site-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -174,8 +160,6 @@ limitations under the License.
                         <linksource>false</linksource>
                         <links>
                             <link>${java.apidocs}</link>
-                            <link>${automatalib.apidocs}</link>
-                            <link>${learnlib.apidocs}</link>
                         </links>
                     </configuration>
                 </plugin>
@@ -186,11 +170,6 @@ limitations under the License.
                     <configuration>
                         <trimStackTrace>false</trimStackTrace>
                     </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.jacoco</groupId>
-                    <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>${jacoco-plugin.version}</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -204,6 +183,7 @@ limitations under the License.
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>${project-reports.version}</version>
                 <reportSets>
                     <reportSet>
                         <reports>
@@ -243,72 +223,4 @@ limitations under the License.
         </plugins>
     </reporting>
 
-    <!--
-    ===============================	PROFILES =======================
-    -->
-    <profiles>
-        <profile>
-            <id>jacoco</id>
-            <activation>
-                <property>
-                    <name>env.TRAVIS</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>prepare-agent</id>
-                                <phase>validate</phase>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>report</id>
-                                <phase>test</phase>
-                                <goals>
-                                    <goal>report</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>travis</id>
-            <activation>
-                <property>
-                    <name>env.TRAVIS</name>
-                </property>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-checkstyle-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>checkstyle</id>
-                                <phase>test</phase>
-                                <goals>
-                                    <goal>check</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.eluder.coveralls</groupId>
-                        <artifactId>coveralls-maven-plugin</artifactId>
-                        <version>4.3.0</version>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 </project>
