@@ -114,7 +114,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
     }
 
     public static ReachabilityRelation computeCommaRelation(DefaultOneSEVPA<JSONSymbol> automaton) {
-        final JSONSymbol symbol = JSONSymbol.toSymbol(',');
+        final JSONSymbol symbol = JSONSymbol.commaSymbol;
         assert automaton.getInputAlphabet().getInternalAlphabet().contains(symbol);
         final int symbolIndex = automaton.getInputAlphabet().getInternalAlphabet().getSymbolIndex(symbol);
         final ReachabilityRelation relation = new ReachabilityRelation();
@@ -133,7 +133,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
         final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
         // @formatter:off
         final List<Integer> internalSymbolIndices = internalAlphabet.stream()
-            .filter(s -> !Objects.equals(s, JSONSymbol.toSymbol(',')))
+            .filter(s -> !Objects.equals(s, JSONSymbol.commaSymbol))
             .map(s -> internalAlphabet.getSymbolIndex(s))
             .collect(Collectors.toList());
         // @formatter:on
@@ -153,10 +153,6 @@ class ReachabilityRelation implements Iterable<InRelation> {
 
     public static ReachabilityRelation computeWellMatchedRelation(DefaultOneSEVPA<JSONSymbol> automaton, ReachabilityRelation commaRelation, ReachabilityRelation internalRelation) {
         final Set<ReachabilityRelation> relations = new HashSet<>();
-        final JSONSymbol openingCurlyBrace = JSONSymbol.toSymbol("{");
-        final JSONSymbol closingCurlyBrace = JSONSymbol.toSymbol("}");
-        final JSONSymbol openingBracket = JSONSymbol.toSymbol("[");
-        final JSONSymbol closingBracket = JSONSymbol.toSymbol("]");
 
         Set<ReachabilityRelation> R_star = new HashSet<>();
         R_star.add(getIdentityRelation(automaton));
@@ -173,8 +169,8 @@ class ReachabilityRelation implements Iterable<InRelation> {
         while (true) {
             Set<ReachabilityRelation> newR = new HashSet<>();
             for (ReachabilityRelation r : R_star) {
-                newR.add(r.post(automaton, openingCurlyBrace, closingCurlyBrace));
-                newR.add(r.post(automaton, openingBracket, closingBracket));
+                newR.add(r.post(automaton, JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                newR.add(r.post(automaton, JSONSymbol.openingBracketSymbol, JSONSymbol.closingBracketSymbol));
             }
             newR.removeAll(relations);
 

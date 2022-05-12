@@ -29,6 +29,12 @@ import net.automatalib.words.abstractimpl.AbstractSymbol;
  */
 public class JSONSymbol extends AbstractSymbol<JSONSymbol> {
 
+    public static final JSONSymbol commaSymbol = JSONSymbol.toSymbol(",");
+    public static final JSONSymbol openingCurlyBraceSymbol = JSONSymbol.toSymbol("{");
+    public static final JSONSymbol closingCurlyBraceSymbol = JSONSymbol.toSymbol("}");
+    public static final JSONSymbol openingBracketSymbol = JSONSymbol.toSymbol("[");
+    public static final JSONSymbol closingBracketSymbol = JSONSymbol.toSymbol("]");
+
     private final String actualSymbols;
 
     private JSONSymbol(String actualSymbols) {
@@ -77,5 +83,5 @@ public class JSONSymbol extends AbstractSymbol<JSONSymbol> {
     public int hashCode() {
         return Objects.hash(actualSymbols);
     }
-    
+
 }

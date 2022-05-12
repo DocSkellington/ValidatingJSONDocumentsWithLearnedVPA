@@ -69,13 +69,13 @@ public abstract class ABenchmarks {
         final Set<JSONSymbol> callSymbols = new HashSet<>();
         final Set<JSONSymbol> returnSymbols = new HashSet<>();
 
-        callSymbols.add(JSONSymbol.toSymbol("{"));
-        callSymbols.add(JSONSymbol.toSymbol("["));
+        callSymbols.add(JSONSymbol.openingBracketSymbol);
+        callSymbols.add(JSONSymbol.openingCurlyBraceSymbol);
 
-        returnSymbols.add(JSONSymbol.toSymbol("}"));
-        returnSymbols.add(JSONSymbol.toSymbol("]"));
+        returnSymbols.add(JSONSymbol.closingBracketSymbol);
+        returnSymbols.add(JSONSymbol.closingCurlyBraceSymbol);
 
-        internalSymbols.add(JSONSymbol.toSymbol(","));
+        internalSymbols.add(JSONSymbol.commaSymbol);
         internalSymbols.add(JSONSymbol.toSymbol("true"));
         internalSymbols.add(JSONSymbol.toSymbol("false"));
         internalSymbols.add(JSONSymbol.toSymbol("null"));
