@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.util.Set;
 
 import com.google.common.graph.EndpointPair;
-import com.google.common.graph.ImmutableValueGraph;
+import com.google.common.graph.ImmutableGraph;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import be.ac.umons.learningjson.JSONSymbol;
+import be.ac.umons.permutationautomaton.Automata;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 
@@ -56,7 +57,7 @@ public class TestReachabilityGraph {
         ReachabilityGraph graph = new ReachabilityGraph(automaton);
         Set<NodeInGraph> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph>> edges = graph.edges();
-        ImmutableValueGraph<NodeInGraph, Boolean> actualGraph = graph.getGraph();
+        ImmutableGraph<NodeInGraph> actualGraph = graph.getGraph();
 
         Location q0 = automaton.getLocation(0);
         Location q2 = automaton.getLocation(2);
@@ -105,7 +106,7 @@ public class TestReachabilityGraph {
         ReachabilityGraph graph = new ReachabilityGraph(automaton);
         Set<NodeInGraph> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph>> edges = graph.edges();
-        ImmutableValueGraph<NodeInGraph, Boolean> actualGraph = graph.getGraph();
+        ImmutableGraph<NodeInGraph> actualGraph = graph.getGraph();
 
         DotWriter.write(graph, System.out);
 

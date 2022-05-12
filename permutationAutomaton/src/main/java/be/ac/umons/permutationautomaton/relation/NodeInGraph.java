@@ -5,17 +5,20 @@ import java.util.Objects;
 
 import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
+import net.automatalib.automata.vpda.Location;
 
-class NodeInGraph {
+public class NodeInGraph {
 
     private final InRelation inRelation;
     private final BitSet acceptingForLocation;
+    private NodeStackContents stackForRejected;
 
     public NodeInGraph(InRelation inRelation, DefaultOneSEVPA<JSONSymbol> automaton) {
         this.inRelation = inRelation;
         this.acceptingForLocation = new BitSet(automaton.size());
-        final JSONSymbol callSymbol = JSONSymbol.toSymbol("{");
-        final JSONSymbol returnSymbol = JSONSymbol.toSymbol("}");
+        this.stackForRejected = null;
+        final JSONSymbol callSymbol = JSONSymbol.openingCurlyBraceSymbol;
+        final JSONSymbol returnSymbol = JSONSymbol.closingCurlyBraceSymbol;
         final int returnSymbolIndex = automaton.getInputAlphabet().getReturnSymbolIndex(returnSymbol);
         for (int i = 0 ; i < automaton.size() ; i++) {
             final int stackSym = automaton.encodeStackSym(automaton.getLocation(i), callSymbol);
@@ -25,8 +28,20 @@ class NodeInGraph {
         }
     }
 
-    public InRelation getInRelation() {
+    InRelation getInRelation() {
         return inRelation;
+    }
+
+    public Location getStartLocation() {
+        return getInRelation().getStart();
+    }
+
+    public Location getTargetLocation() {
+        return getInRelation().getTarget();
+    }
+
+    public boolean isAcceptingForLocation(Location location) {
+        return isAcceptingForLocation(location.getIndex());
     }
 
     public boolean isAcceptingForLocation(int locId) {
@@ -53,5 +68,24 @@ class NodeInGraph {
     @Override
     public String toString() {
         return inRelation.toString();
+    }
+
+    void addLayerInStack() {
+        stackForRejected = NodeStackContents.push(false, stackForRejected);
+    }
+
+    void popLayerInStack() {
+        stackForRejected = stackForRejected.pop();
+    }
+
+    public void markRejected() {
+        stackForRejected.markRejected();
+    }
+
+    public boolean isRejected() {
+        if (stackForRejected == null) {
+            return false;
+        }
+        return stackForRejected.peek();
     }
 }

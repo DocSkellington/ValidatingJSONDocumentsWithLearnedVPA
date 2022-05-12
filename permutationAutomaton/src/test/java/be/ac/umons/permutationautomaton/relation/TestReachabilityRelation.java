@@ -4,6 +4,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import be.ac.umons.learningjson.JSONSymbol;
+import be.ac.umons.permutationautomaton.Automata;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.VPDAlphabet;
@@ -42,8 +43,8 @@ public class TestReachabilityRelation {
     @Test
     public void testStraightforwardAutomatonPost() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
-        JSONSymbol openingCurly = JSONSymbol.toSymbol("{");
-        JSONSymbol closingCurly = JSONSymbol.toSymbol("}");
+        JSONSymbol openingCurly = JSONSymbol.openingCurlyBraceSymbol;
+        JSONSymbol closingCurly = JSONSymbol.closingCurlyBraceSymbol;
 
         ReachabilityRelation relation = new ReachabilityRelation();
         for (int i = 0 ; i <= 6 ; i++) {
@@ -62,8 +63,8 @@ public class TestReachabilityRelation {
     @Test
     public void testAutomatonWithOptionalKeysPost() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
-        JSONSymbol openingCurly = JSONSymbol.toSymbol("{");
-        JSONSymbol closingCurly = JSONSymbol.toSymbol("}");
+        JSONSymbol openingCurly = JSONSymbol.openingCurlyBraceSymbol;
+        JSONSymbol closingCurly = JSONSymbol.closingCurlyBraceSymbol;
 
         ReachabilityRelation relation = new ReachabilityRelation();
         // We add all pairs (p, p)
