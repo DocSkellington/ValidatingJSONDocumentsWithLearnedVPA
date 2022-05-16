@@ -3,6 +3,7 @@ package be.ac.umons.permutationautomaton.relation;
 import java.util.Objects;
 
 import be.ac.umons.learningjson.JSONSymbol;
+import be.ac.umons.permutationautomaton.PairLocations;
 import net.automatalib.automata.vpda.Location;
 
 /**
@@ -69,5 +70,9 @@ class InRelation {
 
     public Location getTarget() {
         return target;
+    }
+
+    public PairLocations toPairLocations() {
+        return PairLocations.of(this.start, this.target);
     }
 }

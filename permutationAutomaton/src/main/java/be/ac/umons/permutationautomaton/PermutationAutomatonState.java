@@ -1,6 +1,7 @@
 package be.ac.umons.permutationautomaton;
 
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import net.automatalib.automata.vpda.Location;
 
@@ -12,16 +13,22 @@ import net.automatalib.automata.vpda.Location;
  * @author Gaëtan Staquet
  */
 class PermutationAutomatonState {
-    private final List<Location> locations;
+    private final Set<PairLocations> sourceToReachedLocations;
     private final PermutationAutomatonStackContents stack;
 
-    public PermutationAutomatonState(final List<Location> locations, final PermutationAutomatonStackContents stack) {
-        this.locations = locations;
+    public PermutationAutomatonState(final Set<PairLocations> sourceToReachedLocations, final PermutationAutomatonStackContents stack) {
+        this.sourceToReachedLocations = sourceToReachedLocations;
         this.stack = stack;
     }
 
-    public List<Location> getLocations() {
-        return locations;
+    public Set<PairLocations> getSourceToReachedLocations() {
+        return sourceToReachedLocations;
+    }
+
+    public Set<Location> getReachedLocations() {
+        return sourceToReachedLocations.stream()
+            .map(pair -> pair.getReachedLocation())
+            .collect(Collectors.toSet());
     }
 
     public PermutationAutomatonStackContents getStack() {

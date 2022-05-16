@@ -4,11 +4,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -19,6 +17,7 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.ImmutableGraph;
 
 import be.ac.umons.learningjson.JSONSymbol;
+import be.ac.umons.permutationautomaton.PairLocations;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 
@@ -49,7 +48,7 @@ import net.automatalib.automata.vpda.Location;
 public class ReachabilityGraph {
     private final ImmutableGraph<NodeInGraph> graph;
     private final Map<JSONSymbol, List<NodeInGraph>> keyToNodes = new HashMap<>();
-    private final Map<JSONSymbol, List<Location>> keyToLocations = new HashMap<>();
+    private final Map<JSONSymbol, Set<Location>> keyToLocations = new HashMap<>();
     private final List<NodeInGraph> startingNodes = new LinkedList<>();
 
     public ReachabilityGraph(DefaultOneSEVPA<JSONSymbol> automaton) {
@@ -87,9 +86,9 @@ public class ReachabilityGraph {
                 final List<NodeInGraph> listNode = new LinkedList<>();
                 listNode.add(node);
                 keyToNodes.put(key, listNode);
-                final List<Location> listLocation = new LinkedList<>();
-                listLocation.add(node.getStartLocation());
-                keyToLocations.put(key, listLocation);
+                final Set<Location> setLocations = new HashSet<>();
+                setLocations.add(node.getStartLocation());
+                keyToLocations.put(key, setLocations);
             }
 
             if (inRel.getStart().equals(automaton.getInitialLocation())) {
@@ -156,8 +155,8 @@ public class ReachabilityGraph {
      * @param key The key
      * @return
      */
-    public List<Location> getLocationsReadingKey(JSONSymbol key) {
-        return keyToLocations.getOrDefault(key, Collections.emptyList());
+    public Set<Location> getLocationsReadingKey(JSONSymbol key) {
+        return keyToLocations.getOrDefault(key, Collections.emptySet());
     }
 
     /**
@@ -190,22 +189,14 @@ public class ReachabilityGraph {
      * The function expects that the size of {@code locationsReached} is equal to
      * the number of nodes having {@code lastKeyProcessed} as their symbol.
      * 
-     * @param locationsReached The locations reached
+     * @param sourceToReachedLocations The locations reached
      * @param lastKeyProcessed The last key that was read
      */
-    public void markNodesToReject(final List<Location> locationsReached, final JSONSymbol lastKeyProcessed) {
+    public void markNodesToReject(final Set<PairLocations> sourceToReachedLocations, final JSONSymbol lastKeyProcessed) {
         final List<NodeInGraph> nodesForKey = getNodesForKey(lastKeyProcessed);
-        assert nodesForKey.size() == locationsReached.size();
 
-        final Iterator<Location> itrLocations = locationsReached.iterator();
-        final Iterator<NodeInGraph> itrNodes = nodesForKey.iterator();
-
-        while (itrLocations.hasNext()) {
-            assert itrNodes.hasNext();
-
-            final Location location = itrLocations.next();
-            final NodeInGraph node = itrNodes.next();
-            if (location == null || !Objects.equals(node.getTargetLocation(), location)) {
+        for (NodeInGraph node : nodesForKey) {
+            if (!sourceToReachedLocations.contains(node.toPairLocations())) {
                 node.markRejected();
             }
         }
@@ -230,25 +221,21 @@ public class ReachabilityGraph {
     public Set<Location> getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(Set<JSONSymbol> seenKeys,
             Collection<Location> locationsBeforeCall) {
         final Set<Location> acceptingNodes = new HashSet<>();
-        final Set<NodeInGraph> seenNodes = new HashSet<>();
         for (NodeInGraph initial : startingNodes) {
-            depthFirstExploreForAcceptingNodes(initial, seenNodes, new LinkedList<>(), acceptingNodes, seenKeys,
+            depthFirstExploreForAcceptingNodes(initial, new LinkedList<>(), acceptingNodes, seenKeys,
                     locationsBeforeCall);
         }
         return acceptingNodes;
     }
 
-    private void depthFirstExploreForAcceptingNodes(final NodeInGraph current, final Set<NodeInGraph> seenNodes,
+    private void depthFirstExploreForAcceptingNodes(final NodeInGraph current,
             final LinkedList<JSONSymbol> seenKeysInExploration, final Set<Location> acceptingLocations,
             final Set<JSONSymbol> seenKeysInAutomaton, final Collection<Location> locationsBeforeCall) {
-        if (seenNodes.contains(current)) {
-            return;
-        }
-        seenNodes.add(current);
-
         if (current.isRejected()) {
             return;
         }
+
+        // TODO: stop earlier if we know that none of the successor can pop (p, {)
 
         final JSONSymbol key = current.getInRelation().getSymbol();
         if (!seenKeysInAutomaton.contains(key)) {
@@ -282,7 +269,7 @@ public class ReachabilityGraph {
 
         final Set<NodeInGraph> successors = graph.successors(current);
         for (final NodeInGraph successor : successors) {
-            depthFirstExploreForAcceptingNodes(successor, seenNodes, seenKeysInExploration, acceptingLocations,
+            depthFirstExploreForAcceptingNodes(successor, seenKeysInExploration, acceptingLocations,
                     seenKeysInAutomaton, locationsBeforeCall);
         }
 

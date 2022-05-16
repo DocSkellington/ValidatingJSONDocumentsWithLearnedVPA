@@ -1,10 +1,7 @@
 package be.ac.umons.permutationautomaton;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import be.ac.umons.learningjson.JSONSymbol;
 import be.ac.umons.permutationautomaton.relation.ReachabilityGraph;
@@ -44,7 +41,9 @@ public class PermutationAutomaton {
     }
 
     private PermutationAutomatonState getInitialState() {
-        return new PermutationAutomatonState(Collections.singletonList(automaton.getInitialLocation()), null);
+        final Set<Location> setWithInitialLocation = new HashSet<>();
+        setWithInitialLocation.add(automaton.getInitialLocation());
+        return new PermutationAutomatonState(PairLocations.getIdentityPairs(setWithInitialLocation), null);
     }
 
     public boolean accepts(Iterable<JSONSymbol> input) {
@@ -56,7 +55,8 @@ public class PermutationAutomaton {
             return false;
         }
         // @formatter:off
-        return state.getLocations().stream()
+        return state.getSourceToReachedLocations().stream()
+            .map(pair -> pair.getReachedLocation())
             .filter(location -> location.isAccepting())
             .findAny().isPresent();
         // @formatter:on
@@ -83,7 +83,7 @@ public class PermutationAutomaton {
 
     PermutationAutomatonState getSuccessor(PermutationAutomatonState state, JSONSymbol currentSymbol,
             JSONSymbol nextSymbol) {
-        if (state == null || state.getLocations().isEmpty()) {
+        if (state == null || state.getSourceToReachedLocations().isEmpty()) {
             return null;
         }
 
@@ -106,129 +106,121 @@ public class PermutationAutomaton {
             return getCommaInObjectSuccessor(state, nextSymbol);
         }
 
-        final List<Location> successorLocations = new LinkedList<>();
-        boolean oneNotNull = false;
-        for (Location location : state.getLocations()) {
-            if (location == null) {
-                successorLocations.add(null);
-            } else {
-                Location target = automaton.getInternalSuccessor(location, currentIntSymbol);
-                successorLocations.add(target);
-                if (target != null) {
-                    oneNotNull = true;
-                }
+
+        final Set<PairLocations> sourceToSuccessorLocations = new HashSet<>();
+        for (final PairLocations sourceToReachedLocation : state.getSourceToReachedLocations()) {
+            final Location reachedAfterTransition = automaton.getInternalSuccessor(sourceToReachedLocation.getReachedLocation(), currentIntSymbol);
+            if (reachedAfterTransition != null) {
+                sourceToSuccessorLocations.add(sourceToReachedLocation.transition(reachedAfterTransition));
             }
         }
-        if (oneNotNull) {
-            return new PermutationAutomatonState(successorLocations, state.getStack());
-        } else {
+
+        if (sourceToSuccessorLocations.isEmpty()) {
             return null;
         }
+        return new PermutationAutomatonState(sourceToSuccessorLocations, state.getStack());
     }
 
     private PermutationAutomatonState getCommaInObjectSuccessor(PermutationAutomatonState state,
             JSONSymbol nextSymbol) {
-        final List<Location> currentLocations = state.getLocations();
         final PermutationAutomatonStackContents currentStack = state.getStack();
         final JSONSymbol currentKey = currentStack.getCurrentKey();
 
-        graph.markNodesToReject(currentLocations, currentKey);
+        graph.markNodesToReject(state.getSourceToReachedLocations(), currentKey);
 
         if (!currentStack.addKey(nextSymbol)) {
             return null;
         }
-        final List<Location> successorLocations = graph.getLocationsReadingKey(nextSymbol);
 
+        final Set<Location> successorLocations = graph.getLocationsReadingKey(nextSymbol);
         if (successorLocations.isEmpty()) {
             return null;
         }
-
-        return new PermutationAutomatonState(successorLocations, currentStack);
+        return new PermutationAutomatonState(PairLocations.getIdentityPairs(successorLocations), currentStack);
     }
 
     private PermutationAutomatonState getCallSuccessor(PermutationAutomatonState state, JSONSymbol currentCallSymbol,
             JSONSymbol nextSymbol) {
-        final List<Location> currentLocations = state.getLocations();
+        final Set<PairLocations> sourceToReachedLocations = state.getSourceToReachedLocations();
         final PermutationAutomatonStackContents currentStack = state.getStack();
-        final PermutationAutomatonStackContents newStack = PermutationAutomatonStackContents.push(currentLocations,
-                currentCallSymbol, currentStack);
+        final PermutationAutomatonStackContents newStack = PermutationAutomatonStackContents.push(sourceToReachedLocations, currentCallSymbol, currentStack);
 
-        final List<Location> successorLocations;
+        final Set<PairLocations> successorSourceToReachedLocations;
         if (currentCallSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
-            successorLocations = graph.getLocationsReadingKey(nextSymbol);
+            successorSourceToReachedLocations = PairLocations.getIdentityPairs(graph.getLocationsReadingKey(nextSymbol));
             newStack.addKey(nextSymbol);
         } else {
-            successorLocations = new LinkedList<>();
-            successorLocations.add(automaton.getInitialLocation());
+            successorSourceToReachedLocations = new HashSet<>();
+            successorSourceToReachedLocations.add(PairLocations.of(automaton.getInitialLocation(), automaton.getInitialLocation()));
         }
 
         graph.addLayerInStack();
 
-        if (successorLocations.isEmpty()) {
+        if (successorSourceToReachedLocations.isEmpty()) {
             return null;
         }
 
-        return new PermutationAutomatonState(successorLocations, newStack);
+        return new PermutationAutomatonState(successorSourceToReachedLocations, newStack);
     }
 
     private PermutationAutomatonState getReturnSuccessor(PermutationAutomatonState state, JSONSymbol retSymbol) {
-        final List<Location> currentLocations = state.getLocations();
         final PermutationAutomatonStackContents currentStack = state.getStack();
         if (currentStack == null) {
             return null;
         }
+
+        final Set<PairLocations> sourceToReachedLocationsBeforeCall = currentStack.peekSourceToReachedLocationsBeforeCall();
         final JSONSymbol callSymbol = currentStack.peekCallSymbol();
 
-        // @formatter:off
-        final Set<Integer> stackSymbols = currentStack.peekLocations().stream()
-            .map(location -> automaton.encodeStackSym(location, callSymbol))
-            .collect(Collectors.toSet());
-        // @formatter:on
+        final Set<PairLocations> sourceToReachedLocations = state.getSourceToReachedLocations();
 
-        final List<Location> successorLocations = new LinkedList<>();
+        final Set<PairLocations> successorSourceToReachedLocations = new HashSet<>();
 
         if (retSymbol.equals(JSONSymbol.closingBracketSymbol)) {
             if (!callSymbol.equals(JSONSymbol.openingBracketSymbol)) {
                 return null;
             }
 
-            // If we have read an array, we take the transitions that pop the symbols that
-            // were added when reading [
-            for (Location location : currentLocations) {
-                for (int stackSym : stackSymbols) {
-                    Location target = automaton.getReturnSuccessor(location, retSymbol, stackSym);
-                    successorLocations.add(target);
-                }
-            }
-        } else if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
-            if (!callSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
-                return null;
-            }
-            final JSONSymbol currentKey = currentStack.getCurrentKey();
-
-            graph.markNodesToReject(currentLocations, currentKey);
-
-            // TODO: check if the size and order of successorsLocations is correct, in a
-            // nested document
-            final Set<Location> acceptingNodes = graph.getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
-                    currentStack.getSeenKeys(), currentStack.peekLocations());
-            for (final Location beforeRetLocation : acceptingNodes) {
-                for (final int stackSym : stackSymbols) {
-                    final Location afterRetLocation = automaton.getReturnSuccessor(beforeRetLocation, retSymbol,
-                            stackSym);
-                    if (afterRetLocation != null) {
-                        successorLocations.add(afterRetLocation);
+            for (final PairLocations sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
+                final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(), callSymbol);
+                for (final PairLocations currentSourceToReached : state.getSourceToReachedLocations()) {
+                    final Location target = automaton.getReturnSuccessor(currentSourceToReached.getReachedLocation(), retSymbol, stackSymbol);
+                    if (target != null) {
+                        successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transition(target));
                     }
                 }
             }
         }
+        else if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
+            if (!callSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
+                return null;
+            }
+            final JSONSymbol currentKey = currentStack.getCurrentKey();
+            graph.markNodesToReject(sourceToReachedLocations, currentKey);
+
+            final Set<Location> acceptingLocations = graph.getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
+                    currentStack.getSeenKeys(), currentStack.peekReachedLocationsBeforeCall());
+
+            for (final PairLocations sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
+                final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(), callSymbol);
+                for (final Location beforeReturnLocation : acceptingLocations) {
+                    final Location target = automaton.getReturnSuccessor(beforeReturnLocation, retSymbol, stackSymbol);
+                    if (target != null) {
+                        successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transition(target));
+                    }
+                }
+            }
+        }
+        else {
+            return null;
+        }
 
         graph.popLayerInStack();
 
-        if (successorLocations.isEmpty()) {
+        if (successorSourceToReachedLocations.isEmpty()) {
             return null;
         }
-        return new PermutationAutomatonState(successorLocations, currentStack.pop());
+        return new PermutationAutomatonState(successorSourceToReachedLocations, currentStack.pop());
     }
 
 }

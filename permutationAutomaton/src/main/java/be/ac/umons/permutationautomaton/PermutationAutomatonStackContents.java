@@ -1,8 +1,8 @@
 package be.ac.umons.permutationautomaton;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -19,19 +19,15 @@ import net.automatalib.automata.vpda.Location;
  * @author Gaëtan Staquet
  */
 class PermutationAutomatonStackContents {
-    private final List<Location> locations;
+    private final Set<PairLocations> sourceToReachedLocationsBeforeCall;
     private final JSONSymbol callSymbol;
     private final Set<JSONSymbol> seenKeys = new HashSet<>();
     private JSONSymbol currentKey = null;
     private @Nullable final PermutationAutomatonStackContents rest;
 
-    private PermutationAutomatonStackContents(final List<Location> locations, final JSONSymbol symbol) {
-        this(locations, symbol, null);
-    }
-
-    private PermutationAutomatonStackContents(final List<Location> locations, final JSONSymbol symbol,
+    private PermutationAutomatonStackContents(final Set<PairLocations> sourceToReachedLocations, final JSONSymbol symbol,
             final @Nullable PermutationAutomatonStackContents rest) {
-        this.locations = locations;
+        this.sourceToReachedLocationsBeforeCall = sourceToReachedLocations;
         this.callSymbol = symbol;
         this.rest = rest;
     }
@@ -41,8 +37,16 @@ class PermutationAutomatonStackContents {
         return seenKeys.add(key);
     }
 
-    public List<Location> peekLocations() {
-        return locations;
+    public Set<PairLocations> peekSourceToReachedLocationsBeforeCall() {
+        return sourceToReachedLocationsBeforeCall;
+    }
+
+    public Set<Location> peekReachedLocationsBeforeCall() {
+        // @formatter:off
+        return sourceToReachedLocationsBeforeCall.stream()
+            .map(pair -> pair.getReachedLocation())
+            .collect(Collectors.toSet());
+        // @formatter:on
     }
 
     public JSONSymbol peekCallSymbol() {
@@ -61,8 +65,8 @@ class PermutationAutomatonStackContents {
         return rest;
     }
 
-    public static PermutationAutomatonStackContents push(final List<Location> locations, final JSONSymbol symbol,
+    public static PermutationAutomatonStackContents push(final Set<PairLocations> sourceToReachedLocations, final JSONSymbol symbol,
             final PermutationAutomatonStackContents rest) {
-        return new PermutationAutomatonStackContents(locations, symbol, rest);
+        return new PermutationAutomatonStackContents(sourceToReachedLocations, symbol, rest);
     }
 }

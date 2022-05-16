@@ -488,5 +488,115 @@ public class TestPermutationAutomaton {
         builder.add(JSONSymbol.toSymbol("bool"));
         builder.add(JSONSymbol.closingCurlyBraceSymbol);
         Assert.assertFalse(permutationAutomaton.accepts(builder.toWord()));
+
+        // Three levels of nesting
+
+        builder.clear();
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("o1"));
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.toSymbol("int"));
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("o1"));
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.toSymbol("int"));
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("o1"));
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.toSymbol("int"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("o2"));
+        builder.add(JSONSymbol.toSymbol("bool"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("k1"));
+        builder.add(JSONSymbol.toSymbol("str"));
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("o2"));
+        builder.add(JSONSymbol.toSymbol("bool"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        Assert.assertTrue(permutationAutomaton.accepts(builder.toWord()));
+    }
+
+    @Test
+    public void testAutomatonWithNestedObjectAndMultipleBranches() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithNestedObjectAndMultipleBranches();
+        PermutationAutomaton permutationAutomaton = new PermutationAutomaton(automaton);
+
+        WordBuilder<JSONSymbol> builder = new WordBuilder<>();
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k1"));
+        builder.add(JSONSymbol.toSymbol("int"));
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.toSymbol("str"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        Assert.assertTrue(permutationAutomaton.accepts(builder.toWord()));
+
+        builder.clear();
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k1"));
+        builder.add(JSONSymbol.toSymbol("bool"));
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.toSymbol("int"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        Assert.assertTrue(permutationAutomaton.accepts(builder.toWord()));
+
+        builder.clear();
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k1"));
+        builder.add(JSONSymbol.toSymbol("str"));
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.toSymbol("int"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("k3"));
+        builder.add(JSONSymbol.toSymbol("int"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        Assert.assertTrue(permutationAutomaton.accepts(builder.toWord()));
+
+        builder.clear();
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k1"));
+        builder.add(JSONSymbol.toSymbol("int"));
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.toSymbol("str"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("k3"));
+        builder.add(JSONSymbol.toSymbol("int"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        Assert.assertFalse(permutationAutomaton.accepts(builder.toWord()));
+
+        builder.clear();
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k1"));
+        builder.add(JSONSymbol.toSymbol("bool"));
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k2"));
+        builder.add(JSONSymbol.toSymbol("str"));
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        Assert.assertFalse(permutationAutomaton.accepts(builder.toWord()));
     }
 }

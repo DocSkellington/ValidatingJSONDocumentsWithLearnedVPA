@@ -4,6 +4,7 @@ import java.util.BitSet;
 import java.util.Objects;
 
 import be.ac.umons.learningjson.JSONSymbol;
+import be.ac.umons.permutationautomaton.PairLocations;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 
@@ -100,5 +101,9 @@ class NodeInGraph {
             return false;
         }
         return stackForRejected.peek();
+    }
+
+    public PairLocations toPairLocations() {
+        return inRelation.toPairLocations();
     }
 }
