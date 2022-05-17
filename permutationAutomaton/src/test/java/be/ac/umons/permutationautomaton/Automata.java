@@ -230,4 +230,55 @@ public class Automata {
 
         return automaton;
     }
+
+    public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithArrays() {
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", ",", "int", "str", "bool");
+        DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
+        JSONSymbol k1Symbol = JSONSymbol.toSymbol("k1"), k2Symbol = JSONSymbol.toSymbol("k2");
+        JSONSymbol intSymbol = JSONSymbol.toSymbol("int"), boolSymbol = JSONSymbol.toSymbol("bool"), strSymbol = JSONSymbol.toSymbol("str");
+
+        List<Location> locations = new ArrayList<>();
+
+        locations.add(automaton.addInitialLocation(false));
+        for (int i = 1 ; i <= 15 ; i++) {
+            locations.add(automaton.addLocation(false));
+        }
+        locations.add(automaton.addLocation(true));
+
+        int q0StackSymbol = automaton.encodeStackSym(locations.get(0), JSONSymbol.openingCurlyBraceSymbol);
+        int q1StackSymbol = automaton.encodeStackSym(locations.get(1), JSONSymbol.openingBracketSymbol);
+        int q3StackSymbol = automaton.encodeStackSym(locations.get(3), JSONSymbol.openingCurlyBraceSymbol);
+        int q7StackSymbol = automaton.encodeStackSym(locations.get(7), JSONSymbol.openingBracketSymbol);
+
+        automaton.setInternalSuccessor(locations.get(0), k1Symbol, locations.get(1));
+        automaton.setInternalSuccessor(locations.get(0), intSymbol, locations.get(2));
+        automaton.setInternalSuccessor(locations.get(0), k2Symbol, locations.get(4));
+        automaton.setInternalSuccessor(locations.get(0), boolSymbol, locations.get(10));
+
+        automaton.setInternalSuccessor(locations.get(2), JSONSymbol.commaSymbol, locations.get(3));
+
+        automaton.setInternalSuccessor(locations.get(4), strSymbol, locations.get(5));
+
+        automaton.setReturnSuccessor(locations.get(5), JSONSymbol.closingCurlyBraceSymbol, q3StackSymbol, locations.get(6));
+
+        automaton.setInternalSuccessor(locations.get(6), JSONSymbol.commaSymbol, locations.get(7));
+
+        automaton.setReturnSuccessor(locations.get(10), JSONSymbol.closingBracketSymbol, q7StackSymbol, locations.get(11));
+
+        automaton.setInternalSuccessor(locations.get(11), JSONSymbol.commaSymbol, locations.get(12));
+
+        automaton.setInternalSuccessor(locations.get(12), boolSymbol, locations.get(8));
+
+        automaton.setReturnSuccessor(locations.get(8), JSONSymbol.closingBracketSymbol, q1StackSymbol, locations.get(9));
+
+        automaton.setInternalSuccessor(locations.get(9), JSONSymbol.commaSymbol, locations.get(13));
+
+        automaton.setInternalSuccessor(locations.get(13), k2Symbol, locations.get(14));
+
+        automaton.setInternalSuccessor(locations.get(14), strSymbol, locations.get(15));
+
+        automaton.setReturnSuccessor(locations.get(15), JSONSymbol.closingCurlyBraceSymbol, q0StackSymbol, locations.get(16));
+
+        return automaton;
+    }
 }
