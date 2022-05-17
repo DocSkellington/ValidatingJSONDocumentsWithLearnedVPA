@@ -21,8 +21,8 @@ limitations under the License.
     <!--
     ================================= PROJECT INFO ==============================
     -->
-    <groupId>be.ac.umons.permutationautomaton</groupId>
-    <artifactId>permutation-automaton</artifactId>
+    <groupId>be.ac.umons.learningjson</groupId>
+    <artifactId>permutationautomaton</artifactId>
     <version>1.0</version>
 
     <name>Permutation automaton</name>

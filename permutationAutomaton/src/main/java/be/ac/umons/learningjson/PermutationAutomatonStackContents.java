@@ -1,4 +1,4 @@
-package be.ac.umons.permutationautomaton;
+package be.ac.umons.learningjson;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.Location;
 
 /**

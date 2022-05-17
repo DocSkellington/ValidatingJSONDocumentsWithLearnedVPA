@@ -1,10 +1,10 @@
-package be.ac.umons.permutationautomaton.relation;
+package be.ac.umons.learningjson.relation;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import be.ac.umons.learningjson.Automata;
 import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.permutationautomaton.Automata;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.VPDAlphabet;

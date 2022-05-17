@@ -1,10 +1,9 @@
-package be.ac.umons.permutationautomaton;
+package be.ac.umons.learningjson;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.permutationautomaton.relation.ReachabilityGraph;
+import be.ac.umons.learningjson.relation.ReachabilityGraph;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.VPDAlphabet;

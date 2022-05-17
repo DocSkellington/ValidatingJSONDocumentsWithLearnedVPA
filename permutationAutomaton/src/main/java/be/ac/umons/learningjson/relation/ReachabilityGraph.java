@@ -1,4 +1,4 @@
-package be.ac.umons.permutationautomaton.relation;
+package be.ac.umons.learningjson.relation;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -18,7 +18,7 @@ import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.Traverser;
 
 import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.permutationautomaton.PairSourceToReached;
+import be.ac.umons.learningjson.PairSourceToReached;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 

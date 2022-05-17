@@ -3,4 +3,4 @@
  * 
  * @author Gaëtan Staquet
  */
-package be.ac.umons.permutationautomaton.relation;
+package be.ac.umons.learningjson.relation;

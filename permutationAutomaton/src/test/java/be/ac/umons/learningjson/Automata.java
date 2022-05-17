@@ -1,9 +1,8 @@
-package be.ac.umons.permutationautomaton;
+package be.ac.umons.learningjson;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.Alphabet;

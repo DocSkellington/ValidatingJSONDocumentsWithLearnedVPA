@@ -1,4 +1,4 @@
-package be.ac.umons.permutationautomaton.relation;
+package be.ac.umons.learningjson.relation;
 
 import java.io.IOException;
 import java.util.Set;
@@ -9,8 +9,8 @@ import com.google.common.graph.ImmutableGraph;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import be.ac.umons.learningjson.Automata;
 import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.permutationautomaton.Automata;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 

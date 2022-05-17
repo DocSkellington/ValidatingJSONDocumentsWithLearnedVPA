@@ -1,4 +1,4 @@
-package be.ac.umons.permutationautomaton;
+package be.ac.umons.learningjson;
 
 import java.util.Collection;
 import java.util.Objects;

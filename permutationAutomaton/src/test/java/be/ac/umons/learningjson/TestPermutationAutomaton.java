@@ -1,9 +1,8 @@
-package be.ac.umons.permutationautomaton;
+package be.ac.umons.learningjson;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
