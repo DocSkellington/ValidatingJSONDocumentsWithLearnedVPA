@@ -4,7 +4,7 @@ import java.util.BitSet;
 import java.util.Objects;
 
 import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.permutationautomaton.PairLocations;
+import be.ac.umons.permutationautomaton.PairSourceToReached;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 
@@ -25,19 +25,24 @@ class NodeInGraph {
 
     private final InRelation inRelation;
     private final BitSet acceptingForLocation;
+    private final BitSet onPathToAcceptingForLocation;
     private NodeStackContents stackForRejected;
 
     public NodeInGraph(InRelation inRelation, DefaultOneSEVPA<JSONSymbol> automaton) {
         this.inRelation = inRelation;
         this.acceptingForLocation = new BitSet(automaton.size());
+        this.onPathToAcceptingForLocation = new BitSet(automaton.size());
         this.stackForRejected = null;
+
         final JSONSymbol callSymbol = JSONSymbol.openingCurlyBraceSymbol;
         final JSONSymbol returnSymbol = JSONSymbol.closingCurlyBraceSymbol;
         final int returnSymbolIndex = automaton.getInputAlphabet().getReturnSymbolIndex(returnSymbol);
+
         for (int i = 0; i < automaton.size(); i++) {
             final int stackSym = automaton.encodeStackSym(automaton.getLocation(i), callSymbol);
             if (inRelation.getTarget().getReturnSuccessor(returnSymbolIndex, stackSym) != null) {
                 acceptingForLocation.set(i);
+                onPathToAcceptingForLocation.set(i);
             }
         }
     }
@@ -55,11 +60,15 @@ class NodeInGraph {
     }
 
     public boolean isAcceptingForLocation(Location location) {
-        return isAcceptingForLocation(location.getIndex());
+        return acceptingForLocation.get(location.getIndex());
     }
 
-    public boolean isAcceptingForLocation(int locId) {
-        return acceptingForLocation.get(locId);
+    public boolean isOnPathToAcceptingForLocation(Location location) {
+        return onPathToAcceptingForLocation.get(location.getIndex());
+    }
+
+    void setOnPathToAcceptingLocation(Location location) {
+        onPathToAcceptingForLocation.set(location.getIndex());
     }
 
     @Override
@@ -92,7 +101,7 @@ class NodeInGraph {
         stackForRejected = stackForRejected.pop();
     }
 
-    public void markRejected() {
+    void markRejected() {
         stackForRejected.markRejected();
     }
 
@@ -103,7 +112,7 @@ class NodeInGraph {
         return stackForRejected.peek();
     }
 
-    public PairLocations toPairLocations() {
-        return inRelation.toPairLocations();
+    public PairSourceToReached toPairLocations() {
+        return PairSourceToReached.of(inRelation.getStart(), inRelation.getTarget());
     }
 }

@@ -15,9 +15,10 @@ import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.ImmutableGraph;
+import com.google.common.graph.Traverser;
 
 import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.permutationautomaton.PairLocations;
+import be.ac.umons.permutationautomaton.PairSourceToReached;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 
@@ -105,6 +106,23 @@ public class ReachabilityGraph {
         }
 
         this.graph = builder.build();
+
+        propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
+    }
+
+    private void propagateIsOnPathToAcceptingForLocations(Collection<Location> locations) {
+        Iterable<NodeInGraph> exploration = Traverser.forGraph(graph).depthFirstPostOrder(startingNodes);
+
+        for (NodeInGraph node : exploration) {
+            Set<NodeInGraph> successors = graph.successors(node);
+            for (NodeInGraph successor : successors) {
+                for (Location location : locations) {
+                    if (successor.isOnPathToAcceptingForLocation(location)) {
+                        node.setOnPathToAcceptingLocation(location);
+                    }
+                }
+            }
+        }
     }
 
     ImmutableGraph<NodeInGraph> getGraph() {
@@ -141,7 +159,7 @@ public class ReachabilityGraph {
      * @return
      */
     public boolean isAcceptingForLocation(InRelation inRelation, Location locationBeforeCall) {
-        return getNode(inRelation).isAcceptingForLocation(locationBeforeCall.getIndex());
+        return getNode(inRelation).isAcceptingForLocation(locationBeforeCall);
     }
 
     private List<NodeInGraph> getNodesForKey(JSONSymbol key) {
@@ -190,9 +208,10 @@ public class ReachabilityGraph {
      * the number of nodes having {@code lastKeyProcessed} as their symbol.
      * 
      * @param sourceToReachedLocations The locations reached
-     * @param lastKeyProcessed The last key that was read
+     * @param lastKeyProcessed         The last key that was read
      */
-    public void markNodesToReject(final Set<PairLocations> sourceToReachedLocations, final JSONSymbol lastKeyProcessed) {
+    public void markNodesToReject(final Set<PairSourceToReached> sourceToReachedLocations,
+            final JSONSymbol lastKeyProcessed) {
         final List<NodeInGraph> nodesForKey = getNodesForKey(lastKeyProcessed);
 
         for (NodeInGraph node : nodesForKey) {
@@ -220,23 +239,34 @@ public class ReachabilityGraph {
      */
     public Set<Location> getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(Set<JSONSymbol> seenKeys,
             Collection<Location> locationsBeforeCall) {
-        final Set<Location> acceptingNodes = new HashSet<>();
+        final Set<Location> locationsReadingClosing = new HashSet<>();
         for (NodeInGraph initial : startingNodes) {
-            depthFirstExploreForAcceptingNodes(initial, new LinkedList<>(), acceptingNodes, seenKeys,
+            depthFirstExploreForAcceptingNodes(initial, new LinkedList<>(), locationsReadingClosing, seenKeys,
                     locationsBeforeCall);
         }
-        return acceptingNodes;
+        return locationsReadingClosing;
     }
 
     private void depthFirstExploreForAcceptingNodes(final NodeInGraph current,
-            final LinkedList<JSONSymbol> seenKeysInExploration, final Set<Location> acceptingLocations,
+            final LinkedList<JSONSymbol> seenKeysInExploration, final Set<Location> locationsReadingClosing,
             final Set<JSONSymbol> seenKeysInAutomaton, final Collection<Location> locationsBeforeCall) {
+        // The path has a node that is rejected
         if (current.isRejected()) {
             return;
         }
 
-        // TODO: stop earlier if we know that none of the successor can pop (p, {)
+        // We know we will never be able to reach a state from which we can read a
+        // return symbol matching the locations before the call
+        // @formatter:off
+        boolean canReachAnAcceptingLocation = locationsBeforeCall.stream()
+            .filter(location -> current.isOnPathToAcceptingForLocation(location))
+            .findAny().isPresent();
+        // @formatter:on
+        if (!canReachAnAcceptingLocation) {
+            return;
+        }
 
+        // The path contains a node reading a key that was not seen in the automaton
         final JSONSymbol key = current.getInRelation().getSymbol();
         if (!seenKeysInAutomaton.contains(key)) {
             return;
@@ -258,18 +288,19 @@ public class ReachabilityGraph {
                 for (final JSONSymbol seenKey : seenKeysInExploration) {
                     if (!seenKeysInAutomaton.contains(seenKey)) {
                         allKeys = false;
+                        break;
                     }
                 }
 
                 if (allKeys) {
-                    acceptingLocations.add(current.getTargetLocation());
+                    locationsReadingClosing.add(current.getTargetLocation());
                 }
             }
         }
 
         final Set<NodeInGraph> successors = graph.successors(current);
         for (final NodeInGraph successor : successors) {
-            depthFirstExploreForAcceptingNodes(successor, seenKeysInExploration, acceptingLocations,
+            depthFirstExploreForAcceptingNodes(successor, seenKeysInExploration, locationsReadingClosing,
                     seenKeysInAutomaton, locationsBeforeCall);
         }
 

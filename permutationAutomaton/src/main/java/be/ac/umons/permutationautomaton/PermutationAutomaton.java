@@ -14,9 +14,8 @@ import net.automatalib.words.VPDAlphabet;
  * document.
  *
  * It is constructed from a visibly pushdown automaton (VPA). Such an automaton
- * can be
- * constructed by hand or learned through an active learning algorithm (see the
- * other project in the repository).
+ * can be constructed by hand or learned through an active learning algorithm
+ * (see the other project in the repository).
  * 
  * A JSON document is accepted if there is a path from the initial location with
  * empty stack to an accepting location with empty stack.
@@ -43,7 +42,7 @@ public class PermutationAutomaton {
     private PermutationAutomatonState getInitialState() {
         final Set<Location> setWithInitialLocation = new HashSet<>();
         setWithInitialLocation.add(automaton.getInitialLocation());
-        return new PermutationAutomatonState(PairLocations.getIdentityPairs(setWithInitialLocation), null);
+        return new PermutationAutomatonState(PairSourceToReached.getIdentityPairs(setWithInitialLocation), null);
     }
 
     public boolean accepts(Iterable<JSONSymbol> input) {
@@ -54,6 +53,7 @@ public class PermutationAutomaton {
         if (state.getStack() != null) {
             return false;
         }
+        // Do we have at least one accepting location?
         // @formatter:off
         return state.getSourceToReachedLocations().stream()
             .map(pair -> pair.getReachedLocation())
@@ -64,20 +64,22 @@ public class PermutationAutomaton {
 
     PermutationAutomatonState getState(Iterable<JSONSymbol> input) {
         PermutationAutomatonState state = getInitialState();
-        JSONSymbol previousSymbol = null;
+        JSONSymbol symbolToRead = null;
         boolean ready = false;
-        for (JSONSymbol symbol : input) {
+        for (JSONSymbol nextSymbol : input) {
             if (ready) {
-                state = getSuccessor(state, previousSymbol, symbol);
+                state = getSuccessor(state, symbolToRead, nextSymbol);
                 if (state == null) {
                     return null;
                 }
             } else {
                 ready = true;
             }
-            previousSymbol = symbol;
+            symbolToRead = nextSymbol;
         }
-        state = getSuccessor(state, previousSymbol, null);
+        if (symbolToRead != null) {
+            state = getSuccessor(state, symbolToRead, null);
+        }
         return state;
     }
 
@@ -106,12 +108,12 @@ public class PermutationAutomaton {
             return getCommaInObjectSuccessor(state, nextSymbol);
         }
 
-
-        final Set<PairLocations> sourceToSuccessorLocations = new HashSet<>();
-        for (final PairLocations sourceToReachedLocation : state.getSourceToReachedLocations()) {
-            final Location reachedAfterTransition = automaton.getInternalSuccessor(sourceToReachedLocation.getReachedLocation(), currentIntSymbol);
+        final Set<PairSourceToReached> sourceToSuccessorLocations = new HashSet<>();
+        for (final PairSourceToReached sourceToReachedLocation : state.getSourceToReachedLocations()) {
+            final Location reachedAfterTransition = automaton
+                    .getInternalSuccessor(sourceToReachedLocation.getReachedLocation(), currentIntSymbol);
             if (reachedAfterTransition != null) {
-                sourceToSuccessorLocations.add(sourceToReachedLocation.transition(reachedAfterTransition));
+                sourceToSuccessorLocations.add(sourceToReachedLocation.transitionToReached(reachedAfterTransition));
             }
         }
 
@@ -136,22 +138,25 @@ public class PermutationAutomaton {
         if (successorLocations.isEmpty()) {
             return null;
         }
-        return new PermutationAutomatonState(PairLocations.getIdentityPairs(successorLocations), currentStack);
+        return new PermutationAutomatonState(PairSourceToReached.getIdentityPairs(successorLocations), currentStack);
     }
 
     private PermutationAutomatonState getCallSuccessor(PermutationAutomatonState state, JSONSymbol currentCallSymbol,
             JSONSymbol nextSymbol) {
-        final Set<PairLocations> sourceToReachedLocations = state.getSourceToReachedLocations();
+        final Set<PairSourceToReached> sourceToReachedLocations = state.getSourceToReachedLocations();
         final PermutationAutomatonStackContents currentStack = state.getStack();
-        final PermutationAutomatonStackContents newStack = PermutationAutomatonStackContents.push(sourceToReachedLocations, currentCallSymbol, currentStack);
+        final PermutationAutomatonStackContents newStack = PermutationAutomatonStackContents
+                .push(sourceToReachedLocations, currentCallSymbol, currentStack);
 
-        final Set<PairLocations> successorSourceToReachedLocations;
+        final Set<PairSourceToReached> successorSourceToReachedLocations;
         if (currentCallSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
-            successorSourceToReachedLocations = PairLocations.getIdentityPairs(graph.getLocationsReadingKey(nextSymbol));
+            successorSourceToReachedLocations = PairSourceToReached
+                    .getIdentityPairs(graph.getLocationsReadingKey(nextSymbol));
             newStack.addKey(nextSymbol);
         } else {
             successorSourceToReachedLocations = new HashSet<>();
-            successorSourceToReachedLocations.add(PairLocations.of(automaton.getInitialLocation(), automaton.getInitialLocation()));
+            successorSourceToReachedLocations
+                    .add(PairSourceToReached.of(automaton.getInitialLocation(), automaton.getInitialLocation()));
         }
 
         graph.addLayerInStack();
@@ -169,49 +174,52 @@ public class PermutationAutomaton {
             return null;
         }
 
-        final Set<PairLocations> sourceToReachedLocationsBeforeCall = currentStack.peekSourceToReachedLocationsBeforeCall();
+        final Set<PairSourceToReached> sourceToReachedLocationsBeforeCall = currentStack
+                .peekSourceToReachedLocationsBeforeCall();
         final JSONSymbol callSymbol = currentStack.peekCallSymbol();
 
-        final Set<PairLocations> sourceToReachedLocations = state.getSourceToReachedLocations();
+        final Set<PairSourceToReached> sourceToReachedLocations = state.getSourceToReachedLocations();
 
-        final Set<PairLocations> successorSourceToReachedLocations = new HashSet<>();
+        final Set<PairSourceToReached> successorSourceToReachedLocations = new HashSet<>();
 
         if (retSymbol.equals(JSONSymbol.closingBracketSymbol)) {
             if (!callSymbol.equals(JSONSymbol.openingBracketSymbol)) {
                 return null;
             }
 
-            for (final PairLocations sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
-                final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(), callSymbol);
-                for (final PairLocations currentSourceToReached : state.getSourceToReachedLocations()) {
-                    final Location target = automaton.getReturnSuccessor(currentSourceToReached.getReachedLocation(), retSymbol, stackSymbol);
+            for (final PairSourceToReached sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
+                final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),
+                        callSymbol);
+                for (final PairSourceToReached currentSourceToReached : state.getSourceToReachedLocations()) {
+                    final Location target = automaton.getReturnSuccessor(currentSourceToReached.getReachedLocation(),
+                            retSymbol, stackSymbol);
                     if (target != null) {
-                        successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transition(target));
+                        successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transitionToReached(target));
                     }
                 }
             }
-        }
-        else if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
+        } else if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
             if (!callSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
                 return null;
             }
             final JSONSymbol currentKey = currentStack.getCurrentKey();
             graph.markNodesToReject(sourceToReachedLocations, currentKey);
 
-            final Set<Location> acceptingLocations = graph.getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
-                    currentStack.getSeenKeys(), currentStack.peekReachedLocationsBeforeCall());
+            final Set<Location> acceptingLocations = graph
+                    .getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
+                            currentStack.getSeenKeys(), currentStack.peekReachedLocationsBeforeCall());
 
-            for (final PairLocations sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
-                final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(), callSymbol);
+            for (final PairSourceToReached sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
+                final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),
+                        callSymbol);
                 for (final Location beforeReturnLocation : acceptingLocations) {
                     final Location target = automaton.getReturnSuccessor(beforeReturnLocation, retSymbol, stackSymbol);
                     if (target != null) {
-                        successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transition(target));
+                        successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transitionToReached(target));
                     }
                 }
             }
-        }
-        else {
+        } else {
             return null;
         }
 
