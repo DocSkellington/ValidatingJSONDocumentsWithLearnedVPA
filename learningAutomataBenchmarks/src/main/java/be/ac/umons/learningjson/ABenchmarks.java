@@ -1,4 +1,4 @@
-package be.ac.umons.vpdajson;
+package be.ac.umons.learningjson;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,7 +16,6 @@ import org.apache.commons.csv.CSVPrinter;
 import be.ac.umons.jsonschematools.AbstractConstants;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.learningjson.JSONSymbol;
 import de.learnlib.filter.statistic.Counter;
 import de.learnlib.util.statistics.SimpleProfiler;
 import net.automatalib.graphs.Graph;

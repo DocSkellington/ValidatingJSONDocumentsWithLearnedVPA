@@ -1,4 +1,4 @@
-package be.ac.umons.vpdajson;
+package be.ac.umons.learningjson;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,7 +19,6 @@ import com.google.common.base.Stopwatch;
 
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.learningjson.JSONSymbol;
 import be.ac.umons.learningjson.oracles.JSONMembershipOracle;
 import be.ac.umons.learningjson.oracles.JSONPartialEquivalenceOracle;
 import be.ac.umons.learningjson.oracles.VCAJSONEquivalenceOracle;

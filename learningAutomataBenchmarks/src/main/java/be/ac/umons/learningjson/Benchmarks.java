@@ -1,4 +1,4 @@
-package be.ac.umons.vpdajson;
+package be.ac.umons.learningjson;
 
 import java.io.IOException;
 import java.net.URL;
