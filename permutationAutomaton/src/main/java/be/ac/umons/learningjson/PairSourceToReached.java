@@ -11,9 +11,9 @@ import net.automatalib.automata.vpda.Location;
  * A pair of two locations such that it is possible to go from the first to the
  * second.
  * 
- * Such a pair is used in the {@link PermutationAutomaton} to store the states
- * from which we started reading a word and the states reached after reading
- * that word.
+ * Such a pair is used in the {@link PermutationAutomaton} to store the
+ * locations from which we started reading a word and the locations reached
+ * after reading that word.
  * 
  * @author Gaëtan Staquet
  */
