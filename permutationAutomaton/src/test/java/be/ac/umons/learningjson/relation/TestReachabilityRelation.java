@@ -1,5 +1,7 @@
 package be.ac.umons.learningjson.relation;
 
+import java.util.Set;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -131,6 +133,8 @@ public class TestReachabilityRelation {
 
         Assert.assertEquals(wellMatchedRelation.size(), 1);
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(6)));
+        
+        Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
     }
 
     @Test
@@ -145,6 +149,31 @@ public class TestReachabilityRelation {
         Assert.assertEquals(wellMatchedRelation.size(), 2);
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(11)));
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(7)));
+        
+        System.out.println(wellMatchedRelation);
+        Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
+    }
+
+    @Test
+    public void testAutomatonWithOptionalKeysAndExplicitBinStateWellMatchedRelation() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
+
+        ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
+        ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
+                commaRelation, internalRelation);
+
+        System.out.println(wellMatchedRelation);
+        Assert.assertEquals(wellMatchedRelation.size(), 15);
+        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(11)));
+        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(7)));
+        for (Location source : automaton.getLocations()) {
+            Assert.assertTrue(wellMatchedRelation.areInRelation(source, JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(12)));
+        }
+        
+        Set<Location> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
+        Assert.assertEquals(1, binLocations.size());
+        Assert.assertTrue(binLocations.contains(automaton.getLocation(12)));
     }
 
     @Test
@@ -171,5 +200,7 @@ public class TestReachabilityRelation {
         Assert.assertEquals(wellMatchedRelation.size(), 2);
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(6)));
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), JSONSymbol.openingCurlyBraceSymbol, automaton.getLocation(5)));
+        
+        Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
     }
 }

@@ -58,6 +58,8 @@ public class ReachabilityGraph {
         final ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
                 commaRelation, internalRelation);
 
+        final Set<Location> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
+
         final ReachabilityRelation unionRelation = internalRelation.union(wellMatchedRelation);
 
         final ReachabilityRelation keyValueRelation = unionRelation.compose(unionRelation);
@@ -75,7 +77,11 @@ public class ReachabilityGraph {
         // We create the nodes
         final Map<InRelation, NodeInGraph> relationToNode = new HashMap<>();
         for (final InRelation inRel : keyValueRelation) {
-            final NodeInGraph node = new NodeInGraph(inRel, automaton);
+            if (binLocations.contains(inRel.getStart()) || binLocations.contains(inRel.getTarget())) {
+                continue;
+            }
+
+            final NodeInGraph node = new NodeInGraph(inRel, automaton, binLocations);
             relationToNode.put(inRel, node);
             builder.addNode(node);
 
@@ -98,7 +104,13 @@ public class ReachabilityGraph {
         }
         // We create the edges
         for (final InRelation source : keyValueRelation) {
+            if (binLocations.contains(source.getStart()) || binLocations.contains(source.getTarget())) {
+                continue;
+            }
             for (final InRelation target : keyValueRelation) {
+                if (binLocations.contains(target.getStart()) || binLocations.contains(target.getTarget())) {
+                    continue;
+                }
                 if (commaRelation.areInRelation(source.getTarget(), JSONSymbol.commaSymbol, target.getStart())) {
                     builder.putEdge(relationToNode.get(source), relationToNode.get(target));
                 }

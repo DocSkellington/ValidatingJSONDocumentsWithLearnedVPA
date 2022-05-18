@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
-import net.automatalib.commons.util.Pair;
 import net.automatalib.words.Alphabet;
 
 /**
@@ -76,7 +75,11 @@ class ReachabilityRelation implements Iterable<InRelation> {
     }
 
     private void add(final InRelation inRel) {
-        relation.add(inRel);
+        if (relation.contains(inRel)) {
+            mergeSeenLocations(inRel);
+        } else {
+            relation.add(inRel);
+        }
     }
 
     /**
@@ -96,7 +99,46 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param rel The relation to take the triplets from
      */
     private void addAll(final ReachabilityRelation rel) {
-        this.relation.addAll(rel.relation);
+        rel.relation.forEach(r -> this.add(r));
+    }
+
+    private void mergeSeenLocations(final InRelation inRel) {
+        for (InRelation alreadyInRelation : relation) {
+            if (Objects.equals(inRel, alreadyInRelation)) {
+                alreadyInRelation.addSeenLocations(inRel.getLocationsSeenBetweenStartAndTarget());
+                return;
+            }
+        }
+    }
+
+    private void mergeSeenLocations(final ReachabilityRelation rel) {
+        rel.forEach(r -> mergeSeenLocations(r));
+    }
+
+    private Set<Location> allLocationsOnAcceptingPath(DefaultOneSEVPA<JSONSymbol> automaton) {
+        final Set<Location> locations = new HashSet<>();
+        for (final InRelation inRelation : this) {
+            if (inRelation.getStart().equals(automaton.getInitialLocation()) && inRelation.getTarget().isAccepting()) {
+                locations.addAll(inRelation.getLocationsSeenBetweenStartAndTarget());
+            }
+        }
+        return locations;
+    }
+
+    /**
+     * Based on this relation, identifies all the bin locations in the automaton.
+     * 
+     * Using this relation, we can find all locations that are on a path from the
+     * initial location to an accepting locations. If one location of the automaton
+     * is not among these locations, it is a bin location.
+     * 
+     * @param automaton The VPA
+     * @return A set with the bin locations
+     */
+    Set<Location> identifyBinLocations(DefaultOneSEVPA<JSONSymbol> automaton) {
+        Set<Location> binLocations = new HashSet<>(automaton.getLocations());
+        binLocations.removeAll(allLocationsOnAcceptingPath(automaton));
+        return binLocations;
     }
 
     /**
@@ -106,7 +148,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param other The other relation
      * @return The union of this and other
      */
-    public ReachabilityRelation union(ReachabilityRelation other) {
+    ReachabilityRelation union(ReachabilityRelation other) {
         ReachabilityRelation newRelation = new ReachabilityRelation();
         newRelation.addAll(this);
         newRelation.addAll(other);
@@ -140,13 +182,16 @@ class ReachabilityRelation implements Iterable<InRelation> {
                 continue;
             }
 
-            // @formatter:off
-            this.relation.stream()
-                .filter(inRel -> Objects.equals(inRel.getStart(), callTarget))
-                .map(inRel -> Pair.of(inRel.getSymbol(), inRel.getTarget().getReturnSuccessor(returnSymbolIndex, stackSym)))
-                .filter(pair -> pair.getSecond() != null)
-                .forEach(pair -> newRelation.add(start, callSymbol, pair.getSecond()));
-            // @formatter:on
+            for (final InRelation inRelation : relation) {
+                if (Objects.equals(inRelation.getStart(), callTarget)) {
+                    final Location target = inRelation.getTarget().getReturnSuccessor(returnSymbolIndex, stackSym);
+                    if (target != null) {
+                        final InRelation newInRelation = InRelation.of(start, callSymbol, target);
+                        newInRelation.addSeenLocations(inRelation.getLocationsSeenBetweenStartAndTarget());
+                        newRelation.add(newInRelation);
+                    }
+                }
+            }
         }
 
         return newRelation;
@@ -168,7 +213,11 @@ class ReachabilityRelation implements Iterable<InRelation> {
         for (final InRelation inRelThis : this) {
             for (final InRelation inRelOther : other) {
                 if (Objects.equals(inRelThis.getTarget(), inRelOther.getStart())) {
-                    relation.add(inRelThis.getStart(), inRelThis.getSymbol(), inRelOther.getTarget());
+                    final InRelation newInRelation = InRelation.of(inRelThis.getStart(), inRelThis.getSymbol(),
+                            inRelOther.getTarget());
+                    newInRelation.addSeenLocations(inRelThis.getLocationsSeenBetweenStartAndTarget());
+                    newInRelation.addSeenLocations(inRelOther.getLocationsSeenBetweenStartAndTarget());
+                    relation.add(newInRelation);
                 }
             }
         }
@@ -260,12 +309,19 @@ class ReachabilityRelation implements Iterable<InRelation> {
                 final ReachabilityRelation bracketPost = r.post(automaton, JSONSymbol.openingBracketSymbol,
                         JSONSymbol.closingBracketSymbol);
 
-                newRelations.add(curlyPost);
-                newRelations.add(bracketPost);
+                addRelationToSet(newRelations, curlyPost);
+                addRelationToSet(newRelations, bracketPost);
+            }
+            for (final ReachabilityRelation alreadyInRelations : relations) {
+                for (final ReachabilityRelation inNewRelations : newRelations) {
+                    alreadyInRelations.mergeSeenLocations(inNewRelations);
+                }
             }
             newRelations.removeAll(relations);
 
-            relations.addAll(newRelations);
+            for (final ReachabilityRelation inNewRelations : newRelations) {
+                addRelationToSet(relations, inNewRelations);
+            }
             newRelations.removeAll(composedRelations);
 
             if (newRelations.isEmpty()) {
@@ -301,8 +357,8 @@ class ReachabilityRelation implements Iterable<InRelation> {
 
             final Set<ReachabilityRelation> newRelations = new HashSet<>();
             for (final ReachabilityRelation relation : allComposedRelations) {
-                newRelations.add(relation.compose(relationToCompose));
-                newRelations.add(relationToCompose.compose(relation));
+                addRelationToSet(newRelations, relation.compose(relationToCompose));
+                addRelationToSet(newRelations, relationToCompose.compose(relation));
             }
 
             for (ReachabilityRelation relation : newRelations) {
@@ -311,9 +367,21 @@ class ReachabilityRelation implements Iterable<InRelation> {
                 }
             }
 
-            allComposedRelations.addAll(newRelations);
+            for (final ReachabilityRelation inNewRelations : newRelations) {
+                addRelationToSet(allComposedRelations, inNewRelations);
+            }
         }
 
         return allComposedRelations;
+    }
+
+    private static void addRelationToSet(final Set<ReachabilityRelation> set, final ReachabilityRelation relation) {
+        for (final ReachabilityRelation inSet : set) {
+            if (Objects.equals(inSet, relation)) {
+                inSet.mergeSeenLocations(relation);
+                return;
+            }
+        }
+        set.add(relation);
     }
 }

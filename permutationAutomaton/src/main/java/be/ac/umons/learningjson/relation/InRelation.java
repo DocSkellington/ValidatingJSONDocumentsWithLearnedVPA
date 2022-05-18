@@ -1,6 +1,8 @@
 package be.ac.umons.learningjson.relation;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.Location;
@@ -9,12 +11,16 @@ import net.automatalib.automata.vpda.Location;
  * A triplet {@code (s, k, s')} such that the VPA can go from {@code s} to
  * {@code s'} by reading a well-matched word starting with {@code k}.
  * 
+ * The set of all locations seen when going from s to s' is stored alongside the
+ * triplet.
+ * 
  * @author Gaëtan Staquet
  */
 class InRelation {
     private final Location start;
     private final JSONSymbol symbol;
     private final Location target;
+    private final Set<Location> locationsSeenBetweenStartAndTarget = new HashSet<>();
 
     /**
      * Creates a triplet.
@@ -33,6 +39,8 @@ class InRelation {
         this.start = start;
         this.symbol = symbol;
         this.target = target;
+        this.locationsSeenBetweenStartAndTarget.add(start);
+        this.locationsSeenBetweenStartAndTarget.add(target);
     }
 
     @Override
@@ -56,7 +64,7 @@ class InRelation {
 
     @Override
     public String toString() {
-        return "(" + start + ", " + symbol + ", " + target + ")";
+        return "(" + start + ", " + symbol + ", " + target + ", " + locationsSeenBetweenStartAndTarget + ")";
     }
 
     public Location getStart() {
@@ -69,5 +77,13 @@ class InRelation {
 
     public Location getTarget() {
         return target;
+    }
+
+    public Set<Location> getLocationsSeenBetweenStartAndTarget() {
+        return locationsSeenBetweenStartAndTarget;
+    }
+
+    public void addSeenLocations(Set<Location> locations) {
+        locationsSeenBetweenStartAndTarget.addAll(locations);
     }
 }

@@ -141,6 +141,74 @@ public class Automata {
         return automaton;
     }
 
+    public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithOptionalKeysAndExplicitBinState() {
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "o1", "o2", ",", "int", "str", "bool");
+        DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
+
+        List<Location> locations = new ArrayList<>();
+        locations.add(automaton.addInitialLocation(false));
+        for (int i = 1 ; i <= 10 ; i++) {
+            locations.add(automaton.addLocation(false));
+        }
+        locations.add(automaton.addLocation(true));
+        locations.add(automaton.addLocation(false));
+
+        List<Integer> curlyStackSymbols = new ArrayList<>();
+        List<Integer> bracketStackSymbols = new ArrayList<>();
+        for (Location location : locations) {
+            curlyStackSymbols.add(automaton.encodeStackSym(location, JSONSymbol.openingCurlyBraceSymbol));
+            bracketStackSymbols.add(automaton.encodeStackSym(location, JSONSymbol.openingBracketSymbol));
+        }
+
+        automaton.setInternalSuccessor(locations.get(0), JSONSymbol.toSymbol("k1"), locations.get(1));
+        automaton.setInternalSuccessor(locations.get(0), JSONSymbol.toSymbol("k2"), locations.get(5));
+
+        automaton.setInternalSuccessor(locations.get(1), JSONSymbol.toSymbol("str"), locations.get(2));
+
+        automaton.setReturnSuccessor(locations.get(2), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(0), locations.get(11));
+        automaton.setInternalSuccessor(locations.get(2), JSONSymbol.commaSymbol, locations.get(3));
+
+        automaton.setInternalSuccessor(locations.get(3), JSONSymbol.toSymbol("o1"), locations.get(4));
+
+        automaton.setInternalSuccessor(locations.get(5), JSONSymbol.toSymbol("int"), locations.get(6));
+        
+        automaton.setReturnSuccessor(locations.get(6), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(4), locations.get(7));
+        automaton.setInternalSuccessor(locations.get(6), JSONSymbol.commaSymbol, locations.get(3));
+
+        automaton.setReturnSuccessor(locations.get(7), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(0), locations.get(11));
+        automaton.setReturnSuccessor(locations.get(7), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(4), locations.get(7));
+        automaton.setInternalSuccessor(locations.get(7), JSONSymbol.commaSymbol, locations.get(8));
+
+        automaton.setInternalSuccessor(locations.get(8), JSONSymbol.toSymbol("o2"), locations.get(9));
+
+        automaton.setInternalSuccessor(locations.get(9), JSONSymbol.toSymbol("bool"), locations.get(10));
+
+        automaton.setReturnSuccessor(locations.get(10), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(0), locations.get(11));
+        automaton.setReturnSuccessor(locations.get(10), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(4), locations.get(7));
+
+        for (Location source : locations) {
+            for (JSONSymbol internalSymbol : alphabet.getInternalAlphabet()) {
+                if (automaton.getInternalSuccessor(source, internalSymbol) == null) {
+                    automaton.setInternalSuccessor(source, internalSymbol, locations.get(12));
+                }
+            }
+            for (JSONSymbol returnSymbol : alphabet.getReturnAlphabet()) {
+                for (int stackSymbol : curlyStackSymbols) {
+                    if (automaton.getReturnSuccessor(source, returnSymbol, stackSymbol) == null) {
+                        automaton.setReturnSuccessor(source, returnSymbol, stackSymbol, locations.get(12));
+                    }
+                }
+                for (int stackSymbol : bracketStackSymbols) {
+                    if (automaton.getReturnSuccessor(source, returnSymbol, stackSymbol) == null) {
+                        automaton.setReturnSuccessor(source, returnSymbol, stackSymbol, locations.get(12));
+                    }
+                }
+            }
+        }
+
+        return automaton;
+    }
+
     public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithTwoKeysOnSameTransition() {
         VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "o1", ",", "int", "str");
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);

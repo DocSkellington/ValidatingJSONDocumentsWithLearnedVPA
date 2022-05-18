@@ -2,6 +2,7 @@ package be.ac.umons.learningjson.relation;
 
 import java.util.BitSet;
 import java.util.Objects;
+import java.util.Set;
 
 import be.ac.umons.learningjson.JSONSymbol;
 import be.ac.umons.learningjson.PairSourceToReached;
@@ -28,7 +29,7 @@ class NodeInGraph {
     private final BitSet onPathToAcceptingForLocation;
     private NodeStackContents stackForRejected;
 
-    public NodeInGraph(InRelation inRelation, DefaultOneSEVPA<JSONSymbol> automaton) {
+    public NodeInGraph(InRelation inRelation, DefaultOneSEVPA<JSONSymbol> automaton, Set<Location> binLocations) {
         this.inRelation = inRelation;
         this.acceptingForLocation = new BitSet(automaton.size());
         this.onPathToAcceptingForLocation = new BitSet(automaton.size());
@@ -39,8 +40,16 @@ class NodeInGraph {
         final int returnSymbolIndex = automaton.getInputAlphabet().getReturnSymbolIndex(returnSymbol);
 
         for (int i = 0; i < automaton.size(); i++) {
-            final int stackSym = automaton.encodeStackSym(automaton.getLocation(i), callSymbol);
-            if (inRelation.getTarget().getReturnSuccessor(returnSymbolIndex, stackSym) != null) {
+            // If the location before the call or the location after the return are the bin
+            // locations, we ignore them as we do not want the bin state in the graph
+            final Location locationBeforeCall = automaton.getLocation(i);
+            if (binLocations.contains(locationBeforeCall)) {
+                continue;
+            }
+
+            final int stackSym = automaton.encodeStackSym(locationBeforeCall, callSymbol);
+            final Location locationAfterReturn = inRelation.getTarget().getReturnSuccessor(returnSymbolIndex, stackSym);
+            if (locationAfterReturn != null && !binLocations.contains(locationAfterReturn)) {
                 acceptingForLocation.set(i);
                 onPathToAcceptingForLocation.set(i);
             }
