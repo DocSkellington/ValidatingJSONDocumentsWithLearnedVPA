@@ -1,13 +1,10 @@
 package be.ac.umons.learningjson.validation;
 
-import java.io.IOException;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import be.ac.umons.jsonschematools.AbstractConstants;
 import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.learningjson.validation.relation.DotWriter;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
@@ -18,12 +15,6 @@ public class TestPermutationAutomaton {
     public void testStraightforwardAutomatonWithPermutation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
         ValidationByAutomaton permutationAutomaton = new ValidationByAutomaton(automaton);
-        try {
-            DotWriter.write(permutationAutomaton.getGraph(), System.out);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
 
         Assert.assertFalse(permutationAutomaton.accepts(Word.epsilon()));
 

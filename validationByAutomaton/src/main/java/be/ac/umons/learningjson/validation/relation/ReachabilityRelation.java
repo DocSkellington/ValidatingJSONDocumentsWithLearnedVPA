@@ -299,9 +299,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
         final Set<ReachabilityRelation> setCommaAndInternalRelations = new HashSet<>();
         setCommaAndInternalRelations.add(commaRelation.union(internalRelation));
 
-        System.out.println(setCommaAndInternalRelations);
         final Set<ReachabilityRelation> initial = compositionClosure(setIdentityRelation, setCommaAndInternalRelations);
-        System.out.println("Initial " + initial);
 
         Set<ReachabilityRelation> composedRelations = new HashSet<>();
         composedRelations.addAll(initial);
@@ -328,7 +326,6 @@ class ReachabilityRelation implements Iterable<InRelation> {
                 addRelationToSet(relations, inNewRelations);
             }
             newRelations.removeAll(composedRelations);
-            System.out.println(newRelations);
 
             if (newRelations.isEmpty()) {
                 break;

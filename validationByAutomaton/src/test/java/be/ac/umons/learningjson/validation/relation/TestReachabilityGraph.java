@@ -11,9 +11,6 @@ import org.testng.annotations.Test;
 
 import be.ac.umons.learningjson.JSONSymbol;
 import be.ac.umons.learningjson.validation.Automata;
-import be.ac.umons.learningjson.validation.relation.InRelation;
-import be.ac.umons.learningjson.validation.relation.NodeInGraph;
-import be.ac.umons.learningjson.validation.relation.ReachabilityGraph;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 

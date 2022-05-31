@@ -57,14 +57,10 @@ public class ReachabilityGraph {
     private final List<NodeInGraph> startingNodes = new LinkedList<>();
 
     public ReachabilityGraph(DefaultOneSEVPA<JSONSymbol> automaton) {
-        System.out.println("Start of graph");
         final ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
-        System.out.println("Comma " + commaRelation);
         final ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
-        System.out.println("Internal " + internalRelation);
         final ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
                 commaRelation, internalRelation);
-        System.out.println("Well-matched " + wellMatchedRelation);
 
         final Set<Location> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
 
@@ -238,7 +234,6 @@ public class ReachabilityGraph {
      */
     public void addLayerInStack() {
         for (NodeInGraph node : nodes()) {
-            System.out.println("NODE : " + node);
             node.addLayerInStack();
         }
     }

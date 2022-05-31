@@ -7,7 +7,6 @@ import org.testng.annotations.Test;
 
 import be.ac.umons.learningjson.JSONSymbol;
 import be.ac.umons.learningjson.validation.Automata;
-import be.ac.umons.learningjson.validation.relation.ReachabilityRelation;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.VPDAlphabet;
@@ -151,7 +150,6 @@ public class TestReachabilityRelation {
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(11)));
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(7)));
         
-        System.out.println(wellMatchedRelation);
         Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
     }
 
@@ -164,7 +162,6 @@ public class TestReachabilityRelation {
         ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
                 commaRelation, internalRelation);
 
-        System.out.println(wellMatchedRelation);
         Assert.assertEquals(wellMatchedRelation.size(), 15);
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(11)));
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(7)));

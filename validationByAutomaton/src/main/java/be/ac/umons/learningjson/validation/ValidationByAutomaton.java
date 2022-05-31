@@ -1,11 +1,9 @@
 package be.ac.umons.learningjson.validation;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
 import be.ac.umons.learningjson.JSONSymbol;
-import be.ac.umons.learningjson.validation.relation.DotWriter;
 import be.ac.umons.learningjson.validation.relation.ReachabilityGraph;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
@@ -35,20 +33,8 @@ public class ValidationByAutomaton {
     private final DefaultOneSEVPA<JSONSymbol> automaton;
     private final VPDAlphabet<JSONSymbol> alphabet;
 
-    // TODO: delete
-    public ReachabilityGraph getGraph() {
-        return graph;
-    }
-
     public ValidationByAutomaton(final DefaultOneSEVPA<JSONSymbol> automaton) {
-        System.out.println("Start of automaton");
         this.graph = new ReachabilityGraph(automaton);
-        System.out.println("Graph created ");
-        try {
-            DotWriter.write(graph, System.out);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         this.automaton = automaton;
         this.alphabet = automaton.getInputAlphabet();
     }
