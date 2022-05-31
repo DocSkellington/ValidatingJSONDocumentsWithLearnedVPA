@@ -12,17 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package be.ac.umons.learningjson.oracles;
+package be.ac.umons.learningjson.oracles.exploration;
 
-import java.util.Collection;
 import java.util.Random;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.learningjson.JSONSymbol;
 import de.learnlib.api.oracle.EquivalenceOracle;
-import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.fsa.DFA;
 import net.automatalib.words.Alphabet;
 
@@ -34,25 +30,15 @@ import net.automatalib.words.Alphabet;
  * 
  * @author Gaëtan Staquet
  */
-public class JSONPartialEquivalenceOracle extends AbstractJSONConformance<DFA<?, JSONSymbol>>
-        implements EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> {
-
-    private int counterLimit = 0;
+public class JSONPartialEquivalenceOracle extends AbstractExplorationJSONConformance<DFA<?, JSONSymbol>> implements EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> {
 
     public JSONPartialEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema,
             Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
-        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
-    }
-
-    @Override
-    public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(DFA<?, JSONSymbol> hypothesis,
-            Collection<? extends JSONSymbol> inputs) {
-        return findCounterExample(hypothesis, counterLimit);
+        super(numberTests, 0, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
     }
 
     @Override
     public void setCounterLimit(int counterLimit) {
-        this.counterLimit = counterLimit;
+        setMaximalDocumentDepth(counterLimit);
     }
-
 }

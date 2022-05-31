@@ -1,4 +1,4 @@
-package be.ac.umons.learningjson.oracles;
+package be.ac.umons.learningjson.oracles.random;
 
 import java.util.Collection;
 import java.util.Random;
@@ -15,9 +15,9 @@ import net.automatalib.words.Alphabet;
 public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<OneSEVPA<?, JSONSymbol>>
         implements EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> {
 
-    public VPDAJSONEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema, Random random,
-            boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
-        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+    public VPDAJSONEquivalenceOracle(int numberTests, int maxDocumentDepth, int maxProperties, int maxItems,
+            JSONSchema schema, Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
     }
 
     @Override

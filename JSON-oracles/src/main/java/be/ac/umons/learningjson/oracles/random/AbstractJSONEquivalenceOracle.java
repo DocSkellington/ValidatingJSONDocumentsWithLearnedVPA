@@ -1,4 +1,4 @@
-package be.ac.umons.learningjson.oracles;
+package be.ac.umons.learningjson.oracles.random;
 
 import java.util.Random;
 
@@ -11,15 +11,18 @@ import net.automatalib.ts.acceptors.DeterministicAcceptorTS;
 import net.automatalib.words.Alphabet;
 
 public abstract class AbstractJSONEquivalenceOracle<A extends DeterministicAcceptorTS<?, JSONSymbol>>
-        extends AbstractJSONConformance<A> {
+        extends AbstractRandomJSONConformance<A> {
 
-    public AbstractJSONEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema,
-            Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+    private final int maxDocumentDepth;
+
+    public AbstractJSONEquivalenceOracle(int numberTests, int maxDocumentDepth, int maxProperties, int maxItems,
+            JSONSchema schema, Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
         super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+        this.maxDocumentDepth = maxDocumentDepth;
     }
 
     protected @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypothesis) {
-        for (int maxTreeSize = 0; maxTreeSize <= 100; maxTreeSize++) {
+        for (int maxTreeSize = 0; maxTreeSize <= maxDocumentDepth; maxTreeSize++) {
             DefaultQuery<JSONSymbol, Boolean> counterexample = findCounterExample(hypothesis, maxTreeSize);
             if (counterexample != null) {
                 return counterexample;
