@@ -1,7 +1,6 @@
 package be.ac.umons.learningjson;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,6 +15,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
+import com.google.common.base.Stopwatch;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.json.JSONException;
@@ -27,6 +28,7 @@ import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.JSONSchemaStore;
 import be.ac.umons.jsonschematools.Validator;
+import be.ac.umons.learningjson.validation.ValidationByAutomaton;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.serialization.InputModelDeserializer;
 import net.automatalib.serialization.dot.DOTParsers;
@@ -101,12 +103,15 @@ public class Benchmarks {
         // @formatter:on
     }
 
-    private void runBenchmarks(final JSONSchema schema, final DefaultOneSEVPA<JSONSymbol> vpa, final Path pathToDocuments, final int nExperiments) throws JSONException, FileNotFoundException {
-        System.out.println("START");
+    private void runBenchmarks(final JSONSchema schema, final DefaultOneSEVPA<JSONSymbol> vpa, final Path pathToDocuments, final int nExperiments) throws JSONException, IOException {
         for (int experimentId = 0 ; experimentId < nExperiments ; experimentId++) {
             System.out.println(experimentId);
-            // TODO: measure time needed to construct the automaton
-            PermutationAutomaton automaton = new PermutationAutomaton(vpa);
+            Stopwatch watch = Stopwatch.createStarted();
+            ValidationByAutomaton automaton = new ValidationByAutomaton(vpa);
+            watch.stop();
+            
+            csvPrinter.printRecords("PRECOMPUTATION", watch.elapsed().toMillis());
+
             Validator validator = new DefaultValidator();
             int documentId = 0;
             for (final File file : pathToDocuments.toFile().listFiles()) {
@@ -119,7 +124,7 @@ public class Benchmarks {
         }
     }
 
-    private void runExperiment(final PermutationAutomaton automaton, final Validator validator, final JSONSchema schema, final JSONObject document, final int documentId) {
+    private void runExperiment(final ValidationByAutomaton automaton, final Validator validator, final JSONSchema schema, final JSONObject document, final int documentId) throws IOException {
         Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random());
 
         final boolean automatonOutput = automaton.accepts(word);
@@ -135,17 +140,20 @@ public class Benchmarks {
             validatorOutput = false;
         }
 
-        List<Object> results = new LinkedList<>();
-        results.add(documentId);
-        results.add("AUTOMATON TIME");
-        results.add(automatonOutput);
+        final List<Object> statistics = new LinkedList<>();
+        statistics.add(documentId);
+        statistics.add("AUTOMATON TIME");
+        statistics.add(automatonOutput);
         if (validatorError) {
-            results.add("Error");
-            results.add("Error");
+            statistics.add("Error");
+            statistics.add("Error");
         }
         else {
-            results.add("VALIDATOR TIME");
-            results.add(validatorOutput);
+            statistics.add("VALIDATOR TIME");
+            statistics.add(validatorOutput);
         }
+
+        csvPrinter.printRecord(statistics);
+        csvPrinter.flush();
     }
 }

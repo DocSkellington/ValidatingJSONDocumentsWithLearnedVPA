@@ -78,7 +78,7 @@ limitations under the License.
         <javadoc-plugin.conf.release>8</javadoc-plugin.conf.release>
 
         <!-- Dependency versions -->
-        <learningoracles.version>1.0</learningoracles.version>
+        <jsonvalidation.version>2.0</jsonvalidation.version>
         <jsonschema.version>1.0</jsonschema.version>
         <automatalib.version>0.11.0-SNAPSHOT</automatalib.version>
         <learnlib.version>0.17.0-SNAPSHOT</learnlib.version>
@@ -101,10 +101,12 @@ limitations under the License.
     <dependencies>
         <!-- Internal dependencies -->
         <dependency>
-            <groupId>be.ac.umons.learningjson</groupId>
-            <artifactId>oracles</artifactId>
-            <version>${learningoracles.version}</version>
+            <groupId>be.ac.umons.jsonvalidation</groupId>
+            <artifactId>jsonvalidation</artifactId>
+            <version>${jsonvalidation.version}</version>
         </dependency>
+
+        <!-- JSON schema -->
         <dependency>
             <groupId>be.ac.umons.jsonschematools</groupId>
             <artifactId>jsonschematools-tools</artifactId>

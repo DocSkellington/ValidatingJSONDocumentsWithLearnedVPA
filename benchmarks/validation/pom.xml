@@ -78,7 +78,7 @@ limitations under the License.
         <javadoc-plugin.conf.release>8</javadoc-plugin.conf.release>
 
         <!-- Dependency versions -->
-        <permutationautomaton.version>1.0</permutationautomaton.version>
+        <jsonvalidation.version>2.0</jsonvalidation.version>
         <learningoracles.version>1.0</learningoracles.version>
         <jsonschema.version>1.0</jsonschema.version>
         <automatalib.version>0.11.0-SNAPSHOT</automatalib.version>
@@ -101,15 +101,12 @@ limitations under the License.
     <dependencies>
         <!-- Internal dependencies -->
         <dependency>
-            <groupId>be.ac.umons.learningjson</groupId>
-            <artifactId>permutationautomaton</artifactId>
-            <version>${permutationautomaton.version}</version>
+            <groupId>be.ac.umons.jsonvalidation</groupId>
+            <artifactId>jsonvalidation</artifactId>
+            <version>${jsonvalidation.version}</version>
         </dependency>
-        <dependency>
-            <groupId>be.ac.umons.learningjson</groupId>
-            <artifactId>oracles</artifactId>
-            <version>${learningoracles.version}</version>
-        </dependency>
+
+        <!-- JSON schema -->
         <dependency>
             <groupId>be.ac.umons.jsonschematools</groupId>
             <artifactId>jsonschematools-tools</artifactId>

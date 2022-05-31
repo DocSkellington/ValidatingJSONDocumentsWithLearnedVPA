@@ -23,7 +23,7 @@ limitations under the License.
     -->
     <groupId>be.ac.umons.jsonvalidation</groupId>
     <artifactId>jsonvalidation</artifactId>
-    <version>1.0</version>
+    <version>2.0</version>
 
     <name>Validation of a JSON document using an automaton</name>
     <description>Oracles to learn an automaton validating a JSON document assuming a fixed order on the keys, and a validating algorithm using a learned automaton to lift this assumption</description>
