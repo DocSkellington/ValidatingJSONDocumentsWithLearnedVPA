@@ -14,26 +14,29 @@ import net.automatalib.words.VPDAlphabet;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 
-abstract class AbstractExplorationJSONConformanceVisiblyAlphabet<A extends DeterministicAcceptorTS<?, JSONSymbol>> extends AbstractExplorationJSONConformance<A> {
+abstract class AbstractExplorationJSONConformanceVisiblyAlphabet<A extends DeterministicAcceptorTS<?, JSONSymbol>>
+        extends AbstractExplorationJSONConformance<A> {
 
     private final VPDAlphabet<JSONSymbol> alphabet;
 
-    protected AbstractExplorationJSONConformanceVisiblyAlphabet(int numberTests, int maxDocumentDepth,
-            int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
-            VPDAlphabet<JSONSymbol> alphabet) {
-        super(numberTests, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+    protected AbstractExplorationJSONConformanceVisiblyAlphabet(int numberTests, boolean canGenerateInvalid,
+            int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema, Random random,
+            boolean shuffleKeys, VPDAlphabet<JSONSymbol> alphabet) {
+        super(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys,
+                alphabet);
 
         this.alphabet = alphabet;
     }
-    
+
     @Override
-    public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypo, Collection<? extends JSONSymbol> inputs) {
+    public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypo,
+            Collection<? extends JSONSymbol> inputs) {
         DefaultQuery<JSONSymbol, Boolean> counterexample = super.findCounterExample(hypo);
         if (counterexample != null) {
             return counterexample;
         }
 
-        for (int i = 0 ; i < numberTests(); i++) {
+        for (int i = 0; i < numberTests(); i++) {
             Word<JSONSymbol> word = generateGibberishInternalSymbols();
             DefaultQuery<JSONSymbol, Boolean> query = checkWord(hypo, word);
             if (query != null) {

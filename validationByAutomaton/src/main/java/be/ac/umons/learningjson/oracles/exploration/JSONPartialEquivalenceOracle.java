@@ -30,11 +30,12 @@ import net.automatalib.words.Alphabet;
  * 
  * @author Gaëtan Staquet
  */
-public class JSONPartialEquivalenceOracle extends AbstractExplorationJSONConformance<DFA<?, JSONSymbol>> implements EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> {
+public class JSONPartialEquivalenceOracle extends AbstractExplorationJSONConformance<DFA<?, JSONSymbol>>
+        implements EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> {
 
-    public JSONPartialEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema,
-            Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
-        super(numberTests, 0, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+    public JSONPartialEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxProperties, int maxItems,
+            JSONSchema schema, Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, canGenerateInvalid, 0, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
     }
 
     @Override

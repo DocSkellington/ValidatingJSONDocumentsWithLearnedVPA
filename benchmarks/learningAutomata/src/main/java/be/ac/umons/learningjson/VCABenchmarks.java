@@ -24,8 +24,8 @@ import net.automatalib.words.VPDAlphabet;
 
 public abstract class VCABenchmarks extends ABenchmarks {
 
-    public VCABenchmarks(Path pathToCSVFile, Duration timeout) throws IOException {
-        super(pathToCSVFile, timeout);
+    public VCABenchmarks(Path pathToCSVFile, Duration timeout, int maxProperties, int maxItems) throws IOException {
+        super(pathToCSVFile, timeout, maxProperties, maxItems);
     }
 
     @Override
@@ -47,8 +47,8 @@ public abstract class VCABenchmarks extends ABenchmarks {
 
     @Override
     protected void runExperiment(final Random rand, final JSONSchema schema, final String schemaName, final int nTests,
-            final int maxDocumentDepth, final boolean shuffleKeys, final int currentId)
-            throws InterruptedException, IOException, JSONSchemaException {
+            final boolean canGenerateInvalid, final int maxDocumentDepth, final boolean shuffleKeys,
+            final int currentId) throws InterruptedException, IOException, JSONSchemaException {
         final VPDAlphabet<JSONSymbol> alphabet = extractSymbolsFromSchema(schema);
 
         final MembershipOracle.ROCAMembershipOracle<JSONSymbol> sul = new JSONMembershipOracle(schema);
@@ -56,12 +56,13 @@ public abstract class VCABenchmarks extends ABenchmarks {
         final ROCACounterOracle<JSONSymbol> membershipOracle = new ROCACounterOracle<>(sulCache, "membership queries");
 
         final EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> partialEqOracle = getRestrictedAutomatonEquivalenceOracle(
-                nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys, alphabet);
+                nTests, canGenerateInvalid, getMaxProperties(), getMaxItems(), schema, rand, shuffleKeys, alphabet);
         final RestrictedAutomatonCounterEQOracle<JSONSymbol> partialEquivalenceOracle = new RestrictedAutomatonCounterEQOracle<>(
                 partialEqOracle, "partial equivalence queries");
 
         final EquivalenceOracle.VCAEquivalenceOracle<JSONSymbol> eqOracle = getEquivalenceOracle(nTests,
-                maxDocumentDepth, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys, alphabet);
+                canGenerateInvalid, maxDocumentDepth, getMaxProperties(), getMaxItems(), schema, rand, shuffleKeys,
+                alphabet);
         final VCACounterEQOracle<JSONSymbol> equivalenceOracle = new VCACounterEQOracle<>(eqOracle,
                 "equivalence queries");
 
@@ -103,10 +104,10 @@ public abstract class VCABenchmarks extends ABenchmarks {
     }
 
     protected abstract EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> getRestrictedAutomatonEquivalenceOracle(
-            int nTests, int maxProperties, int maxItems, JSONSchema schema, Random rand, boolean shuffleKeys,
-            VPDAlphabet<JSONSymbol> alphabet);
+            int nTests, boolean canGenerateInvalid, int maxProperties, int maxItems, JSONSchema schema, Random rand,
+            boolean shuffleKeys, VPDAlphabet<JSONSymbol> alphabet);
 
     protected abstract EquivalenceOracle.VCAEquivalenceOracle<JSONSymbol> getEquivalenceOracle(int nTests,
-            int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema, Random rand, boolean shuffleKeys,
-            VPDAlphabet<JSONSymbol> alphabet);
+            boolean canGenerateInvalid, int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema,
+            Random rand, boolean shuffleKeys, VPDAlphabet<JSONSymbol> alphabet);
 }

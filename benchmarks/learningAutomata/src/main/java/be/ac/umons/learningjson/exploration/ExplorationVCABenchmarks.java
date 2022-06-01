@@ -16,21 +16,25 @@ import net.automatalib.words.VPDAlphabet;
 
 public class ExplorationVCABenchmarks extends VCABenchmarks {
 
-    public ExplorationVCABenchmarks(final Path pathToCSVFile, final Duration timeout) throws IOException {
-        super(pathToCSVFile, timeout);
+    public ExplorationVCABenchmarks(final Path pathToCSVFile, final Duration timeout, int maxProperties, int maxItems)
+            throws IOException {
+        super(pathToCSVFile, timeout, maxProperties, maxItems);
     }
 
     @Override
     protected RestrictedAutomatonEquivalenceOracle<JSONSymbol> getRestrictedAutomatonEquivalenceOracle(int nTests,
-            int maxProperties, int maxItems, JSONSchema schema, Random rand, boolean shuffleKeys,
-            VPDAlphabet<JSONSymbol> alphabet) {
-        return new JSONPartialEquivalenceOracle(nTests, MAX_PROPERTIES, MAX_ITEMS, schema, rand, shuffleKeys, alphabet);
+            boolean canGenerateInvalid, int maxProperties, int maxItems, JSONSchema schema, Random rand,
+            boolean shuffleKeys, VPDAlphabet<JSONSymbol> alphabet) {
+        return new JSONPartialEquivalenceOracle(nTests, canGenerateInvalid, getMaxProperties(), getMaxItems(), schema,
+                rand, shuffleKeys, alphabet);
     }
 
     @Override
-    protected VCAEquivalenceOracle<JSONSymbol> getEquivalenceOracle(int nTests, int maxDocumentDepth, int maxProperties,
-            int maxItems, JSONSchema schema, Random rand, boolean shuffleKeys, VPDAlphabet<JSONSymbol> alphabet) {
-        return new VCAJSONEquivalenceOracle(nTests, maxDocumentDepth, maxProperties, maxItems, schema, rand,
+    protected VCAEquivalenceOracle<JSONSymbol> getEquivalenceOracle(int nTests, boolean canGenerateInvalid,
+            int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema, Random rand, boolean shuffleKeys,
+            VPDAlphabet<JSONSymbol> alphabet) {
+        return new VCAJSONEquivalenceOracle(nTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems,
+                schema, rand,
                 shuffleKeys, alphabet);
     }
 }

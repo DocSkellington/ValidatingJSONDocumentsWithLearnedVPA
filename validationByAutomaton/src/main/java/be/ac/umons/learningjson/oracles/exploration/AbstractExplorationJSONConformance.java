@@ -18,33 +18,45 @@ import net.automatalib.ts.acceptors.DeterministicAcceptorTS;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
-abstract class AbstractExplorationJSONConformance<A extends DeterministicAcceptorTS<?, JSONSymbol>> extends AbstractJSONConformance<A> implements EquivalenceOracle<A, JSONSymbol, Boolean> {
+abstract class AbstractExplorationJSONConformance<A extends DeterministicAcceptorTS<?, JSONSymbol>>
+        extends AbstractJSONConformance<A> implements EquivalenceOracle<A, JSONSymbol, Boolean> {
 
     private final ExplorationGenerator generator;
     private Iterator<JSONObject> iteratorDocuments;
+    private int numberGeneratedDocuments = 0;
 
-    protected AbstractExplorationJSONConformance(int numberTests, int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema,
-            Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
-        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+    protected AbstractExplorationJSONConformance(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
+            int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
+            Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, canGenerateInvalid, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
         this.generator = new DefaultExplorationGenerator(maxProperties, maxItems);
         setMaximalDocumentDepth(maxDocumentDepth);
     }
 
     @Override
-    public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypo, Collection<? extends JSONSymbol> inputs) {
+    public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypo,
+            Collection<? extends JSONSymbol> inputs) {
         return findCounterExample(hypo);
     }
 
+    private boolean continueGeneration() {
+        if (numberTests() == -1) {
+            return true;
+        }
+        return numberGeneratedDocuments++ < numberTests();
+    }
+
     protected DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypothesis) {
-        while (iteratorDocuments.hasNext()) {
+        while (iteratorDocuments.hasNext() && continueGeneration()) {
             JSONObject document = iteratorDocuments.next();
+            System.out.println(document);
             DefaultQuery<JSONSymbol, Boolean> query = checkDocument(hypothesis, document);
             if (query != null) {
                 return query;
             }
         }
 
-        for (int i = 0 ; i < numberTests(); i++) {
+        for (int i = 0; i < numberTests(); i++) {
             Word<JSONSymbol> word = generateGibberish();
             DefaultQuery<JSONSymbol, Boolean> query = checkWord(hypothesis, word);
             if (query != null) {
@@ -54,8 +66,8 @@ abstract class AbstractExplorationJSONConformance<A extends DeterministicAccepto
 
         return null;
     }
-    
+
     protected void setMaximalDocumentDepth(int maxDocumentDepth) {
-        this.iteratorDocuments = generator.createIterator(getSchema(), maxDocumentDepth, true);
+        this.iteratorDocuments = generator.createIterator(getSchema(), maxDocumentDepth, canGenerateInvalid());
     }
 }

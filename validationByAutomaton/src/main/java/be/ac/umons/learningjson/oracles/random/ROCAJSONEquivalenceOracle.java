@@ -15,9 +15,11 @@ import net.automatalib.words.Alphabet;
 public class ROCAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<ROCAFromDescription<?, JSONSymbol>>
         implements EquivalenceOracle.ROCAEquivalenceOracle<JSONSymbol> {
 
-    public ROCAJSONEquivalenceOracle(int numberTests, int maxDocumentDepth, int maxProperties, int maxItems,
-            JSONSchema schema, Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
-        super(numberTests, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+    public ROCAJSONEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
+            int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
+            Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys,
+                alphabet);
     }
 
     @Override

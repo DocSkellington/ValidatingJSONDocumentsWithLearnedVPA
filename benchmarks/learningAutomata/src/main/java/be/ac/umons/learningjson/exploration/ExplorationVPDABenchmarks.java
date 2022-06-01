@@ -34,14 +34,16 @@ import net.automatalib.words.VPDAlphabet;
  */
 public class ExplorationVPDABenchmarks extends VPDABenchmarks {
 
-    public ExplorationVPDABenchmarks(final Path pathToCSVFile, final Duration timeout) throws IOException {
-        super(pathToCSVFile, timeout);
+    public ExplorationVPDABenchmarks(final Path pathToCSVFile, final Duration timeout, int maxProperties, int maxItems)
+            throws IOException {
+        super(pathToCSVFile, timeout, maxProperties, maxItems);
     }
 
     @Override
     protected EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> getEquivalenceOracle(int numberTests,
-            int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema, Random random,
-            boolean shuffleKeys, VPDAlphabet<JSONSymbol> alphabet) {
-        return new VPDAJSONEquivalenceOracle(numberTests, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+            boolean canGenerateInvalid, int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema,
+            Random random, boolean shuffleKeys, VPDAlphabet<JSONSymbol> alphabet) {
+        return new VPDAJSONEquivalenceOracle(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems,
+                schema, random, shuffleKeys, alphabet);
     }
 }

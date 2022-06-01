@@ -35,14 +35,16 @@ import net.automatalib.words.VPDAlphabet;
 import net.automatalib.words.impl.DefaultVPDAlphabet;
 
 public abstract class ABenchmarks {
-    protected final static int MAX_PROPERTIES = 10;
-    protected final static int MAX_ITEMS = 10;
-
     protected final CSVPrinter csvPrinter;
     protected final int nColumns;
     protected final Duration timeout;
+    private final int maxProperties;
+    private final int maxItems;
 
-    public ABenchmarks(final Path pathToCSVFile, final Duration timeout) throws IOException {
+    public ABenchmarks(final Path pathToCSVFile, final Duration timeout, int maxProperties, int maxItems)
+            throws IOException {
+        this.maxProperties = maxProperties;
+        this.maxItems = maxItems;
         csvPrinter = new CSVPrinter(new FileWriter(pathToCSVFile.toFile()), CSVFormat.DEFAULT);
         List<String> header = getHeader();
         this.nColumns = header.size();
@@ -51,20 +53,29 @@ public abstract class ABenchmarks {
         csvPrinter.flush();
     }
 
+    public int getMaxProperties() {
+        return maxProperties;
+    }
+
+    public int getMaxItems() {
+        return maxItems;
+    }
+
     protected abstract List<String> getHeader();
 
     public void runBenchmarks(final JSONSchema schema, final String schemaName, final int nTests,
-            final int maxDocumentDepth, final int nRepetitions, final boolean shuffleKeys)
-            throws InterruptedException, IOException, JSONSchemaException {
+            final boolean canGenerateInvalid, final int maxDocumentDepth, final int nRepetitions,
+            final boolean shuffleKeys) throws InterruptedException, IOException, JSONSchemaException {
         for (int i = 0; i < nRepetitions; i++) {
             System.out.println((i + 1) + "/" + nRepetitions);
-            runExperiment(new Random(i), schema, schemaName, nTests, maxDocumentDepth, shuffleKeys, i);
+            runExperiment(new Random(i), schema, schemaName, nTests, canGenerateInvalid, maxDocumentDepth, shuffleKeys,
+                    i);
         }
     }
 
     protected abstract void runExperiment(final Random rand, final JSONSchema schema, final String schemaName,
-            final int nTests, final int maxDocumentDepth, final boolean shuffleKeys, final int currentId)
-            throws InterruptedException, IOException, JSONSchemaException;
+            final int nTests, final boolean canGenerateInvalid, final int maxDocumentDepth, final boolean shuffleKeys,
+            final int currentId) throws InterruptedException, IOException, JSONSchemaException;
 
     protected long getProfilerTime(String key) {
         Counter counter = SimpleProfiler.cumulated(key);

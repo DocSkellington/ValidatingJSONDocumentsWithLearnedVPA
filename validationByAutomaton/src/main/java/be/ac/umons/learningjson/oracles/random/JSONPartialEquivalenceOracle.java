@@ -34,14 +34,14 @@ import net.automatalib.words.Alphabet;
  * 
  * @author Gaëtan Staquet
  */
-public class JSONPartialEquivalenceOracle extends AbstractRandomJSONConformance<DFA<?, JSONSymbol>> implements EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> {
-
+public class JSONPartialEquivalenceOracle extends AbstractRandomJSONConformance<DFA<?, JSONSymbol>>
+        implements EquivalenceOracle.RestrictedAutomatonEquivalenceOracle<JSONSymbol> {
 
     private int counterLimit = 0;
 
-    public JSONPartialEquivalenceOracle(int numberTests, int maxProperties, int maxItems, JSONSchema schema,
-            Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
-        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+    public JSONPartialEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxProperties, int maxItems,
+            JSONSchema schema, Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, canGenerateInvalid, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
     }
 
     @Override

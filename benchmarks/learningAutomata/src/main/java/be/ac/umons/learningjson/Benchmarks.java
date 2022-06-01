@@ -31,8 +31,8 @@ public class Benchmarks {
     }
 
     public static void main(String[] args) throws InterruptedException, IOException, JSONSchemaException {
-        final AutomatonType automatonType = AutomatonType.valueOf(args[0]);
-        final EquivalenceType equivalenceType = EquivalenceType.valueOf(args[1]);
+        final AutomatonType automatonType = AutomatonType.valueOf(args[0].toUpperCase());
+        final EquivalenceType equivalenceType = EquivalenceType.valueOf(args[1].toUpperCase());
         final int timeLimit = Integer.valueOf(args[2]);
 
         final Duration timeout = Duration.ofSeconds(timeLimit);
@@ -42,11 +42,15 @@ public class Benchmarks {
         final Path filePath = Paths.get(args[3]);
         final String schemaName = filePath.getFileName().toString();
         final int nTests = Integer.valueOf(args[4]);
-        final int maxDocumentDepth = Integer.valueOf(args[5]);
-        final int nRepetitions = Integer.valueOf(args[6]);
-        final boolean shuffleKeys = Boolean.valueOf(args[7]);
+        final boolean canGenerateInvalid = Boolean.valueOf(args[5]);
+        final int maxDocumentDepth = Integer.valueOf(args[6]);
+        final int nRepetitions = Integer.valueOf(args[7]);
+        final boolean shuffleKeys = Boolean.valueOf(args[8]);
+        final int maxProperties = Integer.valueOf(args[9]);
+        final int maxItems = Integer.valueOf(args[10]);
+        final boolean ignoreAdditionalProperties = Boolean.valueOf(args[11]);
 
-        final JSONSchemaStore schemaStore = new JSONSchemaStore();
+        final JSONSchemaStore schemaStore = new JSONSchemaStore(ignoreAdditionalProperties);
         final JSONSchema schema;
         try {
             URL url = filePath.toUri().toURL();
@@ -63,32 +67,29 @@ public class Benchmarks {
 
         Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON");
         pathToCSVFolder.toFile().mkdirs();
-        Path pathToCSVFile = pathToCSVFolder.resolve("" + timeLimit + "s-" + schemaName + "-" + automatonType + "-" + nTests + "-" + nRepetitions + "-" + shuffleKeys + "-" + dtf.format(now) + ".csv");
+        Path pathToCSVFile = pathToCSVFolder.resolve("" + timeLimit + "s-" + schemaName + "-" + automatonType + "-"
+                + nTests + "-" + nRepetitions + "-" + shuffleKeys + "-" + dtf.format(now) + ".csv");
         ABenchmarks benchmarks;
         if (automatonType == AutomatonType.VPA) {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomVPDABenchmarks(pathToCSVFile, timeout);
+                benchmarks = new RandomVPDABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
+            } else {
+                benchmarks = new ExplorationVPDABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
             }
-            else {
-                benchmarks = new ExplorationVPDABenchmarks(pathToCSVFile, timeout);
-            }
-        }
-        else if (automatonType == AutomatonType.VCA) {
+        } else if (automatonType == AutomatonType.VCA) {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomVCABenchmarks(pathToCSVFile, timeout);
+                benchmarks = new RandomVCABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
+            } else {
+                benchmarks = new ExplorationVCABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
             }
-            else {
-                benchmarks = new ExplorationVCABenchmarks(pathToCSVFile, timeout);
-            }
-        }
-        else {
+        } else {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomROCABenchmarks(pathToCSVFile, timeout);
-            }
-            else {
-                benchmarks = new ExplorationROCABenchmarks(pathToCSVFile, timeout);
+                benchmarks = new RandomROCABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
+            } else {
+                benchmarks = new ExplorationROCABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
             }
         }
-        benchmarks.runBenchmarks(schema, schemaName, nTests, maxDocumentDepth, nRepetitions, shuffleKeys);
+        benchmarks.runBenchmarks(schema, schemaName, nTests, canGenerateInvalid, maxDocumentDepth, nRepetitions,
+                shuffleKeys);
     }
 }

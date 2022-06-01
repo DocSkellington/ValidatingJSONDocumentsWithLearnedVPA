@@ -15,9 +15,10 @@ public abstract class AbstractJSONEquivalenceOracle<A extends DeterministicAccep
 
     private final int maxDocumentDepth;
 
-    public AbstractJSONEquivalenceOracle(int numberTests, int maxDocumentDepth, int maxProperties, int maxItems,
-            JSONSchema schema, Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
-        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+    public AbstractJSONEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
+            int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
+            Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, canGenerateInvalid, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
         this.maxDocumentDepth = maxDocumentDepth;
     }
 

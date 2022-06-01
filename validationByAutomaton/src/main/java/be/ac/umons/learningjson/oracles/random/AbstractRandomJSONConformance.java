@@ -18,13 +18,14 @@ import net.automatalib.ts.acceptors.DeterministicAcceptorTS;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
-public abstract class AbstractRandomJSONConformance<A extends DeterministicAcceptorTS<?, JSONSymbol>> extends AbstractJSONConformance<A> {
+public abstract class AbstractRandomJSONConformance<A extends DeterministicAcceptorTS<?, JSONSymbol>>
+        extends AbstractJSONConformance<A> {
     private final RandomGenerator generatorValid;
     private final RandomGenerator generatorInvalid;
-        
-    protected AbstractRandomJSONConformance(int numberTests, int maxProperties, int maxItems, JSONSchema schema,
-            Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
-        super(numberTests, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+
+    protected AbstractRandomJSONConformance(int numberTests, boolean canGenerateInvalid, int maxProperties,
+            int maxItems, JSONSchema schema, Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        super(numberTests, canGenerateInvalid, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
         this.generatorValid = new DefaultRandomGeneratorValid(maxProperties, maxItems);
         this.generatorInvalid = new DefaultRandomGeneratorInvalid(maxProperties, maxItems);
     }
@@ -49,10 +50,12 @@ public abstract class AbstractRandomJSONConformance<A extends DeterministicAccep
                 return query;
             }
 
-            document = generateDocument(generatorInvalid, maxTreeSize);
-            query = checkDocument(hypothesis, document);
-            if (query != null) {
-                return query;
+            if (canGenerateInvalid()) {
+                document = generateDocument(generatorInvalid, maxTreeSize);
+                query = checkDocument(hypothesis, document);
+                if (query != null) {
+                    return query;
+                }
             }
 
             Word<JSONSymbol> word = generateGibberish();

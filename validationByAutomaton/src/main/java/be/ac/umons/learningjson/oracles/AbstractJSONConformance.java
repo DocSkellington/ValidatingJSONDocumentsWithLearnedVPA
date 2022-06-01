@@ -26,15 +26,17 @@ public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<
     private final boolean shuffleKeys;
     private final Random rand;
     private final Alphabet<JSONSymbol> alphabet;
+    private final boolean canGenerateInvalid;
 
-    protected AbstractJSONConformance(int numberTests, int maxProperties, int maxItems, JSONSchema schema,
-            Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+    protected AbstractJSONConformance(int numberTests, boolean canGenerateInvalid, int maxProperties, int maxItems,
+            JSONSchema schema, Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
         this.numberTests = numberTests;
         this.schema = schema;
         this.validator = new DefaultValidator();
         this.shuffleKeys = shuffleKeys;
         this.rand = random;
         this.alphabet = alphabet;
+        this.canGenerateInvalid = canGenerateInvalid;
     }
 
     protected Alphabet<JSONSymbol> getAlphabet() {
@@ -55,6 +57,10 @@ public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<
 
     public JSONSchema getSchema() {
         return schema;
+    }
+
+    public boolean canGenerateInvalid() {
+        return canGenerateInvalid;
     }
 
     protected Word<JSONSymbol> generateGibberish() {
@@ -97,8 +103,7 @@ public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<
             JSONObject document = null;
             try {
                 document = new JSONObject(string);
-            }
-            catch (JSONException e) {
+            } catch (JSONException e) {
                 if (hypothesis.accepts(word)) {
                     return new DefaultQuery<>(word, false);
                 }

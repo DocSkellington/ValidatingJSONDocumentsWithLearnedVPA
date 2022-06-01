@@ -16,22 +16,25 @@ import net.automatalib.words.Alphabet;
 
 public class RandomROCABenchmarks extends ROCABenchmarks {
 
-    public RandomROCABenchmarks(final Path pathToCSVFile, final Duration timeout) throws IOException {
-        super(pathToCSVFile, timeout);
+    public RandomROCABenchmarks(final Path pathToCSVFile, final Duration timeout, int maxProperties, int maxItems)
+            throws IOException {
+        super(pathToCSVFile, timeout, maxProperties, maxItems);
     }
 
     @Override
     protected RestrictedAutomatonEquivalenceOracle<JSONSymbol> getRestrictedAutomatonEquivalenceOracle(int nTests,
-            int maxProperties, int maxItems, JSONSchema schema, Random rand, boolean shuffleKeys,
-            Alphabet<JSONSymbol> alphabet) {
-        return new JSONPartialEquivalenceOracle(nTests, maxProperties, maxItems, schema, rand, shuffleKeys, alphabet);
+            boolean canGenerateInvalid, int maxProperties, int maxItems, JSONSchema schema, Random rand,
+            boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        return new JSONPartialEquivalenceOracle(nTests, canGenerateInvalid, maxProperties, maxItems, schema, rand,
+                shuffleKeys, alphabet);
     }
 
     @Override
-    protected ROCAEquivalenceOracle<JSONSymbol> getEquivalenceOracle(int numberTests, int maxDocumentDepth,
-            int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
-            Alphabet<JSONSymbol> alphabet) {
-        return new ROCAJSONEquivalenceOracle(numberTests, maxDocumentDepth, maxProperties, maxItems, schema, random,
+    protected ROCAEquivalenceOracle<JSONSymbol> getEquivalenceOracle(int numberTests, boolean canGenerateInvalid,
+            int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema, Random random,
+            boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
+        return new ROCAJSONEquivalenceOracle(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems,
+                schema, random,
                 shuffleKeys, alphabet);
     }
 }

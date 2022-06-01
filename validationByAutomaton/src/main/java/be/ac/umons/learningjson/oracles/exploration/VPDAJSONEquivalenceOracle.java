@@ -10,8 +10,10 @@ import net.automatalib.words.VPDAlphabet;
 public class VPDAJSONEquivalenceOracle
         extends AbstractExplorationJSONConformanceVisiblyAlphabet<OneSEVPA<?, JSONSymbol>> {
 
-    public VPDAJSONEquivalenceOracle(int numberTests, int maxDocumentDepth, int maxProperties, int maxItems,
-            JSONSchema schema, Random random, boolean shuffleKeys, VPDAlphabet<JSONSymbol> alphabet) {
-        super(numberTests, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys, alphabet);
+    public VPDAJSONEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
+            int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
+            VPDAlphabet<JSONSymbol> alphabet) {
+        super(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys,
+                alphabet);
     }
 }
