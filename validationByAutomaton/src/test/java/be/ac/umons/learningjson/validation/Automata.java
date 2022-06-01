@@ -410,4 +410,47 @@ public class Automata {
 
         return automaton;
     }
+
+    public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithDuplicateKeys() {
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1"),
+            JSONSymbol.toSymbol("k2"),
+            JSONSymbol.commaSymbol,
+            JSONSymbol.integerSymbol,
+            JSONSymbol.stringSymbol
+        );
+        DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
+        JSONSymbol k1Symbol = JSONSymbol.toSymbol("k1"), k2Symbol = JSONSymbol.toSymbol("k2");
+
+        List<Location> locations = new ArrayList<>();
+
+        locations.add(automaton.addInitialLocation(false));
+        for (int i = 1 ; i <= 7 ; i++) {
+            locations.add(automaton.addLocation(false));
+        }
+        locations.add(automaton.addLocation(true));
+
+        int q0StackSymbol = automaton.encodeStackSym(locations.get(0), JSONSymbol.openingCurlyBraceSymbol);
+        int q1StackSymbol = automaton.encodeStackSym(locations.get(1), JSONSymbol.openingCurlyBraceSymbol);
+
+        automaton.setInternalSuccessor(locations.get(0), k1Symbol, locations.get(1));
+        automaton.setInternalSuccessor(locations.get(0), k2Symbol, locations.get(2));
+
+        automaton.setInternalSuccessor(locations.get(1), JSONSymbol.integerSymbol, locations.get(7));
+
+        automaton.setInternalSuccessor(locations.get(2), JSONSymbol.integerSymbol, locations.get(3));
+
+        automaton.setInternalSuccessor(locations.get(3), JSONSymbol.commaSymbol, locations.get(4));
+
+        automaton.setInternalSuccessor(locations.get(4), k2Symbol, locations.get(5));
+
+        automaton.setInternalSuccessor(locations.get(5), JSONSymbol.stringSymbol, locations.get(6));
+        
+        automaton.setReturnSuccessor(locations.get(6), JSONSymbol.closingCurlyBraceSymbol, q1StackSymbol, locations.get(7));
+
+        automaton.setReturnSuccessor(locations.get(7), JSONSymbol.closingCurlyBraceSymbol, q0StackSymbol, locations.get(8));
+
+        return automaton;
+    }
 }

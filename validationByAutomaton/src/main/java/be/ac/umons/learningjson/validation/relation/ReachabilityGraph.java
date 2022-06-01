@@ -54,6 +54,8 @@ public class ReachabilityGraph {
     private final Map<JSONSymbol, List<NodeInGraph>> keyToNodes = new HashMap<>();
     private final Map<JSONSymbol, Set<Location>> keyToLocations = new HashMap<>();
     private final List<NodeInGraph> startingNodes = new LinkedList<>();
+    private final boolean cyclic;
+    private final boolean duplicateKeys;
 
     public ReachabilityGraph(DefaultOneSEVPA<JSONSymbol> automaton) {
         final ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
@@ -70,7 +72,7 @@ public class ReachabilityGraph {
         // @formatter:off
         final ImmutableGraph.Builder<NodeInGraph> builder = GraphBuilder
             .directed()
-            .allowsSelfLoops(false)
+            // .allowsSelfLoops(false)
             .nodeOrder(ElementOrder.insertion())
             .incidentEdgeOrder(ElementOrder.stable())
             .<NodeInGraph>immutable()
@@ -158,6 +160,23 @@ public class ReachabilityGraph {
         }
 
         this.graph = builder.build();
+
+        boolean cyclic = false, duplicateKeys = false;
+        for (NodeInGraph start : startingNodes) {
+            Set<NodeInGraph> seenNodes = new HashSet<>();
+            Set<JSONSymbol> symbols = new HashSet<>();
+            for (NodeInGraph node : Traverser.forGraph(graph).depthFirstPreOrder(start)) {
+                if (!seenNodes.add(node)) {
+                    cyclic = true;
+                }
+                if (!symbols.add(node.getSymbol())) {
+                    duplicateKeys = true;
+                }
+            }
+        }
+
+        this.cyclic = cyclic;
+        this.duplicateKeys = duplicateKeys;
 
         propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
     }

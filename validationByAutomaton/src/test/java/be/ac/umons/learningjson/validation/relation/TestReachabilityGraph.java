@@ -19,6 +19,7 @@ public class TestReachabilityGraph {
     public void testStraightforwardAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
         ReachabilityGraph graph = new ReachabilityGraph(automaton);
+        Assert.assertTrue(graph.isValid());
         Set<NodeInGraph> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph>> edges = graph.edges();
 
@@ -55,6 +56,7 @@ public class TestReachabilityGraph {
     public void testSmallTwoBranchesAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
         ReachabilityGraph graph = new ReachabilityGraph(automaton);
+        Assert.assertTrue(graph.isValid());
         Set<NodeInGraph> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph>> edges = graph.edges();
         ImmutableGraph<NodeInGraph> actualGraph = graph.getGraph();
@@ -101,6 +103,8 @@ public class TestReachabilityGraph {
     }
 
     private void checkNodesInAutomatonWithOptionalKeysGraph(DefaultOneSEVPA<JSONSymbol> automaton, ReachabilityGraph graph) {
+        Assert.assertTrue(graph.isValid());
+
         Set<NodeInGraph> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph>> edges = graph.edges();
         ImmutableGraph<NodeInGraph> actualGraph = graph.getGraph();
@@ -166,5 +170,12 @@ public class TestReachabilityGraph {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
         ReachabilityGraph graph = new ReachabilityGraph(automaton);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
+    }
+
+    @Test
+    public void testAutomatonWithDuplicateKeys() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithDuplicateKeys();
+        ReachabilityGraph graph = new ReachabilityGraph(automaton);
+        Assert.assertFalse(graph.isValid());
     }
 }
