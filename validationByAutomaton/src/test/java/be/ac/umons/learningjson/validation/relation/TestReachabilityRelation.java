@@ -14,7 +14,7 @@ import net.automatalib.words.VPDAlphabet;
 public class TestReachabilityRelation {
     @Test
     public void testCompose() {
-        VPDAlphabet<JSONSymbol> alphabet = Automata.constructAlphabet("test");
+        VPDAlphabet<JSONSymbol> alphabet = Automata.constructAlphabet(JSONSymbol.toSymbol("test"));
         Location q0 = new Location(alphabet, 0, false);
         Location q1 = new Location(alphabet, 1, false);
         Location q2 = new Location(alphabet, 2, false);

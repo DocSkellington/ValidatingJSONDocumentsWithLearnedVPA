@@ -88,13 +88,13 @@ public abstract class ABenchmarks {
         returnSymbols.add(JSONSymbol.closingCurlyBraceSymbol);
 
         internalSymbols.add(JSONSymbol.commaSymbol);
-        internalSymbols.add(JSONSymbol.toSymbol("true"));
-        internalSymbols.add(JSONSymbol.toSymbol("false"));
-        internalSymbols.add(JSONSymbol.toSymbol("null"));
-        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\""));
-        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.integerConstant + "\""));
-        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.numberConstant + "\""));
-        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.enumConstant + "\""));
+        internalSymbols.add(JSONSymbol.trueSymbol);
+        internalSymbols.add(JSONSymbol.falseSymbol);
+        internalSymbols.add(JSONSymbol.nullSymbol);
+        internalSymbols.add(JSONSymbol.stringSymbol);
+        internalSymbols.add(JSONSymbol.integerSymbol);
+        internalSymbols.add(JSONSymbol.numberSymbol);
+        internalSymbols.add(JSONSymbol.enumSymbol);
 
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\":"));
         schema.getAllKeysDefinedInSchema().stream().map(k -> "\"" + k + "\":").map(k -> JSONSymbol.toSymbol(k))

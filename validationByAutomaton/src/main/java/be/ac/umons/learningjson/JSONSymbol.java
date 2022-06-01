@@ -16,6 +16,7 @@ package be.ac.umons.learningjson;
 
 import java.util.Objects;
 
+import be.ac.umons.jsonschematools.AbstractConstants;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 import net.automatalib.words.abstractimpl.AbstractSymbol;
@@ -34,6 +35,13 @@ public class JSONSymbol extends AbstractSymbol<JSONSymbol> {
     public static final JSONSymbol closingCurlyBraceSymbol = JSONSymbol.toSymbol("}");
     public static final JSONSymbol openingBracketSymbol = JSONSymbol.toSymbol("[");
     public static final JSONSymbol closingBracketSymbol = JSONSymbol.toSymbol("]");
+    public static final JSONSymbol nullSymbol = JSONSymbol.toSymbol("null");
+    public static final JSONSymbol integerSymbol = JSONSymbol.toSymbol("\"" + AbstractConstants.integerConstant + "\"");
+    public static final JSONSymbol numberSymbol = JSONSymbol.toSymbol("\"" + AbstractConstants.numberConstant + "\"");
+    public static final JSONSymbol stringSymbol = JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\"");
+    public static final JSONSymbol enumSymbol = JSONSymbol.toSymbol("\"" + AbstractConstants.enumConstant + "\"");
+    public static final JSONSymbol trueSymbol = JSONSymbol.toSymbol("true");
+    public static final JSONSymbol falseSymbol = JSONSymbol.toSymbol("false");
 
     private final String actualSymbols;
 
@@ -46,11 +54,11 @@ public class JSONSymbol extends AbstractSymbol<JSONSymbol> {
         if (obj == this) {
             return true;
         }
-        if (obj.getClass() != getClass()) {
+        if (!(obj instanceof JSONSymbol)) {
             return false;
         }
         JSONSymbol o = (JSONSymbol)obj;
-        return actualSymbols.equals(o.actualSymbols);
+        return Objects.equals(actualSymbols, o.actualSymbols);
     }
 
     @Override

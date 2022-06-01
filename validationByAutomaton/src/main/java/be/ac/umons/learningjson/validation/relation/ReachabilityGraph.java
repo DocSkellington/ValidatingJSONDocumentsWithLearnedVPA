@@ -17,7 +17,6 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.Traverser;
 
-import be.ac.umons.jsonschematools.AbstractConstants;
 import be.ac.umons.learningjson.JSONSymbol;
 import be.ac.umons.learningjson.validation.PairSourceToReached;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
@@ -78,12 +77,13 @@ public class ReachabilityGraph {
         ;
         List<JSONSymbol> notKeySymbols = List.of(
             JSONSymbol.commaSymbol,
-            JSONSymbol.toSymbol(AbstractConstants.enumConstant),
-            JSONSymbol.toSymbol(AbstractConstants.integerConstant),
-            JSONSymbol.toSymbol(AbstractConstants.numberConstant),
-            JSONSymbol.toSymbol(AbstractConstants.stringConstant),
-            JSONSymbol.toSymbol("true"),
-            JSONSymbol.toSymbol("false")
+            JSONSymbol.integerSymbol,
+            JSONSymbol.numberSymbol,
+            JSONSymbol.stringSymbol,
+            JSONSymbol.enumSymbol,
+            JSONSymbol.trueSymbol,
+            JSONSymbol.falseSymbol,
+            JSONSymbol.nullSymbol
         );
         final Alphabet<JSONSymbol> keyAlphabet = automaton.getInputAlphabet().getInternalAlphabet().stream()
             .filter(symbol -> !notKeySymbols.contains(symbol))

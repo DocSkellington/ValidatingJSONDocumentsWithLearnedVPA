@@ -51,7 +51,7 @@ public class WordConversion {
         boolean first =  true;
         for (String key : keys) {
             if (!first) {
-                wordBuilder.add(toSymbol(","));
+                wordBuilder.add(JSONSymbol.commaSymbol);
             }
             first = false;
             wordBuilder.add(toSymbol("\"" + key + "\":"));
@@ -85,7 +85,7 @@ public class WordConversion {
         boolean first = true;
         for (Object o : array) {
             if (!first) {
-                wordBuilder.add(toSymbol(","));
+                wordBuilder.add(JSONSymbol.commaSymbol);
             }
             first = false;
             if (o instanceof JSONObject) {

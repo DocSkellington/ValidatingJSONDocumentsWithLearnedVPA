@@ -3,7 +3,6 @@ package be.ac.umons.learningjson.validation;
 import java.util.ArrayList;
 import java.util.List;
 
-import be.ac.umons.jsonschematools.AbstractConstants;
 import be.ac.umons.learningjson.JSONSymbol;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
@@ -13,23 +12,24 @@ import net.automatalib.words.impl.Alphabets;
 import net.automatalib.words.impl.DefaultVPDAlphabet;
 
 public class Automata {
-    private static List<JSONSymbol> fromStringsToSymbols(String... symbols) {
-        List<JSONSymbol> jsonSymbols = new ArrayList<>(symbols.length);
-        for (String symbol : symbols) {
-            jsonSymbols.add(JSONSymbol.toSymbol(symbol));
-        }
-        return jsonSymbols;
-    }
-
-    public static VPDAlphabet<JSONSymbol> constructAlphabet(String... symbols) {
-        Alphabet<JSONSymbol> internalAlphabet = Alphabets.fromCollection(fromStringsToSymbols(symbols));
-        Alphabet<JSONSymbol> callAlphabet = Alphabets.fromCollection(fromStringsToSymbols("{", "["));
-        Alphabet<JSONSymbol> returnAlphabet = Alphabets.fromCollection(fromStringsToSymbols("}", "]"));
+    public static VPDAlphabet<JSONSymbol> constructAlphabet(JSONSymbol... symbols) {
+        Alphabet<JSONSymbol> internalAlphabet = Alphabets.fromArray(symbols);
+        Alphabet<JSONSymbol> callAlphabet = Alphabets.fromArray(JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.openingBracketSymbol);
+        Alphabet<JSONSymbol> returnAlphabet = Alphabets.fromArray(JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.closingBracketSymbol);
         return new DefaultVPDAlphabet<>(internalAlphabet, callAlphabet, returnAlphabet);
     }
 
     public static DefaultOneSEVPA<JSONSymbol> constructStraightforwardAutomaton() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", ",", AbstractConstants.integerConstant, AbstractConstants.stringConstant, "true");
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1"),
+            JSONSymbol.toSymbol("k2"),
+            JSONSymbol.commaSymbol,
+            JSONSymbol.integerSymbol,
+            JSONSymbol.stringSymbol,
+            JSONSymbol.trueSymbol
+        );
+        // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
 
         Location q0 = automaton.addInitialLocation(false);
@@ -42,13 +42,13 @@ public class Automata {
 
         automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k1"), q1);
 
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol(AbstractConstants.integerConstant), q2);
+        automaton.setInternalSuccessor(q1, JSONSymbol.integerSymbol, q2);
 
         automaton.setInternalSuccessor(q2, JSONSymbol.commaSymbol, q3);
 
         automaton.setInternalSuccessor(q3, JSONSymbol.toSymbol("k2"), q4);
 
-        automaton.setInternalSuccessor(q4, JSONSymbol.toSymbol("true"), q5);
+        automaton.setInternalSuccessor(q4, JSONSymbol.trueSymbol, q5);
 
         automaton.setReturnSuccessor(q5, JSONSymbol.closingCurlyBraceSymbol,
                 automaton.encodeStackSym(q0, JSONSymbol.openingCurlyBraceSymbol), q6);
@@ -57,7 +57,17 @@ public class Automata {
     }
 
     public static DefaultOneSEVPA<JSONSymbol> constructSmallTwoBranchesAutomaton() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "k3", ",", "int", "str", "bool");
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1"),
+            JSONSymbol.toSymbol("k2"),
+            JSONSymbol.commaSymbol,
+            JSONSymbol.integerSymbol,
+            JSONSymbol.stringSymbol,
+            JSONSymbol.falseSymbol,
+            JSONSymbol.trueSymbol
+        );
+        // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
 
         Location q0 = automaton.addInitialLocation(false);
@@ -73,14 +83,15 @@ public class Automata {
 
         automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k1"), q1);
 
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("int"), q2);
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("str"), q7);
+        automaton.setInternalSuccessor(q1, JSONSymbol.integerSymbol, q2);
+        automaton.setInternalSuccessor(q1, JSONSymbol.stringSymbol, q7);
 
         automaton.setInternalSuccessor(q2, JSONSymbol.commaSymbol, q3);
 
         automaton.setInternalSuccessor(q3, JSONSymbol.toSymbol("k2"), q4);
 
-        automaton.setInternalSuccessor(q4, JSONSymbol.toSymbol("bool"), q5);
+        automaton.setInternalSuccessor(q4, JSONSymbol.falseSymbol, q5);
+        automaton.setInternalSuccessor(q4, JSONSymbol.trueSymbol, q5);
 
         automaton.setReturnSuccessor(q5, JSONSymbol.closingCurlyBraceSymbol,
                 automaton.encodeStackSym(q0, JSONSymbol.openingCurlyBraceSymbol), q6);
@@ -89,13 +100,24 @@ public class Automata {
 
         automaton.setInternalSuccessor(q8, JSONSymbol.toSymbol("k2"), q9);
 
-        automaton.setInternalSuccessor(q9, JSONSymbol.toSymbol("str"), q5);
+        automaton.setInternalSuccessor(q9, JSONSymbol.stringSymbol, q5);
 
         return automaton;
     }
 
     public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithOptionalKeys() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "o1", "o2", ",", "int", "str", "bool");
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1"),
+            JSONSymbol.toSymbol("k2"),
+            JSONSymbol.toSymbol("o1"),
+            JSONSymbol.toSymbol("o2"),
+            JSONSymbol.commaSymbol,
+            JSONSymbol.integerSymbol,
+            JSONSymbol.stringSymbol,
+            JSONSymbol.trueSymbol
+        );
+        // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
 
         Location q0 = automaton.addInitialLocation(false);
@@ -115,7 +137,7 @@ public class Automata {
         automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k1"), q1);
         automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k2"), q5);
 
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("str"), q2);
+        automaton.setInternalSuccessor(q1, JSONSymbol.stringSymbol, q2);
 
         automaton.setReturnSuccessor(q2, JSONSymbol.closingCurlyBraceSymbol, q0StackSymbol, q11);
         automaton.setInternalSuccessor(q2, JSONSymbol.commaSymbol, q3);
@@ -124,7 +146,7 @@ public class Automata {
 
         int q4StackSymbol = automaton.encodeStackSym(q4, JSONSymbol.openingCurlyBraceSymbol);
 
-        automaton.setInternalSuccessor(q5, JSONSymbol.toSymbol("int"), q6);
+        automaton.setInternalSuccessor(q5, JSONSymbol.integerSymbol, q6);
         
         automaton.setReturnSuccessor(q6, JSONSymbol.closingCurlyBraceSymbol, q4StackSymbol, q7);
         automaton.setInternalSuccessor(q6, JSONSymbol.commaSymbol, q3);
@@ -135,7 +157,7 @@ public class Automata {
 
         automaton.setInternalSuccessor(q8, JSONSymbol.toSymbol("o2"), q9);
 
-        automaton.setInternalSuccessor(q9, JSONSymbol.toSymbol("bool"), q10);
+        automaton.setInternalSuccessor(q9, JSONSymbol.trueSymbol, q10);
 
         automaton.setReturnSuccessor(q10, JSONSymbol.closingCurlyBraceSymbol, q0StackSymbol, q11);
         automaton.setReturnSuccessor(q10, JSONSymbol.closingCurlyBraceSymbol, q4StackSymbol, q7);
@@ -144,7 +166,18 @@ public class Automata {
     }
 
     public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithOptionalKeysAndExplicitBinState() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "o1", "o2", ",", "int", "str", "bool");
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1"),
+            JSONSymbol.toSymbol("k2"),
+            JSONSymbol.toSymbol("o1"),
+            JSONSymbol.toSymbol("o2"),
+            JSONSymbol.commaSymbol,
+            JSONSymbol.integerSymbol,
+            JSONSymbol.stringSymbol,
+            JSONSymbol.trueSymbol
+        );
+        // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
 
         List<Location> locations = new ArrayList<>();
@@ -165,14 +198,14 @@ public class Automata {
         automaton.setInternalSuccessor(locations.get(0), JSONSymbol.toSymbol("k1"), locations.get(1));
         automaton.setInternalSuccessor(locations.get(0), JSONSymbol.toSymbol("k2"), locations.get(5));
 
-        automaton.setInternalSuccessor(locations.get(1), JSONSymbol.toSymbol("str"), locations.get(2));
+        automaton.setInternalSuccessor(locations.get(1), JSONSymbol.stringSymbol, locations.get(2));
 
         automaton.setReturnSuccessor(locations.get(2), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(0), locations.get(11));
         automaton.setInternalSuccessor(locations.get(2), JSONSymbol.commaSymbol, locations.get(3));
 
         automaton.setInternalSuccessor(locations.get(3), JSONSymbol.toSymbol("o1"), locations.get(4));
 
-        automaton.setInternalSuccessor(locations.get(5), JSONSymbol.toSymbol("int"), locations.get(6));
+        automaton.setInternalSuccessor(locations.get(5), JSONSymbol.integerSymbol, locations.get(6));
         
         automaton.setReturnSuccessor(locations.get(6), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(4), locations.get(7));
         automaton.setInternalSuccessor(locations.get(6), JSONSymbol.commaSymbol, locations.get(3));
@@ -183,7 +216,7 @@ public class Automata {
 
         automaton.setInternalSuccessor(locations.get(8), JSONSymbol.toSymbol("o2"), locations.get(9));
 
-        automaton.setInternalSuccessor(locations.get(9), JSONSymbol.toSymbol("bool"), locations.get(10));
+        automaton.setInternalSuccessor(locations.get(9), JSONSymbol.trueSymbol, locations.get(10));
 
         automaton.setReturnSuccessor(locations.get(10), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(0), locations.get(11));
         automaton.setReturnSuccessor(locations.get(10), JSONSymbol.closingCurlyBraceSymbol, curlyStackSymbols.get(4), locations.get(7));
@@ -212,7 +245,16 @@ public class Automata {
     }
 
     public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithTwoKeysOnSameTransition() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "o1", ",", "int", "str");
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1"),
+            JSONSymbol.toSymbol("k2"),
+            JSONSymbol.toSymbol("o1"),
+            JSONSymbol.commaSymbol,
+            JSONSymbol.integerSymbol,
+            JSONSymbol.stringSymbol
+        );
+        // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
 
         Location q0 = automaton.addInitialLocation(false);
@@ -229,8 +271,8 @@ public class Automata {
         automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k1"), q1);
         automaton.setInternalSuccessor(q0, JSONSymbol.toSymbol("k2"), q1);
 
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("int"), q2);
-        automaton.setInternalSuccessor(q1, JSONSymbol.toSymbol("str"), q2);
+        automaton.setInternalSuccessor(q1, JSONSymbol.integerSymbol, q2);
+        automaton.setInternalSuccessor(q1, JSONSymbol.stringSymbol, q2);
 
         automaton.setInternalSuccessor(q2, JSONSymbol.commaSymbol, q3);
         automaton.setReturnSuccessor(q2, JSONSymbol.closingCurlyBraceSymbol, q4StackSymbol, q5);
@@ -244,10 +286,20 @@ public class Automata {
     }
 
     public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithNestedObjectAndMultipleBranches() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", "k3", ",", "int", "str", "bool");
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1"),
+            JSONSymbol.toSymbol("k2"),
+            JSONSymbol.toSymbol("k3"),
+            JSONSymbol.commaSymbol,
+            JSONSymbol.integerSymbol,
+            JSONSymbol.stringSymbol,
+            JSONSymbol.trueSymbol
+        );
+        // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
         JSONSymbol k1Symbol = JSONSymbol.toSymbol("k1"), k2Symbol = JSONSymbol.toSymbol("k2"), k3Symbol = JSONSymbol.toSymbol("k3");
-        JSONSymbol intSymbol = JSONSymbol.toSymbol("int"), boolSymbol = JSONSymbol.toSymbol("bool"), strSymbol = JSONSymbol.toSymbol("str");
+        JSONSymbol intSymbol = JSONSymbol.integerSymbol, boolSymbol = JSONSymbol.trueSymbol, strSymbol = JSONSymbol.stringSymbol;
 
         List<Location> locations = new ArrayList<>();
 
@@ -301,10 +353,18 @@ public class Automata {
     }
 
     public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithArrays() {
-        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet("k1", "k2", ",", "int", "str", "bool");
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1"),
+            JSONSymbol.toSymbol("k2"),
+            JSONSymbol.commaSymbol,
+            JSONSymbol.integerSymbol,
+            JSONSymbol.stringSymbol,
+            JSONSymbol.trueSymbol
+        );
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
         JSONSymbol k1Symbol = JSONSymbol.toSymbol("k1"), k2Symbol = JSONSymbol.toSymbol("k2");
-        JSONSymbol intSymbol = JSONSymbol.toSymbol("int"), boolSymbol = JSONSymbol.toSymbol("bool"), strSymbol = JSONSymbol.toSymbol("str");
+        JSONSymbol intSymbol = JSONSymbol.integerSymbol, boolSymbol = JSONSymbol.trueSymbol, strSymbol = JSONSymbol.stringSymbol;
 
         List<Location> locations = new ArrayList<>();
 
