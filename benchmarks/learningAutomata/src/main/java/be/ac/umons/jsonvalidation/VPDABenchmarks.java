@@ -3,12 +3,12 @@ package be.ac.umons.jsonvalidation;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Random;
-import java.util.Set;
 
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
@@ -105,38 +105,57 @@ public abstract class VPDABenchmarks extends ABenchmarks {
     private <L> int computeDiameter(OneSEVPA<L, JSONSymbol> vpda) {
         System.out.println("Computing diameter");
         final Graph<L, SevpaViewEdge<L, JSONSymbol>> graph = vpda.graphView();
-        int maximalLength = 0;
-        for (L start : graph.getNodes()) {
-            for (L target : graph.getNodes()) {
-                System.out.println("From " + start + " to " + target);
-                int minimalLength = shortestPathLength(vpda.getInitialLocation(), graph, start, target, 0,
-                        new HashSet<>());
-                System.out.println(minimalLength);
-                maximalLength = Math.max(maximalLength, minimalLength);
-            }
-        }
-        return maximalLength;
+        final List<L> nodes = List.copyOf(graph.getNodes());
+        final List<List<Integer>> distances = floydWarshall(graph, nodes);
+
+        return distances.stream()
+            .map(list -> list.stream()
+                .max(Comparator.naturalOrder())
+                .orElseThrow()
+            )
+            .max(Comparator.naturalOrder())
+            .orElseThrow()
+        ;
     }
 
-    private <L> int shortestPathLength(L initial, Graph<L, SevpaViewEdge<L, JSONSymbol>> graph, L current, L target,
-            int length, Set<L> seenLocations) {
-        if (Objects.equals(current, target)) {
-            return length;
+    private <L> List<List<Integer>> floydWarshall(Graph<L, SevpaViewEdge<L, JSONSymbol>> graph, List<L> nodes) {
+        final List<List<Integer>> distances = new ArrayList<>(graph.size());
+
+        for (L source : nodes) {
+            final List<Integer> dist = new ArrayList<>(nodes.size());
+            final Collection<L> adjacent = graph.getAdjacentTargets(source);
+            for (L target : nodes) {
+                if (source == target) {
+                    dist.add(0);
+                }
+                else if (adjacent.contains(target)) {
+                    dist.add(1);
+                }
+                else {
+                    dist.add(Integer.MAX_VALUE);
+                }
+            }
+            distances.add(dist);
         }
 
-        if (!seenLocations.add(current)) {
-            return Integer.MAX_VALUE;
+        for (int k = 0 ; k < nodes.size() ; k++) {
+            for (int i = 0 ; i < nodes.size() ; i++) {
+                for (int j = 0 ; j < nodes.size() ; j++) {
+                    final int sumByK;
+                    if (distances.get(i).get(k) == Integer.MAX_VALUE || distances.get(k).get(j) == Integer.MAX_VALUE) {
+                        sumByK = Integer.MAX_VALUE;
+                    }
+                    else {
+                        sumByK = distances.get(i).get(k) + distances.get(k).get(j);
+                    }
+                    if (distances.get(i).get(j) > sumByK) {
+                        distances.get(i).set(j, sumByK);
+                    }
+                }
+            }
         }
 
-        int minimal = Integer.MAX_VALUE;
-        for (L successor : graph.getAdjacentTargets(current)) {
-            minimal = Math.min(shortestPathLength(initial, graph, successor, target, length + 1, seenLocations),
-                    minimal);
-        }
-        minimal = Math.min(shortestPathLength(initial, graph, initial, target, length, seenLocations), minimal);
-
-        seenLocations.remove(current);
-        return minimal;
+        return distances;
     }
 
     protected abstract EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> getEquivalenceOracle(
