@@ -23,8 +23,6 @@ import org.json.JSONObject;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.WordConversion;
 import net.automatalib.words.Word;
 
 /**

@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import net.automatalib.automata.vpda.Location;
 
 /**
  * The stack used in a {@link ValidationState}.
@@ -18,15 +17,15 @@ import net.automatalib.automata.vpda.Location;
  * 
  * @author Gaëtan Staquet
  */
-class ValidationStackContents {
-    private final Set<PairSourceToReached> sourceToReachedLocationsBeforeCall;
+class ValidationStackContents<L> {
+    private final Set<PairSourceToReached<L>> sourceToReachedLocationsBeforeCall;
     private final JSONSymbol callSymbol;
     private final Set<JSONSymbol> seenKeys = new HashSet<>();
     private JSONSymbol currentKey = null;
-    private @Nullable final ValidationStackContents rest;
+    private @Nullable final ValidationStackContents<L> rest;
 
-    private ValidationStackContents(final Set<PairSourceToReached> sourceToReachedLocations,
-            final JSONSymbol symbol, final @Nullable ValidationStackContents rest) {
+    private ValidationStackContents(final Set<PairSourceToReached<L>> sourceToReachedLocations,
+            final JSONSymbol symbol, final @Nullable ValidationStackContents<L> rest) {
         this.sourceToReachedLocationsBeforeCall = sourceToReachedLocations;
         this.callSymbol = symbol;
         this.rest = rest;
@@ -37,11 +36,11 @@ class ValidationStackContents {
         return seenKeys.add(key);
     }
 
-    public Set<PairSourceToReached> peekSourceToReachedLocationsBeforeCall() {
+    public Set<PairSourceToReached<L>> peekSourceToReachedLocationsBeforeCall() {
         return sourceToReachedLocationsBeforeCall;
     }
 
-    public Set<Location> peekReachedLocationsBeforeCall() {
+    public Set<L> peekReachedLocationsBeforeCall() {
         // @formatter:off
         return sourceToReachedLocationsBeforeCall.stream()
             .map(pair -> pair.getReachedLocation())
@@ -61,12 +60,12 @@ class ValidationStackContents {
         return currentKey;
     }
 
-    public @Nullable ValidationStackContents pop() {
+    public @Nullable ValidationStackContents<L> pop() {
         return rest;
     }
 
-    public static ValidationStackContents push(final Set<PairSourceToReached> sourceToReachedLocations,
-            final JSONSymbol symbol, final ValidationStackContents rest) {
-        return new ValidationStackContents(sourceToReachedLocations, symbol, rest);
+    public static <L> ValidationStackContents<L> push(final Set<PairSourceToReached<L>> sourceToReachedLocations,
+            final JSONSymbol symbol, final ValidationStackContents<L> rest) {
+        return new ValidationStackContents<>(sourceToReachedLocations, symbol, rest);
     }
 }

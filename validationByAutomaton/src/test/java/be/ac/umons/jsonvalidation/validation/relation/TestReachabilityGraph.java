@@ -3,17 +3,14 @@ package be.ac.umons.jsonvalidation.validation.relation;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.graph.EndpointPair;
-import com.google.common.graph.ImmutableGraph;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.graph.EndpointPair;
+import com.google.common.graph.ImmutableGraph;
+
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.Automata;
-import be.ac.umons.jsonvalidation.validation.relation.InRelation;
-import be.ac.umons.jsonvalidation.validation.relation.NodeInGraph;
-import be.ac.umons.jsonvalidation.validation.relation.ReachabilityGraph;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 
@@ -21,19 +18,19 @@ public class TestReachabilityGraph {
     @Test
     public void testStraightforwardAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
-        ReachabilityGraph graph = new ReachabilityGraph(automaton);
+        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
         Assert.assertTrue(graph.isValid());
-        Set<NodeInGraph> nodes = graph.nodes();
-        Set<EndpointPair<NodeInGraph>> edges = graph.edges();
+        Set<NodeInGraph<Location>> nodes = graph.nodes();
+        Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
 
         Location q0 = automaton.getLocation(0);
         Location q2 = automaton.getLocation(2);
         Location q3 = automaton.getLocation(3);
         Location q5 = automaton.getLocation(5);
-        InRelation q0Toq2Relation = InRelation.of(q0, q2);
-        NodeInGraph q0Toq2 = new NodeInGraph(q0Toq2Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
-        InRelation q3Toq5Relation = InRelation.of(q3, q5);
-        NodeInGraph q3Toq5 = new NodeInGraph(q3Toq5Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
+        InRelation<Location> q0Toq2Relation = InRelation.of(q0, q2);
+        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0Toq2Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
+        InRelation<Location> q3Toq5Relation = InRelation.of(q3, q5);
+        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3Toq5Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
 
         Assert.assertEquals(nodes.size(), 2);
         Assert.assertTrue(nodes.contains(q0Toq2));
@@ -58,11 +55,11 @@ public class TestReachabilityGraph {
     @Test
     public void testSmallTwoBranchesAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityGraph graph = new ReachabilityGraph(automaton);
+        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
         Assert.assertTrue(graph.isValid());
-        Set<NodeInGraph> nodes = graph.nodes();
-        Set<EndpointPair<NodeInGraph>> edges = graph.edges();
-        ImmutableGraph<NodeInGraph> actualGraph = graph.getGraph();
+        Set<NodeInGraph<Location>> nodes = graph.nodes();
+        Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
+        ImmutableGraph<NodeInGraph<Location>> actualGraph = graph.getGraph();
 
         Location q0 = automaton.getLocation(0);
         Location q2 = automaton.getLocation(2);
@@ -70,14 +67,14 @@ public class TestReachabilityGraph {
         Location q5 = automaton.getLocation(5);
         Location q7 = automaton.getLocation(7);
         Location q8 = automaton.getLocation(8);
-        InRelation q0Toq2Relation = InRelation.of(q0, q2);
-        InRelation q0Toq7Relation = InRelation.of(q0, q7);
-        InRelation q3Toq5Relation = InRelation.of(q3, q5);
-        InRelation q8Toq5Relation = InRelation.of(q8, q5);
-        NodeInGraph q0Toq2 = new NodeInGraph(q0Toq2Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
-        NodeInGraph q0Toq7 = new NodeInGraph(q0Toq7Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
-        NodeInGraph q3Toq5 = new NodeInGraph(q3Toq5Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
-        NodeInGraph q8Toq5 = new NodeInGraph(q8Toq5Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
+        InRelation<Location> q0Toq2Relation = InRelation.of(q0, q2);
+        InRelation<Location> q0Toq7Relation = InRelation.of(q0, q7);
+        InRelation<Location> q3Toq5Relation = InRelation.of(q3, q5);
+        InRelation<Location> q8Toq5Relation = InRelation.of(q8, q5);
+        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0Toq2Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
+        NodeInGraph<Location> q0Toq7 = new NodeInGraph<>(q0Toq7Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
+        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3Toq5Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
+        NodeInGraph<Location> q8Toq5 = new NodeInGraph<>(q8Toq5Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
 
         Assert.assertEquals(nodes.size(), 4);
         Assert.assertTrue(nodes.contains(q0Toq2));
@@ -105,12 +102,12 @@ public class TestReachabilityGraph {
         }
     }
 
-    private void checkNodesInAutomatonWithOptionalKeysGraph(DefaultOneSEVPA<JSONSymbol> automaton, ReachabilityGraph graph) {
+    private void checkNodesInAutomatonWithOptionalKeysGraph(DefaultOneSEVPA<JSONSymbol> automaton, ReachabilityGraph<Location> graph) {
         Assert.assertTrue(graph.isValid());
 
-        Set<NodeInGraph> nodes = graph.nodes();
-        Set<EndpointPair<NodeInGraph>> edges = graph.edges();
-        ImmutableGraph<NodeInGraph> actualGraph = graph.getGraph();
+        Set<NodeInGraph<Location>> nodes = graph.nodes();
+        Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
+        ImmutableGraph<NodeInGraph<Location>> actualGraph = graph.getGraph();
 
         Location q0 = automaton.getLocation(0);
         Location q2 = automaton.getLocation(2);
@@ -119,14 +116,14 @@ public class TestReachabilityGraph {
         Location q7 = automaton.getLocation(7);
         Location q8 = automaton.getLocation(8);
         Location q10 = automaton.getLocation(10);
-        InRelation q0Toq2Relation = InRelation.of(q0, q2);
-        InRelation q0Toq6Relation = InRelation.of(q0, q6);
-        InRelation q3Toq7Relation = InRelation.of(q3, q7);
-        InRelation q8Toq10Relation = InRelation.of(q8, q10);
-        NodeInGraph q0Toq2 = new NodeInGraph(q0Toq2Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
-        NodeInGraph q0Toq6 = new NodeInGraph(q0Toq6Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
-        NodeInGraph q3Toq7 = new NodeInGraph(q3Toq7Relation, JSONSymbol.toSymbol("o1"), automaton, new HashSet<>());
-        NodeInGraph q8Toq10 = new NodeInGraph(q8Toq10Relation, JSONSymbol.toSymbol("o2"), automaton, new HashSet<>());
+        InRelation<Location> q0Toq2Relation = InRelation.of(q0, q2);
+        InRelation<Location> q0Toq6Relation = InRelation.of(q0, q6);
+        InRelation<Location> q3Toq7Relation = InRelation.of(q3, q7);
+        InRelation<Location> q8Toq10Relation = InRelation.of(q8, q10);
+        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0Toq2Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
+        NodeInGraph<Location> q0Toq6 = new NodeInGraph<>(q0Toq6Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
+        NodeInGraph<Location> q3Toq7 = new NodeInGraph<>(q3Toq7Relation, JSONSymbol.toSymbol("o1"), automaton, new HashSet<>());
+        NodeInGraph<Location> q8Toq10 = new NodeInGraph<>(q8Toq10Relation, JSONSymbol.toSymbol("o2"), automaton, new HashSet<>());
 
         Assert.assertEquals(nodes.size(), 4);
         Assert.assertTrue(nodes.contains(q0Toq2));
@@ -164,21 +161,21 @@ public class TestReachabilityGraph {
     @Test
     public void testAutomatonWithOptionalKeysGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
-        ReachabilityGraph graph = new ReachabilityGraph(automaton);
+        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
 
     @Test
     public void testAutomatonWithOptionalKeysAndExplicitBinStateGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
-        ReachabilityGraph graph = new ReachabilityGraph(automaton);
+        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
 
     @Test
     public void testAutomatonWithDuplicateKeys() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithDuplicateKeys();
-        ReachabilityGraph graph = new ReachabilityGraph(automaton);
+        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
         Assert.assertFalse(graph.isValid());
     }
 }

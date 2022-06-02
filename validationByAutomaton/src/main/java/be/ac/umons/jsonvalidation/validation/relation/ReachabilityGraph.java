@@ -19,8 +19,7 @@ import com.google.common.graph.Traverser;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.PairSourceToReached;
-import net.automatalib.automata.vpda.DefaultOneSEVPA;
-import net.automatalib.automata.vpda.Location;
+import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.commons.util.Pair;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.impl.Alphabets;
@@ -49,33 +48,39 @@ import net.automatalib.words.impl.Alphabets;
  * 
  * @author Gaëtan Staquet
  */
-public class ReachabilityGraph {
-    private final ImmutableGraph<NodeInGraph> graph;
-    private final Map<JSONSymbol, List<NodeInGraph>> keyToNodes = new HashMap<>();
-    private final Map<JSONSymbol, Set<Location>> keyToLocations = new HashMap<>();
-    private final List<NodeInGraph> startingNodes = new LinkedList<>();
+public class ReachabilityGraph<L> {
+    private final OneSEVPA<L, JSONSymbol> automaton;
+    private final ImmutableGraph<NodeInGraph<L>> graph;
+    private final Map<JSONSymbol, List<NodeInGraph<L>>> keyToNodes = new HashMap<>();
+    private final Map<JSONSymbol, Set<L>> keyToLocations = new HashMap<>();
+    private final List<NodeInGraph<L>> startingNodes = new LinkedList<>();
     private final boolean cyclic;
     private final boolean duplicateKeys;
 
-    public ReachabilityGraph(DefaultOneSEVPA<JSONSymbol> automaton) {
-        final ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
-        final ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
-        final ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
+    public static <L> ReachabilityGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton) {
+        final ReachabilityRelation<L> commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
+        final ReachabilityRelation<L> internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        final ReachabilityRelation<L> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
                 commaRelation, internalRelation);
 
-        final Set<Location> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
+        return new ReachabilityGraph<>(automaton, commaRelation, internalRelation, wellMatchedRelation);
+    }
 
-        final ReachabilityRelation unionRelation = internalRelation.union(wellMatchedRelation);
+    public ReachabilityGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> commaRelation, final ReachabilityRelation<L> internalRelation, final ReachabilityRelation<L> wellMatchedRelation) {
+        this.automaton = automaton;
+        final Set<L> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
 
-        final ReachabilityRelation keyValueRelation = unionRelation.compose(unionRelation);
+        final ReachabilityRelation<L> unionRelation = internalRelation.union(wellMatchedRelation);
+
+        final ReachabilityRelation<L> keyValueRelation = unionRelation.compose(unionRelation);
 
         // @formatter:off
-        final ImmutableGraph.Builder<NodeInGraph> builder = GraphBuilder
+        final ImmutableGraph.Builder<NodeInGraph<L>> builder = GraphBuilder
             .directed()
             .allowsSelfLoops(true)
             .nodeOrder(ElementOrder.insertion())
             .incidentEdgeOrder(ElementOrder.stable())
-            .<NodeInGraph>immutable()
+            .<NodeInGraph<L>>immutable()
         ;
         List<JSONSymbol> notKeySymbols = List.of(
             JSONSymbol.commaSymbol,
@@ -93,8 +98,8 @@ public class ReachabilityGraph {
         // @formatter:on
 
         // We create the nodes
-        final Map<Pair<InRelation, JSONSymbol>, NodeInGraph> relationToNode = new HashMap<>();
-        for (final InRelation inRel : keyValueRelation) {
+        final Map<Pair<InRelation<L>, JSONSymbol>, NodeInGraph<L>> relationToNode = new HashMap<>();
+        for (final InRelation<L> inRel : keyValueRelation) {
             if (binLocations.contains(inRel.getStart()) || binLocations.contains(inRel.getTarget())) {
                 continue;
             }
@@ -109,9 +114,9 @@ public class ReachabilityGraph {
             }
 
             for (JSONSymbol key : keyAlphabet) {
-                Location target = automaton.getInternalSuccessor(inRel.getStart(), key);
+                L target = automaton.getInternalSuccessor(inRel.getStart(), key);
                 if (internalRelation.areInRelation(target, inRel.getTarget()) || wellMatchedRelation.areInRelation(target, inRel.getTarget())) {
-                    final NodeInGraph node = new NodeInGraph(inRel, key, automaton, binLocations);
+                    final NodeInGraph<L> node = new NodeInGraph<>(inRel, key, automaton, binLocations);
                     relationToNode.put(Pair.of(inRel, key), node);
                     builder.addNode(node);
 
@@ -119,10 +124,10 @@ public class ReachabilityGraph {
                         keyToNodes.get(key).add(node);
                         keyToLocations.get(key).add(node.getStartLocation());
                     } else {
-                        final List<NodeInGraph> listNode = new LinkedList<>();
+                        final List<NodeInGraph<L>> listNode = new LinkedList<>();
                         listNode.add(node);
                         keyToNodes.put(key, listNode);
-                        final Set<Location> setLocations = new HashSet<>();
+                        final Set<L> setLocations = new HashSet<>();
                         setLocations.add(node.getStartLocation());
                         keyToLocations.put(key, setLocations);
                     }
@@ -134,22 +139,22 @@ public class ReachabilityGraph {
             }
         }
         // We create the edges
-        for (final InRelation source : keyValueRelation) {
+        for (final InRelation<L> source : keyValueRelation) {
             if (binLocations.contains(source.getStart()) || binLocations.contains(source.getTarget())) {
                 continue;
             }
-            for (final InRelation target : keyValueRelation) {
+            for (final InRelation<L> target : keyValueRelation) {
                 if (binLocations.contains(target.getStart()) || binLocations.contains(target.getTarget())) {
                     continue;
                 }
                 if (commaRelation.areInRelation(source.getTarget(), target.getStart())) {
                     for (JSONSymbol keyInSource : keyAlphabet) {
-                        NodeInGraph sourceNode = relationToNode.get(Pair.of(source, keyInSource));
+                        NodeInGraph<L> sourceNode = relationToNode.get(Pair.of(source, keyInSource));
                         if (sourceNode == null) {
                             continue;
                         }
                         for (JSONSymbol keyInTarget : keyAlphabet) {
-                            NodeInGraph targetNode = relationToNode.get(Pair.of(target, keyInTarget));
+                            NodeInGraph<L> targetNode = relationToNode.get(Pair.of(target, keyInTarget));
                             if (targetNode != null) {
                                 builder.putEdge(sourceNode, targetNode);
                             }
@@ -162,10 +167,10 @@ public class ReachabilityGraph {
         this.graph = builder.build();
 
         boolean cyclic = false, duplicateKeys = false;
-        for (NodeInGraph start : startingNodes) {
-            Set<NodeInGraph> seenNodes = new HashSet<>();
+        for (NodeInGraph<L> start : startingNodes) {
+            Set<NodeInGraph<L>> seenNodes = new HashSet<>();
             Set<JSONSymbol> symbols = new HashSet<>();
-            for (NodeInGraph node : Traverser.forGraph(graph).depthFirstPreOrder(start)) {
+            for (NodeInGraph<L> node : Traverser.forGraph(graph).depthFirstPreOrder(start)) {
                 if (!seenNodes.add(node)) {
                     cyclic = true;
                 }
@@ -185,36 +190,37 @@ public class ReachabilityGraph {
         return !cyclic && !duplicateKeys;
     }
 
-    private void propagateIsOnPathToAcceptingForLocations(Collection<Location> locations) {
-        Iterable<NodeInGraph> exploration = Traverser.forGraph(graph).depthFirstPostOrder(startingNodes);
+    private void propagateIsOnPathToAcceptingForLocations(Collection<L> locations) {
+        Iterable<NodeInGraph<L>> exploration = Traverser.forGraph(graph).depthFirstPostOrder(startingNodes);
 
-        for (NodeInGraph node : exploration) {
-            Set<NodeInGraph> successors = graph.successors(node);
-            for (NodeInGraph successor : successors) {
-                for (Location location : locations) {
-                    if (successor.isOnPathToAcceptingForLocation(location)) {
-                        node.setOnPathToAcceptingLocation(location);
+        for (NodeInGraph<L> node : exploration) {
+            Set<NodeInGraph<L>> successors = graph.successors(node);
+            for (NodeInGraph<L> successor : successors) {
+                for (L location : locations) {
+                    int locationId = automaton.getLocationId(location);
+                    if (successor.isOnPathToAcceptingForLocation(locationId)) {
+                        node.setOnPathToAcceptingLocation(locationId);
                     }
                 }
             }
         }
     }
 
-    ImmutableGraph<NodeInGraph> getGraph() {
+    ImmutableGraph<NodeInGraph<L>> getGraph() {
         return graph;
     }
 
-    Set<NodeInGraph> nodes() {
+    Set<NodeInGraph<L>> nodes() {
         return this.graph.nodes();
     }
 
-    Set<EndpointPair<NodeInGraph>> edges() {
+    Set<EndpointPair<NodeInGraph<L>>> edges() {
         return this.graph.edges();
     }
 
     @Nullable
-    NodeInGraph getNode(InRelation inRelation) {
-        for (NodeInGraph node : nodes()) {
+    NodeInGraph<L> getNode(InRelation<L> inRelation) {
+        for (NodeInGraph<L> node : nodes()) {
             if (node.getInRelation().equals(inRelation)) {
                 return node;
             }
@@ -233,11 +239,11 @@ public class ReachabilityGraph {
      *                           pushed
      * @return
      */
-    public boolean isAcceptingForLocation(InRelation inRelation, Location locationBeforeCall) {
-        return getNode(inRelation).isAcceptingForLocation(locationBeforeCall);
+    public boolean isAcceptingForLocation(InRelation<L> inRelation, L locationBeforeCall) {
+        return getNode(inRelation).isAcceptingForLocation(automaton.getLocationId(locationBeforeCall));
     }
 
-    private List<NodeInGraph> getNodesForKey(JSONSymbol key) {
+    private List<NodeInGraph<L>> getNodesForKey(JSONSymbol key) {
         return keyToNodes.getOrDefault(key, Collections.emptyList());
     }
 
@@ -248,7 +254,7 @@ public class ReachabilityGraph {
      * @param key The key
      * @return
      */
-    public Set<Location> getLocationsReadingKey(JSONSymbol key) {
+    public Set<L> getLocationsReadingKey(JSONSymbol key) {
         return keyToLocations.getOrDefault(key, Collections.emptySet());
     }
 
@@ -256,7 +262,7 @@ public class ReachabilityGraph {
      * Adds a new layer in the stack of each node.
      */
     public void addLayerInStack() {
-        for (NodeInGraph node : nodes()) {
+        for (NodeInGraph<L> node : nodes()) {
             node.addLayerInStack();
         }
     }
@@ -265,7 +271,7 @@ public class ReachabilityGraph {
      * Removes the top layer from the stack of each node.
      */
     public void popLayerInStack() {
-        for (NodeInGraph node : nodes()) {
+        for (NodeInGraph<L> node : nodes()) {
             node.popLayerInStack();
         }
     }
@@ -285,11 +291,11 @@ public class ReachabilityGraph {
      * @param sourceToReachedLocations The locations reached
      * @param lastKeyProcessed         The last key that was read
      */
-    public void markNodesToReject(final Set<PairSourceToReached> sourceToReachedLocations,
+    public void markNodesToReject(final Set<PairSourceToReached<L>> sourceToReachedLocations,
             final JSONSymbol lastKeyProcessed) {
-        final List<NodeInGraph> nodesForKey = getNodesForKey(lastKeyProcessed);
+        final List<NodeInGraph<L>> nodesForKey = getNodesForKey(lastKeyProcessed);
 
-        for (NodeInGraph node : nodesForKey) {
+        for (NodeInGraph<L> node : nodesForKey) {
             if (!sourceToReachedLocations.contains(node.toPairLocations())) {
                 node.markRejected();
             }
@@ -312,19 +318,19 @@ public class ReachabilityGraph {
      * @return The set of locations from which the VPA can read the closing curly
      *         brace
      */
-    public Set<Location> getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(Set<JSONSymbol> seenKeys,
-            Collection<Location> locationsBeforeCall) {
-        final Set<Location> locationsReadingClosing = new HashSet<>();
-        for (NodeInGraph initial : startingNodes) {
+    public Set<L> getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(Set<JSONSymbol> seenKeys,
+            Collection<L> locationsBeforeCall) {
+        final Set<L> locationsReadingClosing = new HashSet<>();
+        for (NodeInGraph<L> initial : startingNodes) {
             depthFirstExploreForAcceptingNodes(initial, new LinkedList<>(), locationsReadingClosing, seenKeys,
                     locationsBeforeCall);
         }
         return locationsReadingClosing;
     }
 
-    private void depthFirstExploreForAcceptingNodes(final NodeInGraph current,
-            final LinkedList<JSONSymbol> seenKeysInExploration, final Set<Location> locationsReadingClosing,
-            final Set<JSONSymbol> seenKeysInAutomaton, final Collection<Location> locationsBeforeCall) {
+    private void depthFirstExploreForAcceptingNodes(final NodeInGraph<L> current,
+            final LinkedList<JSONSymbol> seenKeysInExploration, final Set<L> locationsReadingClosing,
+            final Set<JSONSymbol> seenKeysInAutomaton, final Collection<L> locationsBeforeCall) {
         // The path has a node that is rejected
         if (current.isRejected()) {
             return;
@@ -334,7 +340,7 @@ public class ReachabilityGraph {
         // return symbol matching the locations before the call
         // @formatter:off
         boolean canReachAnAcceptingLocation = locationsBeforeCall.stream()
-            .filter(location -> current.isOnPathToAcceptingForLocation(location))
+            .filter(location -> current.isOnPathToAcceptingForLocation(automaton.getLocationId(location)))
             .findAny().isPresent();
         // @formatter:on
         if (!canReachAnAcceptingLocation) {
@@ -349,8 +355,8 @@ public class ReachabilityGraph {
         seenKeysInExploration.addFirst(key);
 
         boolean acceptingForOneLocation = false;
-        for (final Location locationBeforeCall : locationsBeforeCall) {
-            if (current.isAcceptingForLocation(locationBeforeCall)) {
+        for (final L locationBeforeCall : locationsBeforeCall) {
+            if (current.isAcceptingForLocation(automaton.getLocationId(locationBeforeCall))) {
                 acceptingForOneLocation = true;
                 break;
             }
@@ -373,8 +379,8 @@ public class ReachabilityGraph {
             }
         }
 
-        final Set<NodeInGraph> successors = graph.successors(current);
-        for (final NodeInGraph successor : successors) {
+        final Set<NodeInGraph<L>> successors = graph.successors(current);
+        for (final NodeInGraph<L> successor : successors) {
             depthFirstExploreForAcceptingNodes(successor, seenKeysInExploration, locationsReadingClosing,
                     seenKeysInAutomaton, locationsBeforeCall);
         }

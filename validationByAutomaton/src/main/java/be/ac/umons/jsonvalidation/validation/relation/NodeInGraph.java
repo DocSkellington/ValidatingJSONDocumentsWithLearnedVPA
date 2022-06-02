@@ -6,8 +6,7 @@ import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.PairSourceToReached;
-import net.automatalib.automata.vpda.DefaultOneSEVPA;
-import net.automatalib.automata.vpda.Location;
+import net.automatalib.automata.vpda.OneSEVPA;
 
 /**
  * A node in a {@link ReachabilityGraph}.
@@ -22,15 +21,15 @@ import net.automatalib.automata.vpda.Location;
  * 
  * @author Gaëtan Staquet
  */
-class NodeInGraph {
+class NodeInGraph<L> {
 
-    private final InRelation inRelation;
+    private final InRelation<L> inRelation;
     private final JSONSymbol symbol;
     private final BitSet acceptingForLocation;
     private final BitSet onPathToAcceptingForLocation;
     private NodeStackContents stackForRejected;
 
-    public NodeInGraph(InRelation inRelation, JSONSymbol symbol, DefaultOneSEVPA<JSONSymbol> automaton, Set<Location> binLocations) {
+    public NodeInGraph(InRelation<L> inRelation, JSONSymbol symbol, OneSEVPA<L, JSONSymbol> automaton, Set<L> binLocations) {
         this.inRelation = inRelation;
         this.symbol = symbol;
         this.acceptingForLocation = new BitSet(automaton.size());
@@ -39,18 +38,17 @@ class NodeInGraph {
 
         final JSONSymbol callSymbol = JSONSymbol.openingCurlyBraceSymbol;
         final JSONSymbol returnSymbol = JSONSymbol.closingCurlyBraceSymbol;
-        final int returnSymbolIndex = automaton.getInputAlphabet().getReturnSymbolIndex(returnSymbol);
 
         for (int i = 0; i < automaton.size(); i++) {
             // If the location before the call or the location after the return are the bin
             // locations, we ignore them as we do not want the bin state in the graph
-            final Location locationBeforeCall = automaton.getLocation(i);
+            final L locationBeforeCall = automaton.getLocation(i);
             if (binLocations.contains(locationBeforeCall)) {
                 continue;
             }
 
             final int stackSym = automaton.encodeStackSym(locationBeforeCall, callSymbol);
-            final Location locationAfterReturn = inRelation.getTarget().getReturnSuccessor(returnSymbolIndex, stackSym);
+            final L locationAfterReturn = automaton.getReturnSuccessor(inRelation.getTarget(), returnSymbol, stackSym);
             if (locationAfterReturn != null && !binLocations.contains(locationAfterReturn)) {
                 acceptingForLocation.set(i);
                 onPathToAcceptingForLocation.set(i);
@@ -58,7 +56,7 @@ class NodeInGraph {
         }
     }
 
-    InRelation getInRelation() {
+    InRelation<L> getInRelation() {
         return inRelation;
     }
 
@@ -66,24 +64,24 @@ class NodeInGraph {
         return symbol;
     }
 
-    public Location getStartLocation() {
+    public L getStartLocation() {
         return getInRelation().getStart();
     }
 
-    public Location getTargetLocation() {
+    public L getTargetLocation() {
         return getInRelation().getTarget();
     }
 
-    public boolean isAcceptingForLocation(Location location) {
-        return acceptingForLocation.get(location.getIndex());
+    public boolean isAcceptingForLocation(int locationId) {
+        return acceptingForLocation.get(locationId);
     }
 
-    public boolean isOnPathToAcceptingForLocation(Location location) {
-        return onPathToAcceptingForLocation.get(location.getIndex());
+    public boolean isOnPathToAcceptingForLocation(int locationId) {
+        return onPathToAcceptingForLocation.get(locationId);
     }
 
-    void setOnPathToAcceptingLocation(Location location) {
-        onPathToAcceptingForLocation.set(location.getIndex());
+    void setOnPathToAcceptingLocation(int locationId) {
+        onPathToAcceptingForLocation.set(locationId);
     }
 
     @Override
@@ -94,7 +92,7 @@ class NodeInGraph {
         if (!(obj instanceof NodeInGraph)) {
             return false;
         }
-        NodeInGraph other = (NodeInGraph) obj;
+        NodeInGraph<?> other = (NodeInGraph<?>) obj;
         return Objects.equals(this.inRelation, other.inRelation);
     }
 
@@ -127,7 +125,7 @@ class NodeInGraph {
         return stackForRejected.peek();
     }
 
-    public PairSourceToReached toPairLocations() {
+    public PairSourceToReached<L> toPairLocations() {
         return PairSourceToReached.of(inRelation.getStart(), inRelation.getTarget());
     }
 }

@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import net.automatalib.automata.vpda.Location;
-
 /**
  * A triplet {@code (s, k, s')} such that the VPA can go from {@code s} to
  * {@code s'} by reading a well-matched word starting with {@code k}.
@@ -15,10 +13,10 @@ import net.automatalib.automata.vpda.Location;
  * 
  * @author Gaëtan Staquet
  */
-class InRelation {
-    private final Location start;
-    private final Location target;
-    private final Set<Location> locationsSeenBetweenStartAndTarget = new HashSet<>();
+class InRelation<L> {
+    private final L start;
+    private final L target;
+    private final Set<L> locationsSeenBetweenStartAndTarget = new HashSet<>();
 
     /**
      * Creates a triplet.
@@ -27,11 +25,11 @@ class InRelation {
      * @param target The state to end in
      * @return The triplet
      */
-    public static InRelation of(final Location start, final Location target) {
-        return new InRelation(start, target);
+    public static <L> InRelation<L> of(final L start, final L target) {
+        return new InRelation<>(start, target);
     }
 
-    private InRelation(final Location start, final Location target) {
+    private InRelation(final L start, final L target) {
         this.start = start;
         this.target = target;
         this.locationsSeenBetweenStartAndTarget.add(start);
@@ -47,7 +45,7 @@ class InRelation {
             return false;
         }
 
-        final InRelation other = (InRelation) obj;
+        final InRelation<?> other = (InRelation<?>) obj;
         return Objects.equals(this.start, other.start) && Objects.equals(this.target, other.target);
     }
 
@@ -61,19 +59,19 @@ class InRelation {
         return "(" + start + ", " + target + ", " + locationsSeenBetweenStartAndTarget + ")";
     }
 
-    public Location getStart() {
+    public L getStart() {
         return start;
     }
 
-    public Location getTarget() {
+    public L getTarget() {
         return target;
     }
 
-    public Set<Location> getLocationsSeenBetweenStartAndTarget() {
+    public Set<L> getLocationsSeenBetweenStartAndTarget() {
         return locationsSeenBetweenStartAndTarget;
     }
 
-    public void addSeenLocations(Set<Location> locations) {
+    public void addSeenLocations(Set<L> locations) {
         locationsSeenBetweenStartAndTarget.addAll(locations);
     }
 }

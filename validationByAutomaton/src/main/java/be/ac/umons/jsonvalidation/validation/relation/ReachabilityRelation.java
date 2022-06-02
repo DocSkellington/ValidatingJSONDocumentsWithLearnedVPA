@@ -10,8 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import net.automatalib.automata.vpda.DefaultOneSEVPA;
-import net.automatalib.automata.vpda.Location;
+import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Alphabet;
 
 /**
@@ -22,8 +21,8 @@ import net.automatalib.words.Alphabet;
  * @see InRelation for the class used to store a triplet
  * @author Gaëtan Staquet
  */
-class ReachabilityRelation implements Iterable<InRelation> {
-    private final Set<InRelation> relation;
+public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
+    private final Set<InRelation<L>> relation;
 
     ReachabilityRelation() {
         this.relation = new HashSet<>();
@@ -38,7 +37,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param p      The target state in the triplet
      * @return True iff there is such a triplet
      */
-    public boolean areInRelation(final Location q, final Location p) {
+    public boolean areInRelation(final L q, final L p) {
         return relation.contains(InRelation.of(q, p));
     }
 
@@ -53,7 +52,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
     }
 
     @Override
-    public Iterator<InRelation> iterator() {
+    public Iterator<InRelation<L>> iterator() {
         return this.relation.iterator();
     }
 
@@ -66,7 +65,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
             return false;
         }
 
-        final ReachabilityRelation other = (ReachabilityRelation) obj;
+        final ReachabilityRelation<?> other = (ReachabilityRelation<?>) obj;
         return Objects.hash(this) == Objects.hash(other);
     }
 
@@ -74,7 +73,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
         return this.relation.size();
     }
 
-    private void add(final InRelation inRel) {
+    private void add(final InRelation<L> inRel) {
         if (relation.contains(inRel)) {
             mergeSeenLocations(inRel);
         } else {
@@ -89,7 +88,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param symbol The symbol in the triplet
      * @param p      The target state in the triplet
      */
-    void add(final Location q, final Location p) {
+    void add(final L q, final L p) {
         add(InRelation.of(q, p));
     }
 
@@ -98,12 +97,12 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * 
      * @param rel The relation to take the triplets from
      */
-    private void addAll(final ReachabilityRelation rel) {
+    private void addAll(final ReachabilityRelation<L> rel) {
         rel.relation.forEach(r -> this.add(r));
     }
 
-    private void mergeSeenLocations(final InRelation inRel) {
-        for (InRelation alreadyInRelation : relation) {
+    private void mergeSeenLocations(final InRelation<L> inRel) {
+        for (InRelation<L> alreadyInRelation : relation) {
             if (Objects.equals(inRel, alreadyInRelation)) {
                 alreadyInRelation.addSeenLocations(inRel.getLocationsSeenBetweenStartAndTarget());
                 return;
@@ -111,7 +110,7 @@ class ReachabilityRelation implements Iterable<InRelation> {
         }
     }
 
-    private void mergeSeenLocations(final ReachabilityRelation rel) {
+    private void mergeSeenLocations(final ReachabilityRelation<L> rel) {
         if (rel.size() < this.size()) {
             this.forEach(r -> rel.mergeSeenLocations(r));
         }
@@ -120,10 +119,10 @@ class ReachabilityRelation implements Iterable<InRelation> {
         }
     }
 
-    private Set<Location> allLocationsOnAcceptingPath(DefaultOneSEVPA<JSONSymbol> automaton) {
-        final Set<Location> locations = new HashSet<>();
-        for (final InRelation inRelation : this) {
-            if (inRelation.getStart().equals(automaton.getInitialLocation()) && inRelation.getTarget().isAccepting()) {
+    private Set<L> allLocationsOnAcceptingPath(OneSEVPA<L, JSONSymbol> automaton) {
+        final Set<L> locations = new HashSet<>();
+        for (final InRelation<L> inRelation : this) {
+            if (inRelation.getStart().equals(automaton.getInitialLocation()) && automaton.isAcceptingLocation(inRelation.getTarget())) {
                 locations.addAll(inRelation.getLocationsSeenBetweenStartAndTarget());
             }
         }
@@ -140,8 +139,8 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param automaton The VPA
      * @return A set with the bin locations
      */
-    Set<Location> identifyBinLocations(DefaultOneSEVPA<JSONSymbol> automaton) {
-        Set<Location> binLocations = new HashSet<>(automaton.getLocations());
+    Set<L> identifyBinLocations(OneSEVPA<L, JSONSymbol> automaton) {
+        Set<L> binLocations = new HashSet<>(automaton.getLocations());
         binLocations.removeAll(allLocationsOnAcceptingPath(automaton));
         return binLocations;
     }
@@ -153,8 +152,8 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param other The other relation
      * @return The union of this and other
      */
-    ReachabilityRelation union(ReachabilityRelation other) {
-        ReachabilityRelation newRelation = new ReachabilityRelation();
+    ReachabilityRelation<L> union(ReachabilityRelation<L> other) {
+        ReachabilityRelation<L> newRelation = new ReachabilityRelation<>();
         newRelation.addAll(this);
         newRelation.addAll(other);
         return newRelation;
@@ -174,24 +173,22 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param returnSymbol The return symbol to consider
      * @return The new relation
      */
-    ReachabilityRelation post(final DefaultOneSEVPA<JSONSymbol> automaton, final JSONSymbol callSymbol,
+    ReachabilityRelation<L> post(final OneSEVPA<L, JSONSymbol> automaton, final JSONSymbol callSymbol,
             final JSONSymbol returnSymbol) {
-        final ReachabilityRelation newRelation = new ReachabilityRelation();
-        final int callSymbolIndex = automaton.getInputAlphabet().getCallSymbolIndex(callSymbol);
-        final int returnSymbolIndex = automaton.getInputAlphabet().getReturnSymbolIndex(returnSymbol);
+        final ReachabilityRelation<L> newRelation = new ReachabilityRelation<L>();
 
-        for (final Location start : automaton.getLocations()) {
-            final Location callTarget = automaton.getInitialLocation();
-            final int stackSym = automaton.encodeStackSym(start, callSymbolIndex);
+        for (final L start : automaton.getLocations()) {
+            final L callTarget = automaton.getInitialLocation();
+            final int stackSym = automaton.encodeStackSym(start, callSymbol);
             if (callTarget == null) {
                 continue;
             }
 
-            for (final InRelation inRelation : relation) {
+            for (final InRelation<L> inRelation : relation) {
                 if (Objects.equals(inRelation.getStart(), callTarget)) {
-                    final Location target = inRelation.getTarget().getReturnSuccessor(returnSymbolIndex, stackSym);
+                    final L target = automaton.getReturnSuccessor(inRelation.getTarget(), returnSymbol, stackSym);
                     if (target != null) {
-                        final InRelation newInRelation = InRelation.of(start, target);
+                        final InRelation<L> newInRelation = InRelation.of(start, target);
                         newInRelation.addSeenLocations(inRelation.getLocationsSeenBetweenStartAndTarget());
                         newRelation.add(newInRelation);
                     }
@@ -212,13 +209,13 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param other The other relation
      * @return The composed relation
      */
-    ReachabilityRelation compose(ReachabilityRelation other) {
-        final ReachabilityRelation relation = new ReachabilityRelation();
+    ReachabilityRelation<L> compose(ReachabilityRelation<L> other) {
+        final ReachabilityRelation<L> relation = new ReachabilityRelation<>();
 
-        for (final InRelation inRelThis : this) {
-            for (final InRelation inRelOther : other) {
+        for (final InRelation<L> inRelThis : this) {
+            for (final InRelation<L> inRelOther : other) {
                 if (Objects.equals(inRelThis.getTarget(), inRelOther.getStart())) {
-                    final InRelation newInRelation = InRelation.of(inRelThis.getStart(), inRelOther.getTarget());
+                    final InRelation<L> newInRelation = InRelation.of(inRelThis.getStart(), inRelOther.getTarget());
                     newInRelation.addSeenLocations(inRelThis.getLocationsSeenBetweenStartAndTarget());
                     newInRelation.addSeenLocations(inRelOther.getLocationsSeenBetweenStartAndTarget());
                     relation.add(newInRelation);
@@ -236,15 +233,14 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param automaton The VPA
      * @return The comma relation
      */
-    public static ReachabilityRelation computeCommaRelation(DefaultOneSEVPA<JSONSymbol> automaton) {
+    public static <L> ReachabilityRelation<L> computeCommaRelation(OneSEVPA<L, JSONSymbol> automaton) {
         final JSONSymbol symbol = JSONSymbol.commaSymbol;
         assert automaton.getInputAlphabet().getInternalAlphabet().contains(symbol);
-        final int symbolIndex = automaton.getInputAlphabet().getInternalAlphabet().getSymbolIndex(symbol);
-        final ReachabilityRelation relation = new ReachabilityRelation();
+        final ReachabilityRelation<L> relation = new ReachabilityRelation<L>();
 
         // @formatter:off
         automaton.getLocations().stream()
-            .map(loc -> InRelation.of(loc, loc.getInternalSuccessor(symbolIndex)))
+            .map(loc -> InRelation.of(loc, automaton.getInternalSuccessor(loc, symbol)))
             .filter(inRel -> inRel.getTarget() != null)
             .forEach(inRel -> relation.add(inRel));
         // @formatter:on
@@ -259,20 +255,19 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param automaton The VPA
      * @return The internal relation
      */
-    public static ReachabilityRelation computeInternalRelation(DefaultOneSEVPA<JSONSymbol> automaton) {
+    public static <L> ReachabilityRelation<L> computeInternalRelation(OneSEVPA<L, JSONSymbol> automaton) {
         final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
         // @formatter:off
-        final List<Integer> internalSymbolIndices = internalAlphabet.stream()
+        final List<JSONSymbol> internalSymbolWithoutComma = internalAlphabet.stream()
             .filter(s -> !Objects.equals(s, JSONSymbol.commaSymbol))
-            .map(s -> internalAlphabet.getSymbolIndex(s))
             .collect(Collectors.toList());
         // @formatter:on
-        final ReachabilityRelation relation = new ReachabilityRelation();
+        final ReachabilityRelation<L> relation = new ReachabilityRelation<>();
 
-        for (final Location loc : automaton.getLocations()) {
+        for (final L loc : automaton.getLocations()) {
             // @formatter:off
-            internalSymbolIndices.stream()
-                .map(symbolIndex -> InRelation.of(loc, loc.getInternalSuccessor(symbolIndex)))
+            internalSymbolWithoutComma.stream()
+                .map(symbol -> InRelation.of(loc, automaton.getInternalSuccessor(loc, symbol)))
                 .filter(inRel -> inRel.getTarget() != null)
                 .forEach(inRel -> relation.add(inRel));
             // @formatter:on
@@ -290,39 +285,39 @@ class ReachabilityRelation implements Iterable<InRelation> {
      * @param internalRelation The internal relation
      * @return The well-matched relation
      */
-    public static ReachabilityRelation computeWellMatchedRelation(DefaultOneSEVPA<JSONSymbol> automaton,
-            ReachabilityRelation commaRelation, ReachabilityRelation internalRelation) {
-        final Set<ReachabilityRelation> relations = new HashSet<>();
+    public static <L> ReachabilityRelation<L> computeWellMatchedRelation(OneSEVPA<L, JSONSymbol> automaton,
+            ReachabilityRelation<L> commaRelation, ReachabilityRelation<L> internalRelation) {
+        final Set<ReachabilityRelation<L>> relations = new HashSet<>();
 
-        final Set<ReachabilityRelation> setIdentityRelation = new HashSet<>();
+        final Set<ReachabilityRelation<L>> setIdentityRelation = new HashSet<>();
         setIdentityRelation.add(getIdentityRelation(automaton));
-        final Set<ReachabilityRelation> setCommaAndInternalRelations = new HashSet<>();
+        final Set<ReachabilityRelation<L>> setCommaAndInternalRelations = new HashSet<>();
         setCommaAndInternalRelations.add(commaRelation.union(internalRelation));
 
-        final Set<ReachabilityRelation> initial = compositionClosure(setIdentityRelation, setCommaAndInternalRelations);
+        final Set<ReachabilityRelation<L>> initial = compositionClosure(setIdentityRelation, setCommaAndInternalRelations);
 
-        Set<ReachabilityRelation> composedRelations = new HashSet<>();
+        Set<ReachabilityRelation<L>> composedRelations = new HashSet<>();
         composedRelations.addAll(initial);
 
         while (true) {
-            final Set<ReachabilityRelation> newRelations = new HashSet<>();
-            for (ReachabilityRelation r : composedRelations) {
-                final ReachabilityRelation curlyPost = r.post(automaton, JSONSymbol.openingCurlyBraceSymbol,
+            final Set<ReachabilityRelation<L>> newRelations = new HashSet<>();
+            for (ReachabilityRelation<L> r : composedRelations) {
+                final ReachabilityRelation<L> curlyPost = r.post(automaton, JSONSymbol.openingCurlyBraceSymbol,
                         JSONSymbol.closingCurlyBraceSymbol);
-                final ReachabilityRelation bracketPost = r.post(automaton, JSONSymbol.openingBracketSymbol,
+                final ReachabilityRelation<L> bracketPost = r.post(automaton, JSONSymbol.openingBracketSymbol,
                         JSONSymbol.closingBracketSymbol);
 
                 addRelationToSet(newRelations, curlyPost);
                 addRelationToSet(newRelations, bracketPost);
             }
-            for (final ReachabilityRelation alreadyInRelations : relations) {
-                for (final ReachabilityRelation inNewRelations : newRelations) {
+            for (final ReachabilityRelation<L> alreadyInRelations : relations) {
+                for (final ReachabilityRelation<L> inNewRelations : newRelations) {
                     alreadyInRelations.mergeSeenLocations(inNewRelations);
                 }
             }
             newRelations.removeAll(relations);
 
-            for (final ReachabilityRelation inNewRelations : newRelations) {
+            for (final ReachabilityRelation<L> inNewRelations : newRelations) {
                 addRelationToSet(relations, inNewRelations);
             }
             newRelations.removeAll(composedRelations);
@@ -336,41 +331,41 @@ class ReachabilityRelation implements Iterable<InRelation> {
 
         relations.removeAll(initial);
 
-        final ReachabilityRelation result = new ReachabilityRelation();
+        final ReachabilityRelation<L> result = new ReachabilityRelation<L>();
         relations.forEach(r -> result.addAll(r));
 
         return result;
     }
 
-    private static ReachabilityRelation getIdentityRelation(DefaultOneSEVPA<JSONSymbol> automaton) {
-        final ReachabilityRelation relation = new ReachabilityRelation();
-        for (final Location loc : automaton.getLocations()) {
+    private static <L> ReachabilityRelation<L> getIdentityRelation(OneSEVPA<L, JSONSymbol> automaton) {
+        final ReachabilityRelation<L> relation = new ReachabilityRelation<>();
+        for (final L loc : automaton.getLocations()) {
             relation.add(loc, loc);
         }
         return relation;
     }
 
-    private static Set<ReachabilityRelation> compositionClosure(final Set<ReachabilityRelation> composedRelations,
-            final Set<ReachabilityRelation> relationsToCompose) {
-        final Set<ReachabilityRelation> allComposedRelations = new HashSet<>(composedRelations);
-        final Queue<ReachabilityRelation> toProcess = new LinkedList<>(relationsToCompose);
+    private static <L> Set<ReachabilityRelation<L>> compositionClosure(final Set<ReachabilityRelation<L>> composedRelations,
+            final Set<ReachabilityRelation<L>> relationsToCompose) {
+        final Set<ReachabilityRelation<L>> allComposedRelations = new HashSet<>(composedRelations);
+        final Queue<ReachabilityRelation<L>> toProcess = new LinkedList<>(relationsToCompose);
 
         while (!toProcess.isEmpty()) {
-            final ReachabilityRelation relationToCompose = toProcess.poll();
+            final ReachabilityRelation<L> relationToCompose = toProcess.poll();
 
-            final Set<ReachabilityRelation> newRelations = new HashSet<>();
-            for (final ReachabilityRelation relation : allComposedRelations) {
+            final Set<ReachabilityRelation<L>> newRelations = new HashSet<>();
+            for (final ReachabilityRelation<L> relation : allComposedRelations) {
                 addRelationToSet(newRelations, relation.compose(relationToCompose));
                 addRelationToSet(newRelations, relationToCompose.compose(relation));
             }
 
-            for (ReachabilityRelation relation : newRelations) {
+            for (ReachabilityRelation<L> relation : newRelations) {
                 if (!allComposedRelations.contains(relation) && !toProcess.contains(relation)) {
                     toProcess.add(relation);
                 }
             }
 
-            for (final ReachabilityRelation inNewRelations : newRelations) {
+            for (final ReachabilityRelation<L> inNewRelations : newRelations) {
                 addRelationToSet(allComposedRelations, inNewRelations);
             }
         }
@@ -378,8 +373,8 @@ class ReachabilityRelation implements Iterable<InRelation> {
         return allComposedRelations;
     }
 
-    private static void addRelationToSet(final Set<ReachabilityRelation> set, final ReachabilityRelation relation) {
-        for (final ReachabilityRelation inSet : set) {
+    private static <L> void addRelationToSet(final Set<ReachabilityRelation<L>> set, final ReachabilityRelation<L> relation) {
+        for (final ReachabilityRelation<L> inSet : set) {
             if (Objects.equals(inSet, relation)) {
                 inSet.mergeSeenLocations(relation);
                 return;

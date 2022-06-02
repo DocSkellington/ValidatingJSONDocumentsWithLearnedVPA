@@ -4,8 +4,8 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.validation.ValidationByAutomaton;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
+import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 
@@ -14,7 +14,7 @@ public class TestPermutationAutomaton {
     @Test
     public void testStraightforwardAutomatonWithPermutation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
-        ValidationByAutomaton permutationAutomaton = new ValidationByAutomaton(automaton);
+        ValidationByAutomaton<Location> permutationAutomaton = new ValidationByAutomaton<>(automaton);
 
         Assert.assertFalse(permutationAutomaton.accepts(Word.epsilon()));
 
@@ -85,7 +85,7 @@ public class TestPermutationAutomaton {
     @Test
     public void testSmallTwoBranchesAutomatonWithPermutation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ValidationByAutomaton permutationAutomaton = new ValidationByAutomaton(automaton);
+        ValidationByAutomaton<Location> permutationAutomaton = new ValidationByAutomaton<>(automaton);
 
         Assert.assertFalse(permutationAutomaton.accepts(Word.epsilon()));
 
@@ -244,7 +244,7 @@ public class TestPermutationAutomaton {
     @Test
     public void testAutomatonWithOptionalKeysWithPermutation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
-        ValidationByAutomaton permutationAutomaton = new ValidationByAutomaton(automaton);
+        ValidationByAutomaton<Location> permutationAutomaton = new ValidationByAutomaton<>(automaton);
 
         Assert.assertFalse(permutationAutomaton.accepts(Word.epsilon()));
 
@@ -534,7 +534,7 @@ public class TestPermutationAutomaton {
     @Test
     public void testAutomatonWithNestedObjectAndMultipleBranchesPermutation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithNestedObjectAndMultipleBranches();
-        ValidationByAutomaton permutationAutomaton = new ValidationByAutomaton(automaton);
+        ValidationByAutomaton<Location> permutationAutomaton = new ValidationByAutomaton<>(automaton);
 
         Assert.assertFalse(permutationAutomaton.accepts(Word.epsilon()));
 
@@ -613,7 +613,7 @@ public class TestPermutationAutomaton {
     @Test
     public void testAutomatonWithArraysPermutation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithArrays();
-        ValidationByAutomaton permutationAutomaton = new ValidationByAutomaton(automaton);
+        ValidationByAutomaton<Location> permutationAutomaton = new ValidationByAutomaton<>(automaton);
 
         Assert.assertFalse(permutationAutomaton.accepts(Word.epsilon()));
 

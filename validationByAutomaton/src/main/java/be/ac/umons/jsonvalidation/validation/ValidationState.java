@@ -3,8 +3,6 @@ package be.ac.umons.jsonvalidation.validation;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import net.automatalib.automata.vpda.Location;
-
 /**
  * A state used in a {@link ValidationByAutomaton}.
  * 
@@ -12,20 +10,20 @@ import net.automatalib.automata.vpda.Location;
  * 
  * @author Gaëtan Staquet
  */
-class ValidationState {
-    private final Set<PairSourceToReached> sourceToReachedLocations;
-    private final ValidationStackContents stack;
+class ValidationState<L> {
+    private final Set<PairSourceToReached<L>> sourceToReachedLocations;
+    private final ValidationStackContents<L> stack;
 
-    public ValidationState(final Set<PairSourceToReached> sourceToReachedLocations, final ValidationStackContents stack) {
+    public ValidationState(final Set<PairSourceToReached<L>> sourceToReachedLocations, final ValidationStackContents<L> stack) {
         this.sourceToReachedLocations = sourceToReachedLocations;
         this.stack = stack;
     }
 
-    public Set<PairSourceToReached> getSourceToReachedLocations() {
+    public Set<PairSourceToReached<L>> getSourceToReachedLocations() {
         return sourceToReachedLocations;
     }
 
-    public Set<Location> getReachedLocations() {
+    public Set<L> getReachedLocations() {
         // @formatter:off
         return sourceToReachedLocations.stream()
             .map(pair -> pair.getReachedLocation())
@@ -33,7 +31,7 @@ class ValidationState {
         // @formatter:on
     }
 
-    public ValidationStackContents getStack() {
+    public ValidationStackContents<L> getStack() {
         return stack;
     }
 }

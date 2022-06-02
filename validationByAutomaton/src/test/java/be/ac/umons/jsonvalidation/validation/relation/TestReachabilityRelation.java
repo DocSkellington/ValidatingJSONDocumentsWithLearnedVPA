@@ -7,7 +7,6 @@ import org.testng.annotations.Test;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.Automata;
-import be.ac.umons.jsonvalidation.validation.relation.ReachabilityRelation;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.VPDAlphabet;
@@ -21,8 +20,8 @@ public class TestReachabilityRelation {
         Location q2 = new Location(alphabet, 2, false);
         Location q3 = new Location(alphabet, 3, false);
 
-        ReachabilityRelation rel1 = new ReachabilityRelation();
-        ReachabilityRelation rel2 = new ReachabilityRelation();
+        ReachabilityRelation<Location> rel1 = new ReachabilityRelation<>();
+        ReachabilityRelation<Location> rel2 = new ReachabilityRelation<>();
 
         rel1.add(q0, q1);
         rel1.add(q1, q2);
@@ -30,7 +29,7 @@ public class TestReachabilityRelation {
         rel2.add(q1, q3);
         rel2.add(q2, q0);
 
-        ReachabilityRelation result = rel1.compose(rel2);
+        ReachabilityRelation<Location> result = rel1.compose(rel2);
         Assert.assertEquals(result.size(), 2);
         Assert.assertTrue(result.areInRelation(q0, q3));
         Assert.assertTrue(result.areInRelation(q1, q0));
@@ -46,15 +45,15 @@ public class TestReachabilityRelation {
         JSONSymbol openingCurly = JSONSymbol.openingCurlyBraceSymbol;
         JSONSymbol closingCurly = JSONSymbol.closingCurlyBraceSymbol;
 
-        ReachabilityRelation relation = new ReachabilityRelation();
-        for (int i = 0 ; i <= 6 ; i++) {
+        ReachabilityRelation<Location> relation = new ReachabilityRelation<>();
+        for (int i = 0; i <= 6; i++) {
             relation.add(automaton.getLocation(i), automaton.getLocation(i));
-            for (int j = i + 1 ; j <= 5 ; j++) {
+            for (int j = i + 1; j <= 5; j++) {
                 relation.add(automaton.getLocation(i), automaton.getLocation(j));
             }
         }
 
-        ReachabilityRelation result = relation.post(automaton, openingCurly, closingCurly);
+        ReachabilityRelation<Location> result = relation.post(automaton, openingCurly, closingCurly);
         Assert.assertEquals(result.size(), 1);
         Assert.assertTrue(result.areInRelation(automaton.getLocation(0), automaton.getLocation(6)));
     }
@@ -63,19 +62,19 @@ public class TestReachabilityRelation {
     public void testAutomatonWithOptionalKeysPost() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
 
-        ReachabilityRelation relation = new ReachabilityRelation();
+        ReachabilityRelation<Location> relation = new ReachabilityRelation<>();
         // We add all pairs (p, p)
-        for (int i = 0 ; i < automaton.size() ; i++) {
+        for (int i = 0; i < automaton.size(); i++) {
             relation.add(automaton.getLocation(i), automaton.getLocation(i));
         }
 
-        for (int j = 1 ; j <= 4 ; j++) {
+        for (int j = 1; j <= 4; j++) {
             relation.add(automaton.getLocation(0), automaton.getLocation(j));
         }
         relation.add(automaton.getLocation(0), automaton.getLocation(5));
         relation.add(automaton.getLocation(0), automaton.getLocation(6));
 
-        for (int j = 2 ; j <= 4 ; j++) {
+        for (int j = 2; j <= 4; j++) {
             relation.add(automaton.getLocation(1), automaton.getLocation(j));
         }
 
@@ -95,7 +94,8 @@ public class TestReachabilityRelation {
 
         relation.add(automaton.getLocation(9), automaton.getLocation(10));
 
-        ReachabilityRelation result = relation.post(automaton, JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.closingCurlyBraceSymbol);
+        ReachabilityRelation<Location> result = relation.post(automaton, JSONSymbol.openingCurlyBraceSymbol,
+                JSONSymbol.closingCurlyBraceSymbol);
         Assert.assertEquals(result.size(), 2);
         Assert.assertTrue(result.areInRelation(automaton.getLocation(0), automaton.getLocation(11)));
         Assert.assertTrue(result.areInRelation(automaton.getLocation(4), automaton.getLocation(7)));
@@ -104,7 +104,7 @@ public class TestReachabilityRelation {
     @Test
     public void testSmallTwoBranchesAutomatonCommaRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
+        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
         Assert.assertEquals(commaRelation.size(), 2);
         Assert.assertTrue(commaRelation.areInRelation(automaton.getLocation(2), automaton.getLocation(3)));
         Assert.assertTrue(commaRelation.areInRelation(automaton.getLocation(7), automaton.getLocation(8)));
@@ -113,7 +113,7 @@ public class TestReachabilityRelation {
     @Test
     public void testSmallTwoBranchesAutomatonInternalRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
         Assert.assertEquals(internalRelation.size(), 7);
         Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(1)));
         Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), automaton.getLocation(2)));
@@ -127,14 +127,14 @@ public class TestReachabilityRelation {
     @Test
     public void testSmallTwoBranchesAutomatonWellMatchedRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
-        ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
-        ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
+        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
+        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
                 commaRelation, internalRelation);
 
         Assert.assertEquals(wellMatchedRelation.size(), 1);
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(6)));
-        
+
         Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
     }
 
@@ -142,15 +142,15 @@ public class TestReachabilityRelation {
     public void testAutomatonWithOptionalKeysWellMatchedRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
 
-        ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
-        ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
-        ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
+        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
+        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
                 commaRelation, internalRelation);
 
         Assert.assertEquals(wellMatchedRelation.size(), 2);
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(11)));
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(7)));
-        
+
         Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
     }
 
@@ -158,9 +158,9 @@ public class TestReachabilityRelation {
     public void testAutomatonWithOptionalKeysAndExplicitBinStateWellMatchedRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
 
-        ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
-        ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
-        ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
+        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
+        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
                 commaRelation, internalRelation);
 
         Assert.assertEquals(wellMatchedRelation.size(), 15);
@@ -169,7 +169,7 @@ public class TestReachabilityRelation {
         for (Location source : automaton.getLocations()) {
             Assert.assertTrue(wellMatchedRelation.areInRelation(source, automaton.getLocation(12)));
         }
-        
+
         Set<Location> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
         Assert.assertEquals(1, binLocations.size());
         Assert.assertTrue(binLocations.contains(automaton.getLocation(12)));
@@ -179,7 +179,7 @@ public class TestReachabilityRelation {
     public void testAutomatonWithTwoKeysOnSameTransitionInternalRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithTwoKeysOnSameTransition();
 
-        ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
         Assert.assertEquals(internalRelation.size(), 3);
         Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(1)));
         Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), automaton.getLocation(2)));
@@ -190,14 +190,15 @@ public class TestReachabilityRelation {
     public void testAutomatonWithTwoKeysOnSameTransitionWellMatchedRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithTwoKeysOnSameTransition();
 
-        ReachabilityRelation commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
-        ReachabilityRelation internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
-        ReachabilityRelation wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton, commaRelation, internalRelation);
+        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
+        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
+                commaRelation, internalRelation);
 
         Assert.assertEquals(wellMatchedRelation.size(), 2);
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(6)));
         Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(5)));
-        
+
         Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
     }
 }

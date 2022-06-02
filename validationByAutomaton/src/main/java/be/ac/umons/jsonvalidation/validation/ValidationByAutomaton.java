@@ -5,8 +5,7 @@ import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.relation.ReachabilityGraph;
-import net.automatalib.automata.vpda.DefaultOneSEVPA;
-import net.automatalib.automata.vpda.Location;
+import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.VPDAlphabet;
 
 /**
@@ -28,25 +27,29 @@ import net.automatalib.words.VPDAlphabet;
  * 
  * @author Gaëtan Staquet
  */
-public class ValidationByAutomaton {
-    private final ReachabilityGraph graph;
-    private final DefaultOneSEVPA<JSONSymbol> automaton;
+public class ValidationByAutomaton<L> {
+    private final ReachabilityGraph<L> graph;
+    private final OneSEVPA<L, JSONSymbol> automaton;
     private final VPDAlphabet<JSONSymbol> alphabet;
 
-    public ValidationByAutomaton(final DefaultOneSEVPA<JSONSymbol> automaton) {
-        this.graph = new ReachabilityGraph(automaton);
+    public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton) {
+        this(automaton, ReachabilityGraph.graphFor(automaton));
+    }
+
+    public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton, ReachabilityGraph<L> graph) {
+        this.graph = graph;
         this.automaton = automaton;
         this.alphabet = automaton.getInputAlphabet();
     }
 
-    private ValidationState getInitialState() {
-        final Set<Location> setWithInitialLocation = new HashSet<>();
+    private ValidationState<L> getInitialState() {
+        final Set<L> setWithInitialLocation = new HashSet<>();
         setWithInitialLocation.add(automaton.getInitialLocation());
-        return new ValidationState(PairSourceToReached.getIdentityPairs(setWithInitialLocation), null);
+        return new ValidationState<>(PairSourceToReached.getIdentityPairs(setWithInitialLocation), null);
     }
 
     public boolean accepts(Iterable<JSONSymbol> input) {
-        ValidationState state = getState(input);
+        ValidationState<L> state = getState(input);
         if (state == null) {
             return false;
         }
@@ -57,13 +60,13 @@ public class ValidationByAutomaton {
         // @formatter:off
         return state.getSourceToReachedLocations().stream()
             .map(pair -> pair.getReachedLocation())
-            .filter(location -> location.isAccepting())
+            .filter(location -> automaton.isAcceptingLocation(location))
             .findAny().isPresent();
         // @formatter:on
     }
 
-    ValidationState getState(Iterable<JSONSymbol> input) {
-        ValidationState state = getInitialState();
+    public ValidationState<L> getState(Iterable<JSONSymbol> input) {
+        ValidationState<L> state = getInitialState();
         JSONSymbol symbolToRead = null;
         boolean ready = false;
         for (JSONSymbol nextSymbol : input) {
@@ -83,7 +86,7 @@ public class ValidationByAutomaton {
         return state;
     }
 
-    ValidationState getSuccessor(ValidationState state, JSONSymbol currentSymbol,
+    public ValidationState<L> getSuccessor(ValidationState<L> state, JSONSymbol currentSymbol,
             JSONSymbol nextSymbol) {
         if (state == null || state.getSourceToReachedLocations().isEmpty()) {
             return null;
@@ -101,16 +104,16 @@ public class ValidationByAutomaton {
         }
     }
 
-    private ValidationState getInternalSuccessor(ValidationState state, JSONSymbol currentIntSymbol,
+    private ValidationState<L> getInternalSuccessor(ValidationState<L> state, JSONSymbol currentIntSymbol,
             JSONSymbol nextSymbol) {
         if (currentIntSymbol.equals(JSONSymbol.commaSymbol)
                 && state.getStack().peekCallSymbol().equals(JSONSymbol.openingCurlyBraceSymbol)) {
             return getCommaInObjectSuccessor(state, nextSymbol);
         }
 
-        final Set<PairSourceToReached> sourceToSuccessorLocations = new HashSet<>();
-        for (final PairSourceToReached sourceToReachedLocation : state.getSourceToReachedLocations()) {
-            final Location reachedAfterTransition = automaton
+        final Set<PairSourceToReached<L>> sourceToSuccessorLocations = new HashSet<>();
+        for (final PairSourceToReached<L> sourceToReachedLocation : state.getSourceToReachedLocations()) {
+            final L reachedAfterTransition = automaton
                     .getInternalSuccessor(sourceToReachedLocation.getReachedLocation(), currentIntSymbol);
             if (reachedAfterTransition != null) {
                 sourceToSuccessorLocations.add(sourceToReachedLocation.transitionToReached(reachedAfterTransition));
@@ -120,12 +123,12 @@ public class ValidationByAutomaton {
         if (sourceToSuccessorLocations.isEmpty()) {
             return null;
         }
-        return new ValidationState(sourceToSuccessorLocations, state.getStack());
+        return new ValidationState<>(sourceToSuccessorLocations, state.getStack());
     }
 
-    private ValidationState getCommaInObjectSuccessor(ValidationState state,
+    private ValidationState<L> getCommaInObjectSuccessor(ValidationState<L> state,
             JSONSymbol nextSymbol) {
-        final ValidationStackContents currentStack = state.getStack();
+        final ValidationStackContents<L> currentStack = state.getStack();
         final JSONSymbol currentKey = currentStack.getCurrentKey();
 
         graph.markNodesToReject(state.getSourceToReachedLocations(), currentKey);
@@ -134,21 +137,21 @@ public class ValidationByAutomaton {
             return null;
         }
 
-        final Set<Location> successorLocations = graph.getLocationsReadingKey(nextSymbol);
+        final Set<L> successorLocations = graph.getLocationsReadingKey(nextSymbol);
         if (successorLocations.isEmpty()) {
             return null;
         }
-        return new ValidationState(PairSourceToReached.getIdentityPairs(successorLocations), currentStack);
+        return new ValidationState<>(PairSourceToReached.getIdentityPairs(successorLocations), currentStack);
     }
 
-    private ValidationState getCallSuccessor(ValidationState state, JSONSymbol currentCallSymbol,
+    private ValidationState<L> getCallSuccessor(ValidationState<L> state, JSONSymbol currentCallSymbol,
             JSONSymbol nextSymbol) {
-        final Set<PairSourceToReached> sourceToReachedLocations = state.getSourceToReachedLocations();
-        final ValidationStackContents currentStack = state.getStack();
-        final ValidationStackContents newStack = ValidationStackContents
+        final Set<PairSourceToReached<L>> sourceToReachedLocations = state.getSourceToReachedLocations();
+        final ValidationStackContents<L> currentStack = state.getStack();
+        final ValidationStackContents<L> newStack = ValidationStackContents
                 .push(sourceToReachedLocations, currentCallSymbol, currentStack);
 
-        final Set<PairSourceToReached> successorSourceToReachedLocations;
+        final Set<PairSourceToReached<L>> successorSourceToReachedLocations;
         if (currentCallSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
             successorSourceToReachedLocations = PairSourceToReached
                     .getIdentityPairs(graph.getLocationsReadingKey(nextSymbol));
@@ -165,33 +168,33 @@ public class ValidationByAutomaton {
             return null;
         }
 
-        return new ValidationState(successorSourceToReachedLocations, newStack);
+        return new ValidationState<>(successorSourceToReachedLocations, newStack);
     }
 
-    private ValidationState getReturnSuccessor(ValidationState state, JSONSymbol retSymbol) {
-        final ValidationStackContents currentStack = state.getStack();
+    private ValidationState<L> getReturnSuccessor(ValidationState<L> state, JSONSymbol retSymbol) {
+        final ValidationStackContents<L> currentStack = state.getStack();
         if (currentStack == null) {
             return null;
         }
 
-        final Set<PairSourceToReached> sourceToReachedLocationsBeforeCall = currentStack
+        final Set<PairSourceToReached<L>> sourceToReachedLocationsBeforeCall = currentStack
                 .peekSourceToReachedLocationsBeforeCall();
         final JSONSymbol callSymbol = currentStack.peekCallSymbol();
 
-        final Set<PairSourceToReached> sourceToReachedLocations = state.getSourceToReachedLocations();
+        final Set<PairSourceToReached<L>> sourceToReachedLocations = state.getSourceToReachedLocations();
 
-        final Set<PairSourceToReached> successorSourceToReachedLocations = new HashSet<>();
+        final Set<PairSourceToReached<L>> successorSourceToReachedLocations = new HashSet<>();
 
         if (retSymbol.equals(JSONSymbol.closingBracketSymbol)) {
             if (!callSymbol.equals(JSONSymbol.openingBracketSymbol)) {
                 return null;
             }
 
-            for (final PairSourceToReached sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
+            for (final PairSourceToReached<L> sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
                 final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),
                         callSymbol);
-                for (final PairSourceToReached currentSourceToReached : state.getSourceToReachedLocations()) {
-                    final Location target = automaton.getReturnSuccessor(currentSourceToReached.getReachedLocation(),
+                for (final PairSourceToReached<L> currentSourceToReached : state.getSourceToReachedLocations()) {
+                    final L target = automaton.getReturnSuccessor(currentSourceToReached.getReachedLocation(),
                             retSymbol, stackSymbol);
                     if (target != null) {
                         successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transitionToReached(target));
@@ -205,15 +208,15 @@ public class ValidationByAutomaton {
             final JSONSymbol currentKey = currentStack.getCurrentKey();
             graph.markNodesToReject(sourceToReachedLocations, currentKey);
 
-            final Set<Location> acceptingLocations = graph
+            final Set<L> acceptingLocations = graph
                     .getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
                             currentStack.getSeenKeys(), currentStack.peekReachedLocationsBeforeCall());
 
-            for (final PairSourceToReached sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
+            for (final PairSourceToReached<L> sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
                 final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),
                         callSymbol);
-                for (final Location beforeReturnLocation : acceptingLocations) {
-                    final Location target = automaton.getReturnSuccessor(beforeReturnLocation, retSymbol, stackSymbol);
+                for (final L beforeReturnLocation : acceptingLocations) {
+                    final L target = automaton.getReturnSuccessor(beforeReturnLocation, retSymbol, stackSymbol);
                     if (target != null) {
                         successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transitionToReached(target));
                     }
@@ -228,7 +231,7 @@ public class ValidationByAutomaton {
         if (successorSourceToReachedLocations.isEmpty()) {
             return null;
         }
-        return new ValidationState(successorSourceToReachedLocations, currentStack.pop());
+        return new ValidationState<>(successorSourceToReachedLocations, currentStack.pop());
     }
 
 }
