@@ -21,7 +21,7 @@ limitations under the License.
     <!--
     ================================= PROJECT INFO ==============================
     -->
-    <groupId>be.ac.umons.learningjson</groupId>
+    <groupId>be.ac.umons.jsonvalidation</groupId>
     <artifactId>learningautomata</artifactId>
     <version>2.0</version>
 
@@ -193,7 +193,7 @@ limitations under the License.
                         <archive>
                             <manifest>
                                 <addClasspath>true</addClasspath>
-                                <mainClass>be.ac.umons.learningjson.Benchmarks</mainClass>
+                                <mainClass>be.ac.umons.jsonvalidation.Benchmarks</mainClass>
                             </manifest>
                         </archive>
                         <descriptorRefs>
