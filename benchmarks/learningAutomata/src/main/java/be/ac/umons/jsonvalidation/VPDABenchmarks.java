@@ -89,7 +89,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
             final DefaultOneSEVPA<JSONSymbol> vpda = removeBinState(learnedVPDA);
             LOGGER.info("Bin state removed");
             assert learnedVPDA.size() - vpda.size() <= 1;
-            System.out.println("Separating " + OneSEVPAUtil.findSeparatingWord(learnedVPDA, vpda, alphabet));
+            assert OneSEVPAUtil.testEquivalence(vpda, learnedVPDA, alphabet);
 
             statistics.add(results.timeInMillis);
             statistics.add(membershipOracle.getStatisticalData().getCount());

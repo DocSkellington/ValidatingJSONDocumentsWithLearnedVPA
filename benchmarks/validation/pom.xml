@@ -22,7 +22,7 @@ limitations under the License.
     ================================= PROJECT INFO ==============================
     -->
     <groupId>be.ac.umons.jsonvalidation</groupId>
-    <artifactId>benchmarks</artifactId>
+    <artifactId>validationbenchmarks</artifactId>
     <version>1.1</version>
 
     <name>Benchmarks for validation algorithm</name>
@@ -172,7 +172,7 @@ limitations under the License.
                         <archive>
                             <manifest>
                                 <addClasspath>true</addClasspath>
-                                <mainClass>be.ac.umons.learningjson.Benchmarks</mainClass>
+                                <mainClass>be.ac.umons.jsonvalidation.Benchmarks</mainClass>
                             </manifest>
                         </archive>
                         <descriptorRefs>

@@ -28,8 +28,6 @@ import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.JSONSchemaStore;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.oracles.JSONMembershipOracle;
-import be.ac.umons.jsonvalidation.oracles.Utils;
 import net.automatalib.words.Word;
 
 

@@ -48,7 +48,6 @@ abstract class AbstractExplorationJSONConformance<A extends DeterministicAccepto
     }
 
     protected DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypothesis) {
-        System.out.println("VALID");
         while (iteratorValidDocuments.hasNext()) {
             JSONObject document = iteratorValidDocuments.next();
             DefaultQuery<JSONSymbol, Boolean> query = checkDocument(hypothesis, document);
@@ -57,7 +56,6 @@ abstract class AbstractExplorationJSONConformance<A extends DeterministicAccepto
             }
         }
 
-        System.out.println("INVALID");
         while (iteratorInvalidDocuments != null && iteratorInvalidDocuments.hasNext() && continueInvaidGeneration()) {
             JSONObject document = iteratorInvalidDocuments.next();
             DefaultQuery<JSONSymbol, Boolean> query = checkDocument(hypothesis, document);
@@ -66,7 +64,6 @@ abstract class AbstractExplorationJSONConformance<A extends DeterministicAccepto
             }
         }
 
-        System.out.println("GIBBERISH");
         for (int i = 0; i < numberTests(); i++) {
             Word<JSONSymbol> word = generateGibberish();
             DefaultQuery<JSONSymbol, Boolean> query = checkWord(hypothesis, word);

@@ -139,7 +139,7 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
      * @param automaton The VPA
      * @return A set with the bin locations
      */
-    Set<L> identifyBinLocations(OneSEVPA<L, JSONSymbol> automaton) {
+    public Set<L> identifyBinLocations(OneSEVPA<L, JSONSymbol> automaton) {
         Set<L> binLocations = new HashSet<>(automaton.getLocations());
         binLocations.removeAll(allLocationsOnAcceptingPath(automaton));
         return binLocations;

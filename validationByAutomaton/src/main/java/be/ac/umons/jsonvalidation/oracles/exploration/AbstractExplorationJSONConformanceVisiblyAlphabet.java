@@ -36,7 +36,6 @@ abstract class AbstractExplorationJSONConformanceVisiblyAlphabet<A extends Deter
             return query;
         }
 
-        System.out.println("INTERNAL GIBBERISH");
         for (int i = 0; i < numberTests(); i++) {
             Word<JSONSymbol> word = generateGibberishInternalSymbols();
             query = checkWord(hypo, word);

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
  * 
  * @author Gaëtan Staquet
  */
-class ValidationState<L> {
+public class ValidationState<L> {
     private final Set<PairSourceToReached<L>> sourceToReachedLocations;
     private final ValidationStackContents<L> stack;
 

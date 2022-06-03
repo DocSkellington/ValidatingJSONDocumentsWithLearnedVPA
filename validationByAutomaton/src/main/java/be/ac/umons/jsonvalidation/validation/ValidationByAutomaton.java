@@ -42,18 +42,14 @@ public class ValidationByAutomaton<L> {
         this.alphabet = automaton.getInputAlphabet();
     }
 
-    private ValidationState<L> getInitialState() {
+    public ValidationState<L> getInitialState() {
         final Set<L> setWithInitialLocation = new HashSet<>();
         setWithInitialLocation.add(automaton.getInitialLocation());
         return new ValidationState<>(PairSourceToReached.getIdentityPairs(setWithInitialLocation), null);
     }
 
-    public boolean accepts(Iterable<JSONSymbol> input) {
-        ValidationState<L> state = getState(input);
-        if (state == null) {
-            return false;
-        }
-        if (state.getStack() != null) {
+    public boolean isAccepting(ValidationState<L> state) {
+        if (state == null || state.getStack() != null) {
             return false;
         }
         // Do we have at least one accepting location?
@@ -63,6 +59,11 @@ public class ValidationByAutomaton<L> {
             .filter(location -> automaton.isAcceptingLocation(location))
             .findAny().isPresent();
         // @formatter:on
+    }
+
+    public boolean accepts(Iterable<JSONSymbol> input) {
+        ValidationState<L> state = getState(input);
+        return isAccepting(state);
     }
 
     public ValidationState<L> getState(Iterable<JSONSymbol> input) {
