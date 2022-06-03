@@ -6,26 +6,35 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonvalidation.oracles.JSONMembershipOracle;
+import be.ac.umons.jsonvalidation.validation.relation.ReachabilityRelation;
 import de.learnlib.acex.analyzers.AcexAnalyzers;
 import de.learnlib.algorithms.ttt.vpda.TTTLearnerVPDA;
+import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.oracle.MembershipOracle;
 import de.learnlib.filter.statistic.oracle.CounterEQOracle;
 import de.learnlib.filter.statistic.oracle.CounterOracle;
 import de.learnlib.util.Experiment;
+import net.automatalib.automata.vpda.DefaultOneSEVPA;
+import net.automatalib.automata.vpda.Location;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.automata.vpda.OneSEVPAGraphView.SevpaViewEdge;
 import net.automatalib.graphs.Graph;
+import net.automatalib.util.automata.vpda.OneSEVPAUtil;
 import net.automatalib.words.VPDAlphabet;
 
 public abstract class VPDABenchmarks extends ABenchmarks {
+    private static final LearnLogger LOGGER = LearnLogger.getLogger(VPDABenchmarks.class);
 
     public VPDABenchmarks(Path pathToCSVFile, Duration timeout, int maxProperties, int maxItems) throws IOException {
         super(pathToCSVFile, timeout, maxProperties, maxItems);
@@ -39,6 +48,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
             "Membership queries",
             "Equivalence queries",
             "Rounds",
+            "Bin state",
             "alphabet size",
             "ROCA size",
             "Internal transitions",
@@ -75,17 +85,23 @@ public abstract class VPDABenchmarks extends ABenchmarks {
         final List<Object> statistics = new LinkedList<>();
         if (results.finished) {
             final OneSEVPA<?, JSONSymbol> learnedVPDA = experiment.getFinalHypothesis();
+            LOGGER.info("VPDA learned with " + learnedVPDA.size() + " states");
+            final DefaultOneSEVPA<JSONSymbol> vpda = removeBinState(learnedVPDA);
+            LOGGER.info("Bin state removed");
+            assert learnedVPDA.size() - vpda.size() <= 1;
+            System.out.println("Separating " + OneSEVPAUtil.findSeparatingWord(learnedVPDA, vpda, alphabet));
 
             statistics.add(results.timeInMillis);
             statistics.add(membershipOracle.getStatisticalData().getCount());
             statistics.add(equivalenceOracle.getStatisticalData().getCount());
             statistics.add(experiment.getRounds().getCount());
+            statistics.add(vpda.size() != learnedVPDA.size());
             statistics.add(alphabet.size());
-            statistics.add(learnedVPDA.size());
-            statistics.add(learnedVPDA.numberOfInternalTransitions());
-            statistics.add(learnedVPDA.numberOfReturnTransitions());
-            statistics.add(learnedVPDA.numberOfCallTransitions());
-            statistics.add(computeDiameter(learnedVPDA));
+            statistics.add(vpda.size());
+            statistics.add(vpda.numberOfInternalTransitions());
+            statistics.add(vpda.numberOfReturnTransitions());
+            statistics.add(vpda.numberOfCallTransitions());
+            statistics.add(computeDiameter(vpda));
 
             writeModelToDot(learnedVPDA, schemaName, currentId, "VPDA");
         } else if (results.error) {
@@ -103,7 +119,6 @@ public abstract class VPDABenchmarks extends ABenchmarks {
     }
 
     private <L> int computeDiameter(OneSEVPA<L, JSONSymbol> vpda) {
-        System.out.println("Computing diameter");
         final Graph<L, SevpaViewEdge<L, JSONSymbol>> graph = vpda.graphView();
         final List<L> nodes = List.copyOf(graph.getNodes());
         final List<List<Integer>> distances = floydWarshall(graph, nodes);
@@ -113,6 +128,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
                 .max(Comparator.naturalOrder())
                 .orElseThrow()
             )
+            .filter(value -> value != Integer.MAX_VALUE)
             .max(Comparator.naturalOrder())
             .orElseThrow()
         ;
@@ -156,6 +172,62 @@ public abstract class VPDABenchmarks extends ABenchmarks {
         }
 
         return distances;
+    }
+            
+    private <L> DefaultOneSEVPA<JSONSymbol> removeBinState(OneSEVPA<L, JSONSymbol> learned) {
+        final ReachabilityRelation<L> commaRelation = ReachabilityRelation.computeCommaRelation(learned);
+        final ReachabilityRelation<L> internalRelation = ReachabilityRelation.computeInternalRelation(learned);
+        final ReachabilityRelation<L> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(learned, commaRelation, internalRelation);
+        LOGGER.info("Reachability relation computed");
+
+        final Set<L> binLocations = wellMatchedRelation.identifyBinLocations(learned);
+
+        final VPDAlphabet<JSONSymbol> alphabet = learned.getInputAlphabet();
+        final DefaultOneSEVPA<JSONSymbol> withoutBin = new DefaultOneSEVPA<>(alphabet);
+        final Map<L, Location> oldToNewLocations = new HashMap<>();
+        for (final L location : learned.getLocations()) {
+            if (!binLocations.contains(location)) {
+                final Location newLocation;
+                final boolean accepting = learned.isAcceptingLocation(location);
+                if (learned.getInitialLocation() == location) {
+                    newLocation = withoutBin.addInitialLocation(accepting);
+                }
+                else {
+                    newLocation = withoutBin.addLocation(accepting);
+                }
+                oldToNewLocations.put(location, newLocation);
+            }
+        }
+
+        for (final L source : learned.getLocations()) {
+            if (binLocations.contains(source)) {
+                continue;
+            }
+
+            for (final JSONSymbol internalSymbol : alphabet.getInternalAlphabet()) {
+                final L target = learned.getInternalSuccessor(source, internalSymbol);
+                assert target != null;
+                if (!binLocations.contains(target)) {
+                    withoutBin.setInternalSuccessor(oldToNewLocations.get(source), internalSymbol, oldToNewLocations.get(target));
+                }
+            }
+
+            for (final JSONSymbol returnSymbol : alphabet.getReturnAlphabet()) {
+                for (final JSONSymbol callSymbol : alphabet.getCallAlphabet()) {
+                    for (final L locationBeforeCall : learned.getLocations()) {
+                        final int stackSymLearned = learned.encodeStackSym(locationBeforeCall, callSymbol);
+                        final L target = learned.getReturnSuccessor(source, returnSymbol, stackSymLearned);
+                        assert target != null;
+                        if (!binLocations.contains(target)) {
+                            final int stackSymNew = withoutBin.encodeStackSym(oldToNewLocations.get(locationBeforeCall), callSymbol);
+                            withoutBin.setReturnSuccessor(oldToNewLocations.get(source), returnSymbol, stackSymNew, oldToNewLocations.get(target));
+                        }
+                    }
+                }
+            }
+        }
+
+        return withoutBin;
     }
 
     protected abstract EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> getEquivalenceOracle(

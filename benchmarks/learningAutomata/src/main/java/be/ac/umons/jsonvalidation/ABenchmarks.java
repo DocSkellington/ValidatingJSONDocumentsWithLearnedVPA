@@ -17,15 +17,14 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import com.google.common.base.Stopwatch;
-
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+
+import com.google.common.base.Stopwatch;
 
 import be.ac.umons.jsonschematools.AbstractConstants;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonvalidation.JSONSymbol;
 import de.learnlib.filter.statistic.Counter;
 import de.learnlib.util.AbstractExperiment;
 import de.learnlib.util.statistics.SimpleProfiler;
