@@ -98,9 +98,9 @@ public abstract class VPDABenchmarks extends ABenchmarks {
             statistics.add(vpda.size() != learnedVPDA.size());
             statistics.add(alphabet.size());
             statistics.add(vpda.size());
-            statistics.add(vpda.numberOfInternalTransitions());
-            statistics.add(vpda.numberOfReturnTransitions());
-            statistics.add(vpda.numberOfCallTransitions());
+            statistics.add(numberOfInternalTransitions(vpda));
+            statistics.add(numberOfReturnTransitions(vpda));
+            statistics.add(numberOfCallTransitions(vpda));
             statistics.add(computeDiameter(vpda));
 
             writeModelToDot(learnedVPDA, schemaName, currentId, "VPDA");
@@ -228,6 +228,38 @@ public abstract class VPDABenchmarks extends ABenchmarks {
         }
 
         return withoutBin;
+    }
+
+    private <L> int numberOfCallTransitions(OneSEVPA<L, JSONSymbol> vpa) {
+        return vpa.size() * vpa.getInputAlphabet().getNumCalls();
+    }
+
+    private <L> int numberOfReturnTransitions(OneSEVPA<L, JSONSymbol> vpa) {
+        int number = 0;
+        for (L location : vpa.getLocations()) {
+            for (JSONSymbol symbol : vpa.getInputAlphabet().getReturnAlphabet()) {
+                for (L source : vpa.getLocations()) {
+                    for (JSONSymbol call : vpa.getInputAlphabet().getCallAlphabet()) {
+                        if (vpa.getReturnSuccessor(location, symbol, vpa.encodeStackSym(source, call)) != null) {
+                            number++;
+                        }
+                    }
+                }
+            }
+        }
+        return number;
+    }
+
+    private <L> int numberOfInternalTransitions(OneSEVPA<L, JSONSymbol> vpa) {
+        int number = 0;
+        for (L location : vpa.getLocations()) {
+            for (JSONSymbol symbol : vpa.getInputAlphabet().getInternalAlphabet()) {
+                if (vpa.getInternalSuccessor(location, symbol) != null) {
+                    number++;
+                }
+            }
+        }
+        return number;
     }
 
     protected abstract EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> getEquivalenceOracle(
