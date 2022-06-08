@@ -81,7 +81,7 @@ limitations under the License.
         <automatalib.version>0.11.0-SNAPSHOT</automatalib.version>
         <learnlib.version>0.17.0-SNAPSHOT</learnlib.version>
         <json.version>20210307</json.version>
-        <jsonschema.version>1.0</jsonschema.version>
+        <jsonschema.version>2.0</jsonschema.version>
         <guava.version>31.1-jre</guava.version>
         <testng.version>7.4.0</testng.version>
         <javadoc-plugin.version>3.4.0</javadoc-plugin.version>

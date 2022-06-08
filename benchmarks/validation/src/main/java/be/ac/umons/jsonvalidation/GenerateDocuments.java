@@ -13,7 +13,7 @@ import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.exploration.DefaultExplorationGenerator;
 import be.ac.umons.jsonschematools.exploration.ExplorationGenerator;
-import be.ac.umons.jsonschematools.random.DefaultRandomGeneratorInvalid;
+import be.ac.umons.jsonschematools.random.DefaultRandomGenerator;
 import be.ac.umons.jsonschematools.random.GeneratorException;
 import be.ac.umons.jsonschematools.random.RandomGenerator;
 
@@ -46,19 +46,17 @@ public class GenerateDocuments {
     }
 
     public void generate() throws IOException, JSONException, JSONSchemaException, GeneratorException {
+        Iterator<JSONObject> iterator;
         switch (generationType) {
             case EXPLORATION:
-                generateExploration();
+                iterator = createExplorationIterator();
                 break;
             case RANDOM:
-                generateRandom();
+                iterator = createRandomIterator(new Random(1));
                 break;
+            default:
+                return;
         }
-    }
-
-    private void generateExploration() throws IOException {
-        final ExplorationGenerator generator = new DefaultExplorationGenerator(maxProperties, maxItems);
-        final Iterator<JSONObject> iterator = generator.createIterator(schema, maxDocumentDepth, canGenerateInvalid);
 
         for (int i = 0 ; i < nDocuments && iterator.hasNext() ; i++) {
             final JSONObject document = iterator.next();
@@ -66,13 +64,14 @@ public class GenerateDocuments {
         }
     }
 
-    private void generateRandom() throws JSONException, JSONSchemaException, GeneratorException, IOException {
-        final RandomGenerator generator = new DefaultRandomGeneratorInvalid(maxProperties, maxItems);
+    private Iterator<JSONObject> createExplorationIterator() {
+        final ExplorationGenerator generator = new DefaultExplorationGenerator(maxProperties, maxItems);
+        return generator.createIterator(schema, maxDocumentDepth, canGenerateInvalid);
+    }
 
-        for (int i = 0 ; i < nDocuments ; i++) {
-            final JSONObject document = generator.generate(schema, maxItems, new Random(i));
-            writeDocument(document, pathToDocuments, schemaName, i);
-        }
+    private Iterator<JSONObject> createRandomIterator(Random random) {
+        final RandomGenerator generator = new DefaultRandomGenerator(maxProperties, maxItems);
+        return generator.createIterator(schema, maxDocumentDepth, canGenerateInvalid, random);
     }
 
     private static void writeDocument(final JSONObject document, final Path pathToDocuments, final String schemaName, final int id) throws IOException {

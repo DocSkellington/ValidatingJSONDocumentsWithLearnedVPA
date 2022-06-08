@@ -79,8 +79,8 @@ limitations under the License.
 
         <!-- Dependency versions -->
         <jsonvalidation.version>2.0</jsonvalidation.version>
-        <learningoracles.version>1.0</learningoracles.version>
-        <jsonschema.version>1.0</jsonschema.version>
+        <learningoracles.version>2.0</learningoracles.version>
+        <jsonschema.version>2.0</jsonschema.version>
         <automatalib.version>0.11.0-SNAPSHOT</automatalib.version>
         <testng.version>7.4.0</testng.version>
         <csv.version>1.9.0</csv.version>
