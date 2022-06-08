@@ -284,7 +284,13 @@ public class ReachabilityGraph<L> {
         return isAcceptingForLocation(getNode(pairSourceToReached, key), locationBeforeCall);
     }
 
-    private List<NodeInGraph<L>> getNodesForKey(JSONSymbol key) {
+    /**
+     * Gets all the nodes that can read the given key.
+     * 
+     * @param key The key
+     * @return A list with the nodes
+     */
+    public List<NodeInGraph<L>> getNodesForKey(JSONSymbol key) {
         return keyToNodes.getOrDefault(key, Collections.emptyList());
     }
 
@@ -300,50 +306,6 @@ public class ReachabilityGraph<L> {
     }
 
     /**
-     * Adds a new layer in the stack of each node.
-     */
-    public void addLayerInStack() {
-        for (NodeInGraph<L> node : nodes()) {
-            node.addLayerInStack();
-        }
-    }
-
-    /**
-     * Removes the top layer from the stack of each node.
-     */
-    public void popLayerInStack() {
-        for (NodeInGraph<L> node : nodes()) {
-            node.popLayerInStack();
-        }
-    }
-
-    /**
-     * Given the list of locations actually reached, marks all the nodes in the
-     * graph that were not reached.
-     * 
-     * That is, it allows to remove a path in the graph that was not followed while
-     * reading the input.
-     * 
-     * The markings are done at the top level of the stack.
-     * 
-     * The function expects that the size of {@code locationsReached} is equal to
-     * the number of nodes having {@code lastKeyProcessed} as their symbol.
-     * 
-     * @param sourceToReachedLocations The locations reached
-     * @param lastKeyProcessed         The last key that was read
-     */
-    public void markNodesToReject(final Set<PairSourceToReached<L>> sourceToReachedLocations,
-            final JSONSymbol lastKeyProcessed) {
-        final List<NodeInGraph<L>> nodesForKey = getNodesForKey(lastKeyProcessed);
-
-        for (NodeInGraph<L> node : nodesForKey) {
-            if (!sourceToReachedLocations.contains(node.getPairLocations())) {
-                node.markRejected();
-            }
-        }
-    }
-
-    /**
      * Gets all the locations in the VPA such that it is possible to read a closing
      * curly brace and there is a path in the graph such that none of its node is
      * marked as rejected and all the keys seen while processing the input are
@@ -356,24 +318,27 @@ public class ReachabilityGraph<L> {
      * @param seenKeys            The set of keys seen while reading the input
      * @param locationsBeforeCall The locations of the VPA before reading the
      *                            opening curly brace that opened the current object
+     * @param rejectedNodes       A collection of nodes in the graph that are marked
+     *                            as rejected
      * @return The set of locations from which the VPA can read the closing curly
      *         brace
      */
     public Set<L> getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(Set<JSONSymbol> seenKeys,
-            Collection<L> locationsBeforeCall) {
+            Collection<L> locationsBeforeCall, Collection<NodeInGraph<L>> rejectedNodes) {
         final Set<L> locationsReadingClosing = new HashSet<>();
         for (NodeInGraph<L> initial : startingNodes) {
             depthFirstExploreForAcceptingNodes(initial, new LinkedList<>(), locationsReadingClosing, seenKeys,
-                    locationsBeforeCall);
+                    locationsBeforeCall, rejectedNodes);
         }
         return locationsReadingClosing;
     }
 
     private void depthFirstExploreForAcceptingNodes(final NodeInGraph<L> current,
             final LinkedList<JSONSymbol> seenKeysInExploration, final Set<L> locationsReadingClosing,
-            final Set<JSONSymbol> seenKeysInAutomaton, final Collection<L> locationsBeforeCall) {
+            final Set<JSONSymbol> seenKeysInAutomaton, final Collection<L> locationsBeforeCall,
+            Collection<NodeInGraph<L>> rejectedNodes) {
         // The path has a node that is rejected
-        if (current.isRejected()) {
+        if (rejectedNodes.contains(current)) {
             return;
         }
 
@@ -423,7 +388,7 @@ public class ReachabilityGraph<L> {
         final Set<NodeInGraph<L>> successors = graph.successors(current);
         for (final NodeInGraph<L> successor : successors) {
             depthFirstExploreForAcceptingNodes(successor, seenKeysInExploration, locationsReadingClosing,
-                    seenKeysInAutomaton, locationsBeforeCall);
+                    seenKeysInAutomaton, locationsBeforeCall, rejectedNodes);
         }
 
         seenKeysInExploration.removeFirst();

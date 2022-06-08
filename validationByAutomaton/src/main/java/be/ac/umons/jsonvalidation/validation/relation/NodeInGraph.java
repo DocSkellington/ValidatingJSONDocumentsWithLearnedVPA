@@ -16,25 +16,20 @@ import net.automatalib.automata.vpda.OneSEVPA;
  * the triplet can read a return symbol and pop the stack symbol corresponding
  * to {@code p}.
  * 
- * It also has a stack storing whether the node is rejected for each stacked
- * level.
- * 
  * @author Gaëtan Staquet
  */
-class NodeInGraph<L> {
+public class NodeInGraph<L> {
 
     private final PairSourceToReached<L> pairLocations;
     private final JSONSymbol symbol;
     private final BitSet acceptingForLocation;
     private final BitSet onPathToAcceptingForLocation;
-    private NodeStackContents stackForRejected;
 
     public NodeInGraph(InRelation<L> inRelation, JSONSymbol symbol, OneSEVPA<L, JSONSymbol> automaton, Set<L> binLocations) {
         this.pairLocations = PairSourceToReached.of(inRelation.getStart(), inRelation.getTarget());
         this.symbol = symbol;
         this.acceptingForLocation = new BitSet(automaton.size());
         this.onPathToAcceptingForLocation = new BitSet(automaton.size());
-        this.stackForRejected = null;
 
         final JSONSymbol callSymbol = JSONSymbol.openingCurlyBraceSymbol;
         final JSONSymbol returnSymbol = JSONSymbol.closingCurlyBraceSymbol;
@@ -98,30 +93,11 @@ class NodeInGraph<L> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.pairLocations, this.pairLocations);
+        return Objects.hash(this.pairLocations, this.symbol);
     }
 
     @Override
     public String toString() {
         return pairLocations.toString() + ", " + symbol;
-    }
-
-    void addLayerInStack() {
-        stackForRejected = NodeStackContents.push(false, stackForRejected);
-    }
-
-    void popLayerInStack() {
-        stackForRejected = stackForRejected.pop();
-    }
-
-    void markRejected() {
-        stackForRejected.markRejected();
-    }
-
-    public boolean isRejected() {
-        if (stackForRejected == null) {
-            return false;
-        }
-        return stackForRejected.peek();
     }
 }

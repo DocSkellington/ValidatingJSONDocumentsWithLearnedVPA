@@ -1,9 +1,11 @@
 package be.ac.umons.jsonvalidation.validation;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
+import be.ac.umons.jsonvalidation.validation.relation.NodeInGraph;
 import be.ac.umons.jsonvalidation.validation.relation.ReachabilityGraph;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.VPDAlphabet;
@@ -130,9 +132,9 @@ public class ValidationByAutomaton<L> {
     private ValidationState<L> getCommaInObjectSuccessor(ValidationState<L> state,
             JSONSymbol nextSymbol) {
         final ValidationStackContents<L> currentStack = state.getStack();
-        final JSONSymbol currentKey = currentStack.getCurrentKey();
+        final JSONSymbol currentKey = currentStack.peekCurrentKey();
 
-        graph.markNodesToReject(state.getSourceToReachedLocations(), currentKey);
+        markNodesToReject(currentStack, state.getSourceToReachedLocations(), currentKey);
 
         if (!currentStack.addKey(nextSymbol)) {
             return null;
@@ -162,8 +164,6 @@ public class ValidationByAutomaton<L> {
             successorSourceToReachedLocations
                     .add(PairSourceToReached.of(automaton.getInitialLocation(), automaton.getInitialLocation()));
         }
-
-        graph.addLayerInStack();
 
         if (successorSourceToReachedLocations.isEmpty()) {
             return null;
@@ -206,12 +206,12 @@ public class ValidationByAutomaton<L> {
             if (!callSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
                 return null;
             }
-            final JSONSymbol currentKey = currentStack.getCurrentKey();
-            graph.markNodesToReject(sourceToReachedLocations, currentKey);
+            final JSONSymbol currentKey = currentStack.peekCurrentKey();
+            markNodesToReject(currentStack, sourceToReachedLocations, currentKey);
 
-            final Set<L> acceptingLocations = graph
-                    .getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
-                            currentStack.getSeenKeys(), currentStack.peekReachedLocationsBeforeCall());
+            final Set<L> acceptingLocations = graph.getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
+                    currentStack.peekSeenKeys(), currentStack.peekReachedLocationsBeforeCall(),
+                    currentStack.peekRejectedNodes());
 
             for (final PairSourceToReached<L> sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
                 final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),
@@ -227,12 +227,20 @@ public class ValidationByAutomaton<L> {
             return null;
         }
 
-        graph.popLayerInStack();
-
         if (successorSourceToReachedLocations.isEmpty()) {
             return null;
         }
         return new ValidationState<>(successorSourceToReachedLocations, currentStack.pop());
     }
 
+    private void markNodesToReject(final ValidationStackContents<L> topStack,
+            final Collection<PairSourceToReached<L>> sourceToReachedLocations, final JSONSymbol lastKeyProcessed) {
+        final Collection<NodeInGraph<L>> nodesForKey = graph.getNodesForKey(lastKeyProcessed);
+
+        for (NodeInGraph<L> node : nodesForKey) {
+            if (!sourceToReachedLocations.contains(node.getPairLocations())) {
+                topStack.markRejected(node);
+            }
+        }
+    }
 }

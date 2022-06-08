@@ -23,14 +23,18 @@ public class TestReachabilityGraph {
         Set<NodeInGraph<Location>> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
 
+        JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
+        JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
+
         Location q0 = automaton.getLocation(0);
         Location q2 = automaton.getLocation(2);
         Location q3 = automaton.getLocation(3);
         Location q5 = automaton.getLocation(5);
+
         InRelation<Location> q0Toq2Relation = InRelation.of(q0, q2);
-        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0Toq2Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
+        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0Toq2Relation, k1Sym, automaton, new HashSet<>());
         InRelation<Location> q3Toq5Relation = InRelation.of(q3, q5);
-        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3Toq5Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
+        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3Toq5Relation, k2Sym, automaton, new HashSet<>());
 
         Assert.assertEquals(nodes.size(), 2);
         Assert.assertTrue(nodes.contains(q0Toq2));
@@ -40,14 +44,14 @@ public class TestReachabilityGraph {
         Assert.assertTrue(graph.getGraph().hasEdgeConnecting(q0Toq2, q3Toq5));
         
         for (Location location : automaton.getLocations()) {
-            Assert.assertFalse(graph.isAcceptingForLocation(q0Toq2Relation, location));
+            Assert.assertFalse(graph.isAcceptingForLocation(q0, k1Sym, q2, location));
         }
         for (Location location : automaton.getLocations()) {
             if (location.getIndex() == 0) {
-                Assert.assertTrue(graph.isAcceptingForLocation(q3Toq5Relation, location));
+                Assert.assertTrue(graph.isAcceptingForLocation(q3, k2Sym, q5, location));
             }
             else {
-                Assert.assertFalse(graph.isAcceptingForLocation(q3Toq5Relation, location));
+                Assert.assertFalse(graph.isAcceptingForLocation(q3, k2Sym, q5, location));
             }
         }
     }
@@ -61,20 +65,24 @@ public class TestReachabilityGraph {
         Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
         ImmutableGraph<NodeInGraph<Location>> actualGraph = graph.getGraph();
 
+        JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
+        JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
+
         Location q0 = automaton.getLocation(0);
         Location q2 = automaton.getLocation(2);
         Location q3 = automaton.getLocation(3);
         Location q5 = automaton.getLocation(5);
         Location q7 = automaton.getLocation(7);
         Location q8 = automaton.getLocation(8);
+
         InRelation<Location> q0Toq2Relation = InRelation.of(q0, q2);
         InRelation<Location> q0Toq7Relation = InRelation.of(q0, q7);
         InRelation<Location> q3Toq5Relation = InRelation.of(q3, q5);
         InRelation<Location> q8Toq5Relation = InRelation.of(q8, q5);
-        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0Toq2Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
-        NodeInGraph<Location> q0Toq7 = new NodeInGraph<>(q0Toq7Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
-        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3Toq5Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
-        NodeInGraph<Location> q8Toq5 = new NodeInGraph<>(q8Toq5Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
+        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0Toq2Relation, k1Sym, automaton, new HashSet<>());
+        NodeInGraph<Location> q0Toq7 = new NodeInGraph<>(q0Toq7Relation, k1Sym, automaton, new HashSet<>());
+        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3Toq5Relation, k2Sym, automaton, new HashSet<>());
+        NodeInGraph<Location> q8Toq5 = new NodeInGraph<>(q8Toq5Relation, k2Sym, automaton, new HashSet<>());
 
         Assert.assertEquals(nodes.size(), 4);
         Assert.assertTrue(nodes.contains(q0Toq2));
@@ -87,17 +95,17 @@ public class TestReachabilityGraph {
         Assert.assertTrue(actualGraph.hasEdgeConnecting(q0Toq7, q8Toq5));
 
         for (Location location : automaton.getLocations()) {
-            Assert.assertFalse(graph.isAcceptingForLocation(q0Toq2Relation, location));
-            Assert.assertFalse(graph.isAcceptingForLocation(q0Toq7Relation, location));
+            Assert.assertFalse(graph.isAcceptingForLocation(q0, k1Sym, q2, location));
+            Assert.assertFalse(graph.isAcceptingForLocation(q0, k1Sym, q7, location));
         }
         for (Location location : automaton.getLocations()) {
             if (location.getIndex() == 0) {
-                Assert.assertTrue(graph.isAcceptingForLocation(q3Toq5Relation, location));
-                Assert.assertTrue(graph.isAcceptingForLocation(q8Toq5Relation, location));
+                Assert.assertTrue(graph.isAcceptingForLocation(q3, k2Sym, q5, location));
+                Assert.assertTrue(graph.isAcceptingForLocation(q8, k2Sym, q5, location));
             }
             else {
-                Assert.assertFalse(graph.isAcceptingForLocation(q3Toq5Relation, location));
-                Assert.assertFalse(graph.isAcceptingForLocation(q8Toq5Relation, location));
+                Assert.assertFalse(graph.isAcceptingForLocation(q3, k2Sym, q5, location));
+                Assert.assertFalse(graph.isAcceptingForLocation(q8, k2Sym, q5, location));
             }
         }
     }
@@ -109,6 +117,11 @@ public class TestReachabilityGraph {
         Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
         ImmutableGraph<NodeInGraph<Location>> actualGraph = graph.getGraph();
 
+        JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
+        JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
+        JSONSymbol o1Sym = JSONSymbol.toSymbol("o1");
+        JSONSymbol o2Sym = JSONSymbol.toSymbol("o2");
+
         Location q0 = automaton.getLocation(0);
         Location q2 = automaton.getLocation(2);
         Location q3 = automaton.getLocation(3);
@@ -116,14 +129,16 @@ public class TestReachabilityGraph {
         Location q7 = automaton.getLocation(7);
         Location q8 = automaton.getLocation(8);
         Location q10 = automaton.getLocation(10);
+
         InRelation<Location> q0Toq2Relation = InRelation.of(q0, q2);
         InRelation<Location> q0Toq6Relation = InRelation.of(q0, q6);
         InRelation<Location> q3Toq7Relation = InRelation.of(q3, q7);
         InRelation<Location> q8Toq10Relation = InRelation.of(q8, q10);
-        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0Toq2Relation, JSONSymbol.toSymbol("k1"), automaton, new HashSet<>());
-        NodeInGraph<Location> q0Toq6 = new NodeInGraph<>(q0Toq6Relation, JSONSymbol.toSymbol("k2"), automaton, new HashSet<>());
-        NodeInGraph<Location> q3Toq7 = new NodeInGraph<>(q3Toq7Relation, JSONSymbol.toSymbol("o1"), automaton, new HashSet<>());
-        NodeInGraph<Location> q8Toq10 = new NodeInGraph<>(q8Toq10Relation, JSONSymbol.toSymbol("o2"), automaton, new HashSet<>());
+
+        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0Toq2Relation, k1Sym, automaton, new HashSet<>());
+        NodeInGraph<Location> q0Toq6 = new NodeInGraph<>(q0Toq6Relation, k2Sym, automaton, new HashSet<>());
+        NodeInGraph<Location> q3Toq7 = new NodeInGraph<>(q3Toq7Relation, o1Sym, automaton, new HashSet<>());
+        NodeInGraph<Location> q8Toq10 = new NodeInGraph<>(q8Toq10Relation, o2Sym, automaton, new HashSet<>());
 
         Assert.assertEquals(nodes.size(), 4);
         Assert.assertTrue(nodes.contains(q0Toq2));
@@ -138,22 +153,22 @@ public class TestReachabilityGraph {
         
         for (Location location : automaton.getLocations()) {
             if (location.getIndex() == 0) {
-                Assert.assertTrue(graph.isAcceptingForLocation(q0Toq2Relation, location));
-                Assert.assertFalse(graph.isAcceptingForLocation(q0Toq6Relation, location));
-                Assert.assertTrue(graph.isAcceptingForLocation(q3Toq7Relation, location));
-                Assert.assertTrue(graph.isAcceptingForLocation(q8Toq10Relation, location));
+                Assert.assertTrue(graph.isAcceptingForLocation(q0, k1Sym, q2, location));
+                Assert.assertFalse(graph.isAcceptingForLocation(q0, k2Sym, q6, location));
+                Assert.assertTrue(graph.isAcceptingForLocation(q3, o1Sym, q7, location));
+                Assert.assertTrue(graph.isAcceptingForLocation(q8, o2Sym, q10, location));
             }
             else if (location.getIndex() == 4) {
-                Assert.assertFalse(graph.isAcceptingForLocation(q0Toq2Relation, location));
-                Assert.assertTrue(graph.isAcceptingForLocation(q0Toq6Relation, location));
-                Assert.assertTrue(graph.isAcceptingForLocation(q3Toq7Relation, location));
-                Assert.assertTrue(graph.isAcceptingForLocation(q8Toq10Relation, location));
+                Assert.assertFalse(graph.isAcceptingForLocation(q0, k1Sym, q2, location));
+                Assert.assertTrue(graph.isAcceptingForLocation(q0, k2Sym, q6, location));
+                Assert.assertTrue(graph.isAcceptingForLocation(q3, o1Sym, q7, location));
+                Assert.assertTrue(graph.isAcceptingForLocation(q8, o2Sym, q10, location));
             }
             else {
-                Assert.assertFalse(graph.isAcceptingForLocation(q0Toq2Relation, location));
-                Assert.assertFalse(graph.isAcceptingForLocation(q0Toq6Relation, location));
-                Assert.assertFalse(graph.isAcceptingForLocation(q3Toq7Relation, location));
-                Assert.assertFalse(graph.isAcceptingForLocation(q8Toq10Relation, location));
+                Assert.assertFalse(graph.isAcceptingForLocation(q0, k1Sym, q2, location));
+                Assert.assertFalse(graph.isAcceptingForLocation(q0, k2Sym, q6, location));
+                Assert.assertFalse(graph.isAcceptingForLocation(q3, o1Sym, q7, location));
+                Assert.assertFalse(graph.isAcceptingForLocation(q8, o2Sym, q10, location));
             }
         }
     }

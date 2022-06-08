@@ -7,13 +7,14 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
+import be.ac.umons.jsonvalidation.validation.relation.NodeInGraph;
 
 /**
  * The stack used in a {@link ValidationState}.
  * 
  * It contains a set with the source-to-reached locations before the call
- * symbol, the call symbol, the set with all the keys seen so far, and a pointer
- * to the rest of the stack.
+ * symbol, the call symbol, the set with all the keys seen so far, a set of
+ * nodes to reject in the graph, and a pointer to the rest of the stack.
  * 
  * @author Gaëtan Staquet
  */
@@ -21,6 +22,7 @@ class ValidationStackContents<L> {
     private final Set<PairSourceToReached<L>> sourceToReachedLocationsBeforeCall;
     private final JSONSymbol callSymbol;
     private final Set<JSONSymbol> seenKeys = new HashSet<>();
+    private final Set<NodeInGraph<L>> rejectedNodes = new HashSet<>();
     private JSONSymbol currentKey = null;
     private @Nullable final ValidationStackContents<L> rest;
 
@@ -52,11 +54,19 @@ class ValidationStackContents<L> {
         return callSymbol;
     }
 
-    public Set<JSONSymbol> getSeenKeys() {
+    public Set<NodeInGraph<L>> peekRejectedNodes() {
+        return rejectedNodes;
+    }
+
+    public void markRejected(NodeInGraph<L> node) {
+        rejectedNodes.add(node);
+    }
+
+    public Set<JSONSymbol> peekSeenKeys() {
         return seenKeys;
     }
 
-    public JSONSymbol getCurrentKey() {
+    public JSONSymbol peekCurrentKey() {
         return currentKey;
     }
 
