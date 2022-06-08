@@ -24,6 +24,10 @@ public class PairSourceToReached<L> {
         this.reachedLocation = reached;
     }
 
+    public L getSourceLocation() {
+        return sourceLocation;
+    }
+
     public L getReachedLocation() {
         return reachedLocation;
     }

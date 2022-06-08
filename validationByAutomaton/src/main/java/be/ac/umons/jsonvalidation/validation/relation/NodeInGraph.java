@@ -23,14 +23,14 @@ import net.automatalib.automata.vpda.OneSEVPA;
  */
 class NodeInGraph<L> {
 
-    private final InRelation<L> inRelation;
+    private final PairSourceToReached<L> pairLocations;
     private final JSONSymbol symbol;
     private final BitSet acceptingForLocation;
     private final BitSet onPathToAcceptingForLocation;
     private NodeStackContents stackForRejected;
 
     public NodeInGraph(InRelation<L> inRelation, JSONSymbol symbol, OneSEVPA<L, JSONSymbol> automaton, Set<L> binLocations) {
-        this.inRelation = inRelation;
+        this.pairLocations = PairSourceToReached.of(inRelation.getStart(), inRelation.getTarget());
         this.symbol = symbol;
         this.acceptingForLocation = new BitSet(automaton.size());
         this.onPathToAcceptingForLocation = new BitSet(automaton.size());
@@ -56,20 +56,20 @@ class NodeInGraph<L> {
         }
     }
 
-    InRelation<L> getInRelation() {
-        return inRelation;
-    }
-
-    JSONSymbol getSymbol() {
+    public JSONSymbol getSymbol() {
         return symbol;
     }
 
     public L getStartLocation() {
-        return getInRelation().getStart();
+        return pairLocations.getSourceLocation();
     }
 
     public L getTargetLocation() {
-        return getInRelation().getTarget();
+        return pairLocations.getReachedLocation();
+    }
+
+    public PairSourceToReached<L> getPairLocations() {
+        return pairLocations;
     }
 
     public boolean isAcceptingForLocation(int locationId) {
@@ -93,17 +93,17 @@ class NodeInGraph<L> {
             return false;
         }
         NodeInGraph<?> other = (NodeInGraph<?>) obj;
-        return Objects.equals(this.inRelation, other.inRelation);
+        return Objects.equals(this.pairLocations, other.pairLocations);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(inRelation);
+        return Objects.hash(this.pairLocations, this.pairLocations);
     }
 
     @Override
     public String toString() {
-        return inRelation.toString() + ", " + symbol;
+        return pairLocations.toString() + ", " + symbol;
     }
 
     void addLayerInStack() {
@@ -123,9 +123,5 @@ class NodeInGraph<L> {
             return false;
         }
         return stackForRejected.peek();
-    }
-
-    public PairSourceToReached<L> toPairLocations() {
-        return PairSourceToReached.of(inRelation.getStart(), inRelation.getTarget());
     }
 }

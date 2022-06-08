@@ -11,6 +11,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Objects;
 import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
@@ -66,7 +67,8 @@ public class ReachabilityGraph<L> {
         return new ReachabilityGraph<>(automaton, commaRelation, internalRelation, wellMatchedRelation);
     }
 
-    public ReachabilityGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> commaRelation, final ReachabilityRelation<L> internalRelation, final ReachabilityRelation<L> wellMatchedRelation) {
+    public ReachabilityGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> commaRelation,
+            final ReachabilityRelation<L> internalRelation, final ReachabilityRelation<L> wellMatchedRelation) {
         this.automaton = automaton;
         final Set<L> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
 
@@ -115,7 +117,8 @@ public class ReachabilityGraph<L> {
 
             for (JSONSymbol key : keyAlphabet) {
                 L target = automaton.getInternalSuccessor(inRel.getStart(), key);
-                if (internalRelation.areInRelation(target, inRel.getTarget()) || wellMatchedRelation.areInRelation(target, inRel.getTarget())) {
+                if (internalRelation.areInRelation(target, inRel.getTarget())
+                        || wellMatchedRelation.areInRelation(target, inRel.getTarget())) {
                     final NodeInGraph<L> node = new NodeInGraph<>(inRel, key, automaton, binLocations);
                     relationToNode.put(Pair.of(inRel, key), node);
                     builder.addNode(node);
@@ -219,9 +222,14 @@ public class ReachabilityGraph<L> {
     }
 
     @Nullable
-    NodeInGraph<L> getNode(InRelation<L> inRelation) {
+    NodeInGraph<L> getNode(L sourceLocation, JSONSymbol key, L targetLocation) {
+        return getNode(PairSourceToReached.of(sourceLocation, targetLocation), key);
+    }
+
+    @Nullable
+    NodeInGraph<L> getNode(PairSourceToReached<L> pairSourceToReached, JSONSymbol key) {
         for (NodeInGraph<L> node : nodes()) {
-            if (node.getInRelation().equals(inRelation)) {
+            if (Objects.equal(node.getSymbol(), key) && Objects.equal(node.getPairLocations(), pairSourceToReached)) {
                 return node;
             }
         }
@@ -229,18 +237,51 @@ public class ReachabilityGraph<L> {
     }
 
     /**
-     * Test whether the given triplet can read a return symbol popping the symbol
-     * corresponding to the locationBeforeCall.
+     * Tests whether the node in the graph can read a return symbol that pops a
+     * stack symbol that was pushed by reading { from {@code locationBeforeCall}.
      * 
-     * This assumes that the return symbol is }.
+     * This assumes the return symbol is } (meaning the push symbol has to be {).
      * 
-     * @param inRelation         The triplet
-     * @param locationBeforeCall The location from which the call symbol to pop was
-     *                           pushed
+     * @param node               The node in the graph
+     * @param locationBeforeCall The location before the call
      * @return
      */
-    public boolean isAcceptingForLocation(InRelation<L> inRelation, L locationBeforeCall) {
-        return getNode(inRelation).isAcceptingForLocation(automaton.getLocationId(locationBeforeCall));
+    boolean isAcceptingForLocation(NodeInGraph<L> node, L locationBeforeCall) {
+        return node.isAcceptingForLocation(automaton.getLocationId(locationBeforeCall));
+    }
+
+    /**
+     * Tests whether the node in the graph corresponding to the given pair of states
+     * and the key can read a return symbol that pops a stack symbol that was pushed
+     * by reading { from {@code locationBeforeCall}.
+     * 
+     * This assumes the return symbol is } (meaning the push symbol has to be {).
+     * 
+     * @param sourceLocation     The source location
+     * @param key                The key
+     * @param targetLocation     The reached location
+     * @param locationBeforeCall The location before the call
+     * @return
+     */
+    public boolean isAcceptingForLocation(L sourceLocation, JSONSymbol key, L targetLocation, L locationBeforeCall) {
+        return isAcceptingForLocation(getNode(sourceLocation, key, targetLocation), locationBeforeCall);
+    }
+
+    /**
+     * Tests whether the node in the graph corresponding to the given pair of states
+     * and the key can read a return symbol that pops a stack symbol that was pushed
+     * by reading { from {@code locationBeforeCall}.
+     * 
+     * This assumes the return symbol is } (meaning the push symbol has to be {).
+     * 
+     * @param pairSourceToReached The pair of source-to-reached locations
+     * @param key                 The key
+     * @param locationBeforeCall  The location before the call
+     * @return
+     */
+    public boolean isAcceptingForLocation(PairSourceToReached<L> pairSourceToReached, JSONSymbol key,
+            L locationBeforeCall) {
+        return isAcceptingForLocation(getNode(pairSourceToReached, key), locationBeforeCall);
     }
 
     private List<NodeInGraph<L>> getNodesForKey(JSONSymbol key) {
@@ -296,7 +337,7 @@ public class ReachabilityGraph<L> {
         final List<NodeInGraph<L>> nodesForKey = getNodesForKey(lastKeyProcessed);
 
         for (NodeInGraph<L> node : nodesForKey) {
-            if (!sourceToReachedLocations.contains(node.toPairLocations())) {
+            if (!sourceToReachedLocations.contains(node.getPairLocations())) {
                 node.markRejected();
             }
         }
