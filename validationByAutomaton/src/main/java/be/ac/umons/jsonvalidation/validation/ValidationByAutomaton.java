@@ -6,7 +6,7 @@ import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.relation.NodeInGraph;
-import be.ac.umons.jsonvalidation.validation.relation.ReachabilityGraph;
+import be.ac.umons.jsonvalidation.validation.relation.KeyGraph;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.VPDAlphabet;
 
@@ -30,15 +30,15 @@ import net.automatalib.words.VPDAlphabet;
  * @author Gaëtan Staquet
  */
 public class ValidationByAutomaton<L> {
-    private final ReachabilityGraph<L> graph;
+    private final KeyGraph<L> graph;
     private final OneSEVPA<L, JSONSymbol> automaton;
     private final VPDAlphabet<JSONSymbol> alphabet;
 
     public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton) {
-        this(automaton, ReachabilityGraph.graphFor(automaton));
+        this(automaton, KeyGraph.graphFor(automaton));
     }
 
-    public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton, ReachabilityGraph<L> graph) {
+    public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton, KeyGraph<L> graph) {
         this.graph = graph;
         this.automaton = automaton;
         this.alphabet = automaton.getInputAlphabet();

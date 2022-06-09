@@ -18,7 +18,7 @@ public class TestReachabilityGraph {
     @Test
     public void testStraightforwardAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
-        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton);
         Assert.assertTrue(graph.isValid());
         Set<NodeInGraph<Location>> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
@@ -59,7 +59,7 @@ public class TestReachabilityGraph {
     @Test
     public void testSmallTwoBranchesAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton);
         Assert.assertTrue(graph.isValid());
         Set<NodeInGraph<Location>> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
@@ -110,7 +110,7 @@ public class TestReachabilityGraph {
         }
     }
 
-    private void checkNodesInAutomatonWithOptionalKeysGraph(DefaultOneSEVPA<JSONSymbol> automaton, ReachabilityGraph<Location> graph) {
+    private void checkNodesInAutomatonWithOptionalKeysGraph(DefaultOneSEVPA<JSONSymbol> automaton, KeyGraph<Location> graph) {
         Assert.assertTrue(graph.isValid());
 
         Set<NodeInGraph<Location>> nodes = graph.nodes();
@@ -176,21 +176,21 @@ public class TestReachabilityGraph {
     @Test
     public void testAutomatonWithOptionalKeysGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
-        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
 
     @Test
     public void testAutomatonWithOptionalKeysAndExplicitBinStateGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
-        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
 
     @Test
     public void testAutomatonWithDuplicateKeys() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithDuplicateKeys();
-        ReachabilityGraph<Location> graph = ReachabilityGraph.graphFor(automaton);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton);
         Assert.assertFalse(graph.isValid());
     }
 }

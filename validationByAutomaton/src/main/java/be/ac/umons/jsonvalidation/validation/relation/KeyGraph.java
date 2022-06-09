@@ -49,7 +49,7 @@ import net.automatalib.words.impl.Alphabets;
  * 
  * @author Gaëtan Staquet
  */
-public class ReachabilityGraph<L> {
+public class KeyGraph<L> {
     private final OneSEVPA<L, JSONSymbol> automaton;
     private final ImmutableGraph<NodeInGraph<L>> graph;
     private final Map<JSONSymbol, List<NodeInGraph<L>>> keyToNodes = new HashMap<>();
@@ -58,16 +58,16 @@ public class ReachabilityGraph<L> {
     private final boolean cyclic;
     private final boolean duplicateKeys;
 
-    public static <L> ReachabilityGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton) {
+    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton) {
         final ReachabilityRelation<L> commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
         final ReachabilityRelation<L> internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
         final ReachabilityRelation<L> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
                 commaRelation, internalRelation);
 
-        return new ReachabilityGraph<>(automaton, commaRelation, internalRelation, wellMatchedRelation);
+        return new KeyGraph<>(automaton, commaRelation, internalRelation, wellMatchedRelation);
     }
 
-    public ReachabilityGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> commaRelation,
+    public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> commaRelation,
             final ReachabilityRelation<L> internalRelation, final ReachabilityRelation<L> wellMatchedRelation) {
         this.automaton = automaton;
         final Set<L> binLocations = wellMatchedRelation.identifyBinLocations(automaton);

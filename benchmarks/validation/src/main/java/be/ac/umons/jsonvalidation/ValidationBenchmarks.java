@@ -24,7 +24,7 @@ import be.ac.umons.jsonschematools.Validator;
 import be.ac.umons.jsonvalidation.validation.ValidationByAutomaton;
 import be.ac.umons.jsonvalidation.validation.ValidationState;
 import be.ac.umons.jsonvalidation.validation.relation.DotWriter;
-import be.ac.umons.jsonvalidation.validation.relation.ReachabilityGraph;
+import be.ac.umons.jsonvalidation.validation.relation.KeyGraph;
 import be.ac.umons.jsonvalidation.validation.relation.ReachabilityRelation;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
@@ -123,7 +123,7 @@ public class ValidationBenchmarks {
         final long memoryForRelations = getMemoryUse() - memoryAtStart;
 
         watch.reset().start();
-        final ReachabilityGraph<Location> graph = new ReachabilityGraph<>(vpa, commaRelation, internalRelation, wellMatchedRelation);
+        final KeyGraph<Location> graph = new KeyGraph<>(vpa, commaRelation, internalRelation, wellMatchedRelation);
 
         final long timeGraph = watch.stop().elapsed().toMillis();
         final long memoryForGraph = getMemoryUse() - memoryForRelations;

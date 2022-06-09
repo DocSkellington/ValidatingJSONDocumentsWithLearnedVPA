@@ -9,7 +9,7 @@ import be.ac.umons.jsonvalidation.validation.PairSourceToReached;
 import net.automatalib.automata.vpda.OneSEVPA;
 
 /**
- * A node in a {@link ReachabilityGraph}.
+ * A node in a {@link KeyGraph}.
  * 
  * It is labeled by a triplet from the reachability relation. For each location
  * {@code p} in the VPA, it has a boolean indicating whether the target state of
