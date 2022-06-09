@@ -36,7 +36,7 @@ abstract class AbstractExplorationJSONConformanceVisiblyAlphabet<A extends Deter
             return query;
         }
 
-        for (int i = 0; i < numberTests(); i++) {
+        for (int i = 0; i < numberGibberish(); i++) {
             Word<JSONSymbol> word = generateGibberishInternalSymbols();
             query = checkWord(hypo, word);
             if (query != null) {

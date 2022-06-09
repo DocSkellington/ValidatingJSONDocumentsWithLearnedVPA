@@ -24,6 +24,11 @@ public abstract class AbstractJSONEquivalenceOracle<A extends DeterministicAccep
 
     protected @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypothesis) {
         for (int maxTreeSize = 0; maxTreeSize <= maxDocumentDepth; maxTreeSize++) {
+            if (Thread.interrupted()) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+
             DefaultQuery<JSONSymbol, Boolean> counterexample = findCounterExample(hypothesis, maxTreeSize);
             if (counterexample != null) {
                 return counterexample;

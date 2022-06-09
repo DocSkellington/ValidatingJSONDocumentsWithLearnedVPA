@@ -24,6 +24,7 @@ abstract class AbstractExplorationJSONConformance<A extends DeterministicAccepto
     private final ExplorationGenerator generator;
     private Iterator<JSONObject> iteratorValidDocuments;
     private Iterator<JSONObject> iteratorInvalidDocuments = null;
+    private int numberGeneratedValidDocuments = 0;
     private int numberGeneratedInvalidDocuments = 0;
 
     protected AbstractExplorationJSONConformance(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
@@ -40,15 +41,36 @@ abstract class AbstractExplorationJSONConformance<A extends DeterministicAccepto
         return findCounterExample(hypo);
     }
 
-    private boolean continueInvaidGeneration() {
+    private boolean continueInvalidGeneration() {
         if (numberTests() == -1) {
             return true;
         }
         return numberGeneratedInvalidDocuments++ < numberTests();
     }
 
+    private boolean continueValidGeneration() {
+        if (numberTests() == -1) {
+            return true;
+        }
+        return numberGeneratedValidDocuments++ < numberTests();
+    }
+
+    protected int numberGibberish() {
+        if (numberTests() == -1) {
+            return 10;
+        }
+        else {
+            return numberTests();
+        }
+    }
+
     protected DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypothesis) {
-        while (iteratorValidDocuments.hasNext()) {
+        while (iteratorValidDocuments.hasNext() && continueValidGeneration()) {
+            if (Thread.interrupted()) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+
             JSONObject document = iteratorValidDocuments.next();
             DefaultQuery<JSONSymbol, Boolean> query = checkDocument(hypothesis, document);
             if (query != null) {
@@ -56,7 +78,12 @@ abstract class AbstractExplorationJSONConformance<A extends DeterministicAccepto
             }
         }
 
-        while (iteratorInvalidDocuments != null && iteratorInvalidDocuments.hasNext() && continueInvaidGeneration()) {
+        while (iteratorInvalidDocuments != null && iteratorInvalidDocuments.hasNext() && continueInvalidGeneration()) {
+            if (Thread.interrupted()) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+
             JSONObject document = iteratorInvalidDocuments.next();
             DefaultQuery<JSONSymbol, Boolean> query = checkDocument(hypothesis, document);
             if (query != null) {
@@ -64,7 +91,12 @@ abstract class AbstractExplorationJSONConformance<A extends DeterministicAccepto
             }
         }
 
-        for (int i = 0; i < numberTests(); i++) {
+        for (int i = 0; i < numberGibberish(); i++) {
+            if (Thread.interrupted()) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+
             Word<JSONSymbol> word = generateGibberish();
             DefaultQuery<JSONSymbol, Boolean> query = checkWord(hypothesis, word);
             if (query != null) {
