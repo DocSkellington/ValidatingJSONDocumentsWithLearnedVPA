@@ -71,7 +71,7 @@ public class MembershipOracleTests {
         Word<JSONSymbol> word = toWord("{", "\"integer\":", "\"\\I\"", "}");
         Assert.assertFalse(oracle.answerQuery(word));
 
-        word = toWord("{", "\"integer\":", "\"\\I\"", ",", "\"double\":", "\"\\D\"", "}");
+        word = toWord("{", "\"double\":", "\"\\D\"", ",", "\"integer\":", "\"\\I\"", "}");
         Assert.assertTrue(oracle.answerQuery(word));
     }
 }

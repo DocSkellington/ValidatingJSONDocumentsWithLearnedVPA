@@ -14,6 +14,8 @@
  */
 package be.ac.umons.jsonvalidation.oracles;
 
+import java.util.Random;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -54,6 +56,11 @@ public class JSONMembershipOracle implements SingleQueryOracleROCA<JSONSymbol> {
         try {
             json = new JSONObject(string);
         } catch (JSONException e) {
+            return false;
+        }
+
+        final Word<JSONSymbol> wordFromDocument = WordConversion.fromJSONDocumentToJSONSymbolWord(json, false, new Random());
+        if (!wordFromDocument.equals(input)) {
             return false;
         }
 

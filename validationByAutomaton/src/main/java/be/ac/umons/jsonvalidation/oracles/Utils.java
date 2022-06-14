@@ -79,6 +79,7 @@ public class Utils {
         boolean firstObject = true;
         boolean inString = false;
         boolean previousWasEscape = false;
+        boolean previousWasComma = false;
         for (int i = 0; i < word.length(); i++) {
             char character = word.charAt(i);
             if (numberUnmatchedOpen == 0 && !firstObject) {
@@ -87,16 +88,33 @@ public class Utils {
             if (!previousWasEscape && (character == '"' || character == '\'')) {
                 inString = !inString;
             }
-            if (!inString && (character == '{' || character == '[')) {
-                if (numberUnmatchedOpen == 0) {
-                    firstObject = false;
+            if (!inString) {
+                if (character == '{' || character == '[') {
+                    if (numberUnmatchedOpen == 0) {
+                        firstObject = false;
+                    }
+                    numberUnmatchedOpen++;
+                    previousWasComma = false;
                 }
-                numberUnmatchedOpen++;
-            } else if (!inString && (character == '}' || character == ']')) {
-                if (numberUnmatchedOpen == 0) {
-                    return false;
+                else if (character == '}' || character == ']') {
+                    if (numberUnmatchedOpen == 0) {
+                        return false;
+                    }
+                    if (previousWasComma) {
+                        return false;
+                    }
+                    numberUnmatchedOpen--;
+                    previousWasComma = false;
                 }
-                numberUnmatchedOpen--;
+                else if (character == ',') {
+                    if (previousWasComma) {
+                        return false;
+                    }
+                    previousWasComma = true;
+                }
+                else {
+                    previousWasComma = false;
+                }
             }
 
             previousWasEscape = (character == '\\');
