@@ -27,6 +27,8 @@ public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<
     private final Random rand;
     private final Alphabet<JSONSymbol> alphabet;
     private final boolean canGenerateInvalid;
+    private final int maxProperties;
+    private final int maxItems;
 
     protected AbstractJSONConformance(int numberTests, boolean canGenerateInvalid, int maxProperties, int maxItems,
             JSONSchema schema, Random random, boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
@@ -37,6 +39,8 @@ public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<
         this.rand = random;
         this.alphabet = alphabet;
         this.canGenerateInvalid = canGenerateInvalid;
+        this.maxProperties = maxProperties;
+        this.maxItems = maxItems;
     }
 
     protected Alphabet<JSONSymbol> getAlphabet() {
@@ -61,6 +65,14 @@ public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<
 
     public boolean canGenerateInvalid() {
         return canGenerateInvalid;
+    }
+
+    public int getMaxItems() {
+        return maxItems;
+    }
+
+    public int getMaxProperties() {
+        return maxProperties;
     }
 
     protected Word<JSONSymbol> generateGibberish() {
