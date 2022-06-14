@@ -26,12 +26,15 @@ import be.ac.umons.jsonvalidation.validation.ValidationState;
 import be.ac.umons.jsonvalidation.validation.relation.DotWriter;
 import be.ac.umons.jsonvalidation.validation.relation.KeyGraph;
 import be.ac.umons.jsonvalidation.validation.relation.ReachabilityRelation;
+import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.commons.util.Pair;
 import net.automatalib.words.Word;
 
 public class ValidationBenchmarks {
+    private static final LearnLogger LOGGER = LearnLogger.getLogger(ValidationBenchmarks.class);
+
     private final CSVPrinter preprocessingCSVPrinter;
     private final CSVPrinter validationCSVPrinter;
     private final int nPreprocessingColumns;
@@ -63,6 +66,7 @@ public class ValidationBenchmarks {
     private List<String> getPreprocessingHeader() {
         // @formatter:off
         return List.of(
+            "Success",
             "Relation time",
             "Relation memory",
             "Graph time",
@@ -98,6 +102,9 @@ public class ValidationBenchmarks {
             System.out.println((experimentId + 1) / nExperiments);
 
             ValidationByAutomaton<Location> automaton = constructAutomaton(vpa);
+            if (automaton == null) {
+                return;
+            }
 
             Validator validator = new DefaultValidator();
             int documentId = 0;
@@ -115,9 +122,9 @@ public class ValidationBenchmarks {
         final long memoryAtStart = getMemoryUse();
         final Stopwatch watch = Stopwatch.createStarted();
 
-        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(vpa);
-        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(vpa);
-        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(vpa, commaRelation, internalRelation);
+        final ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(vpa);
+        final ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(vpa);
+        final ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(vpa, commaRelation, internalRelation);
 
         final long timeRelations = watch.stop().elapsed().toMillis();
         final long memoryForRelations = getMemoryUse() - memoryAtStart;
@@ -134,25 +141,39 @@ public class ValidationBenchmarks {
         final long timeAutomaton = watch.stop().elapsed().toMillis();
         final long memoryForAutomaton = getMemoryUse() - memoryForGraph;
 
-        DotWriter.write(graph, System.out);
-        System.out.println();
-
-        if (!graph.isValid()) {
-            System.out.println("The automaton can not be used for our algorithm");
-            return null;
-        }
+        final StringBuilder builder = new StringBuilder();
+        DotWriter.write(graph, builder);
+        LOGGER.logModel(builder);
 
         final List<Object> statistics = new ArrayList<>(nPreprocessingColumns);
+        if (!graph.isValid()) {
+            LOGGER.error("The automaton can not be used for our algorithm");
+            
+            statistics.add(false);
+        }
+        else {
+            statistics.add(true);
+        }
         statistics.add(timeRelations);
         statistics.add(memoryForRelations);
         statistics.add(timeGraph);
         statistics.add(memoryForGraph);
         statistics.add(timeAutomaton);
         statistics.add(memoryForAutomaton);
+        statistics.add(commaRelation.size());
+        statistics.add(internalRelation.size());
+        statistics.add(wellMatchedRelation.size());
+        statistics.add(graph.size());
+        
         preprocessingCSVPrinter.printRecord(statistics);
         preprocessingCSVPrinter.flush();
 
-        return automaton;
+        if (graph.isValid()) {
+            return automaton;
+        }
+        else {
+            return null;
+        }
     }
 
     private void runExperiment(final ValidationByAutomaton<Location> automaton, final Validator validator, final JSONSchema schema, final JSONObject document, final int documentId) throws IOException, JSONSchemaException {

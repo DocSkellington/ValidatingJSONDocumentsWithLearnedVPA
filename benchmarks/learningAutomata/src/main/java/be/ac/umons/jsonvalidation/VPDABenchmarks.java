@@ -50,7 +50,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
             "Rounds",
             "Bin state",
             "alphabet size",
-            "ROCA size",
+            "VPDA size",
             "Internal transitions",
             "Return transitions",
             "Call transitions",
