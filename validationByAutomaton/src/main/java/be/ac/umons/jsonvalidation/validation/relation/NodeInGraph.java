@@ -88,7 +88,7 @@ public class NodeInGraph<L> {
             return false;
         }
         NodeInGraph<?> other = (NodeInGraph<?>) obj;
-        return Objects.equals(this.pairLocations, other.pairLocations);
+        return Objects.equals(this.pairLocations, other.pairLocations) && Objects.equals(this.symbol, other.symbol);
     }
 
     @Override

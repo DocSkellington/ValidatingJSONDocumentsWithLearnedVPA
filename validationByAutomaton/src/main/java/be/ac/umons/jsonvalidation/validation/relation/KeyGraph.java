@@ -221,6 +221,10 @@ public class KeyGraph<L> {
         return this.graph.edges();
     }
 
+    public int size() {
+        return nodes().size();
+    }
+
     @Nullable
     NodeInGraph<L> getNode(L sourceLocation, JSONSymbol key, L targetLocation) {
         return getNode(PairSourceToReached.of(sourceLocation, targetLocation), key);

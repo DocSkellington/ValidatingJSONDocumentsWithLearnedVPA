@@ -71,7 +71,7 @@ class InRelation<L> {
         return locationsSeenBetweenStartAndTarget;
     }
 
-    public void addSeenLocations(Set<L> locations) {
-        locationsSeenBetweenStartAndTarget.addAll(locations);
+    public boolean addSeenLocations(Set<L> locations) {
+        return locationsSeenBetweenStartAndTarget.addAll(locations);
     }
 }
