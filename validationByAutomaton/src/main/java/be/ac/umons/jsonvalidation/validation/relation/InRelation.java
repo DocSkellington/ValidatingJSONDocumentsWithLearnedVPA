@@ -4,6 +4,9 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import be.ac.umons.jsonvalidation.JSONSymbol;
+import net.automatalib.words.Word;
+
 /**
  * A triplet {@code (s, k, s')} such that the VPA can go from {@code s} to
  * {@code s'} by reading a well-matched word starting with {@code k}.
@@ -17,21 +20,25 @@ class InRelation<L> {
     private final L start;
     private final L target;
     private final Set<L> locationsSeenBetweenStartAndTarget = new LinkedHashSet<>();
+    private final Word<JSONSymbol> witness;
 
     /**
      * Creates a triplet.
      * 
-     * @param start  The state to start in
-     * @param target The state to end in
+     * @param start   The state to start in
+     * @param target  The state to end in
+     * @param witness A witness that there is a path from {@code start} to
+     *                {@code target}
      * @return The triplet
      */
-    public static <L> InRelation<L> of(final L start, final L target) {
-        return new InRelation<>(start, target);
+    public static <L> InRelation<L> of(final L start, final L target, Word<JSONSymbol> witness) {
+        return new InRelation<>(start, target, witness);
     }
 
-    private InRelation(final L start, final L target) {
+    private InRelation(final L start, final L target, Word<JSONSymbol> witness) {
         this.start = start;
         this.target = target;
+        this.witness = witness;
         this.locationsSeenBetweenStartAndTarget.add(start);
         this.locationsSeenBetweenStartAndTarget.add(target);
     }
@@ -65,6 +72,10 @@ class InRelation<L> {
 
     public L getTarget() {
         return target;
+    }
+
+    public Word<JSONSymbol> getWitness() {
+        return witness;
     }
 
     public Set<L> getLocationsSeenBetweenStartAndTarget() {

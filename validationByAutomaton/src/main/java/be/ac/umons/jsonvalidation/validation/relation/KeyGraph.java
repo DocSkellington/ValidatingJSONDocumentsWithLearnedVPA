@@ -58,11 +58,14 @@ public class KeyGraph<L> {
     private final boolean cyclic;
     private final boolean duplicateKeys;
 
-    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton) {
-        final ReachabilityRelation<L> commaRelation = ReachabilityRelation.computeCommaRelation(automaton);
-        final ReachabilityRelation<L> internalRelation = ReachabilityRelation.computeInternalRelation(automaton);
+    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
+        final ReachabilityRelation<L> commaRelation = ReachabilityRelation.computeCommaRelation(automaton, computeWitnesses);
+        final ReachabilityRelation<L> internalRelation = ReachabilityRelation.computeInternalRelation(automaton, computeWitnesses);
         final ReachabilityRelation<L> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
-                commaRelation, internalRelation);
+                commaRelation, internalRelation, computeWitnesses);
+        if (wellMatchedRelation.size() == 0) {
+            return null;
+        }
 
         return new KeyGraph<>(automaton, commaRelation, internalRelation, wellMatchedRelation);
     }
@@ -105,7 +108,7 @@ public class KeyGraph<L> {
 
         final ReachabilityRelation<L> unionRelation = internalRelation.union(wellMatchedRelation);
 
-        final ReachabilityRelation<L> keyValueRelation = unionRelation.compose(unionRelation);
+        final ReachabilityRelation<L> keyValueRelation = unionRelation.compose(unionRelation, false);
 
         // @formatter:off
         final ImmutableGraph.Builder<NodeInGraph<L>> builder = GraphBuilder

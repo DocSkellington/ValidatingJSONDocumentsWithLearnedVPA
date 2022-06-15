@@ -362,6 +362,7 @@ public class Automata {
             JSONSymbol.stringSymbol,
             JSONSymbol.trueSymbol
         );
+        // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
         JSONSymbol k1Symbol = JSONSymbol.toSymbol("k1"), k2Symbol = JSONSymbol.toSymbol("k2");
         JSONSymbol intSymbol = JSONSymbol.integerSymbol, boolSymbol = JSONSymbol.trueSymbol, strSymbol = JSONSymbol.stringSymbol;
@@ -420,6 +421,7 @@ public class Automata {
             JSONSymbol.integerSymbol,
             JSONSymbol.stringSymbol
         );
+        // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
         JSONSymbol k1Symbol = JSONSymbol.toSymbol("k1"), k2Symbol = JSONSymbol.toSymbol("k2");
 
