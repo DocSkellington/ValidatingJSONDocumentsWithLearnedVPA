@@ -3,7 +3,7 @@ package be.ac.umons.jsonvalidation.validation.relation;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +70,37 @@ public class KeyGraph<L> {
     public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> commaRelation,
             final ReachabilityRelation<L> internalRelation, final ReachabilityRelation<L> wellMatchedRelation) {
         this.automaton = automaton;
+
+        this.graph = constructGraph(commaRelation, internalRelation, wellMatchedRelation);
+
+        boolean cyclic = false, duplicateKeys = false;
+        for (NodeInGraph<L> start : startingNodes) {
+            Set<NodeInGraph<L>> seenNodes = new LinkedHashSet<>();
+            Set<JSONSymbol> symbols = new LinkedHashSet<>();
+            for (NodeInGraph<L> node : Traverser.forGraph(graph).depthFirstPreOrder(start)) {
+                if (!seenNodes.add(node)) {
+                    cyclic = true;
+                }
+                if (!symbols.add(node.getSymbol())) {
+                    duplicateKeys = true;
+                }
+            }
+        }
+
+        this.cyclic = cyclic;
+        this.duplicateKeys = duplicateKeys;
+
+        if (cyclic) {
+            witnessCycle = constructWitnessCycle();
+        }
+        else {
+            witnessCycle = null;
+        }
+
+        propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
+    }
+
+    private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> commaRelation, ReachabilityRelation<L> internalRelation, ReachabilityRelation<L> wellMatchedRelation) {
         final Set<L> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
 
         final ReachabilityRelation<L> unionRelation = internalRelation.union(wellMatchedRelation);
@@ -130,7 +161,7 @@ public class KeyGraph<L> {
                         final List<NodeInGraph<L>> listNode = new LinkedList<>();
                         listNode.add(node);
                         keyToNodes.put(key, listNode);
-                        final Set<L> setLocations = new HashSet<>();
+                        final Set<L> setLocations = new LinkedHashSet<>();
                         setLocations.add(node.getStartLocation());
                         keyToLocations.put(key, setLocations);
                     }
@@ -167,24 +198,8 @@ public class KeyGraph<L> {
             }
         }
 
-        this.graph = builder.build();
-
-        boolean cyclic = false, duplicateKeys = false;
-        for (NodeInGraph<L> start : startingNodes) {
-            Set<NodeInGraph<L>> seenNodes = new HashSet<>();
-            Set<JSONSymbol> symbols = new HashSet<>();
-            for (NodeInGraph<L> node : Traverser.forGraph(graph).depthFirstPreOrder(start)) {
-                if (!seenNodes.add(node)) {
-                    cyclic = true;
-                }
-                if (!symbols.add(node.getSymbol())) {
-                    duplicateKeys = true;
-                }
-            }
-        }
-
-        this.cyclic = cyclic;
-        this.duplicateKeys = duplicateKeys;
+        return builder.build();
+    }
 
         propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
     }
@@ -329,7 +344,7 @@ public class KeyGraph<L> {
      */
     public Set<L> getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(Set<JSONSymbol> seenKeys,
             Collection<L> locationsBeforeCall, Collection<NodeInGraph<L>> rejectedNodes) {
-        final Set<L> locationsReadingClosing = new HashSet<>();
+        final Set<L> locationsReadingClosing = new LinkedHashSet<>();
         for (NodeInGraph<L> initial : startingNodes) {
             depthFirstExploreForAcceptingNodes(initial, new LinkedList<>(), locationsReadingClosing, seenKeys,
                     locationsBeforeCall, rejectedNodes);

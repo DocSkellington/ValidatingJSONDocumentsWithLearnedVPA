@@ -1,6 +1,6 @@
 package be.ac.umons.jsonvalidation.validation;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,8 +21,8 @@ import be.ac.umons.jsonvalidation.validation.relation.NodeInGraph;
 class ValidationStackContents<L> {
     private final Set<PairSourceToReached<L>> sourceToReachedLocationsBeforeCall;
     private final JSONSymbol callSymbol;
-    private final Set<JSONSymbol> seenKeys = new HashSet<>();
-    private final Set<NodeInGraph<L>> rejectedNodes = new HashSet<>();
+    private final Set<JSONSymbol> seenKeys = new LinkedHashSet<>();
+    private final Set<NodeInGraph<L>> rejectedNodes = new LinkedHashSet<>();
     private JSONSymbol currentKey = null;
     private @Nullable final ValidationStackContents<L> rest;
 

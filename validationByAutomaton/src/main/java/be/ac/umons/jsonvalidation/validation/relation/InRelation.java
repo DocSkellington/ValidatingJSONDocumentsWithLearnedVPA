@@ -1,6 +1,6 @@
 package be.ac.umons.jsonvalidation.validation.relation;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -16,7 +16,7 @@ import java.util.Set;
 class InRelation<L> {
     private final L start;
     private final L target;
-    private final Set<L> locationsSeenBetweenStartAndTarget = new HashSet<>();
+    private final Set<L> locationsSeenBetweenStartAndTarget = new LinkedHashSet<>();
 
     /**
      * Creates a triplet.

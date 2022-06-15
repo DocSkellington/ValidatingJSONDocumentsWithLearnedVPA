@@ -1,12 +1,12 @@
 package be.ac.umons.jsonvalidation.validation;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.validation.relation.NodeInGraph;
 import be.ac.umons.jsonvalidation.validation.relation.KeyGraph;
+import be.ac.umons.jsonvalidation.validation.relation.NodeInGraph;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.VPDAlphabet;
 
@@ -45,7 +45,7 @@ public class ValidationByAutomaton<L> {
     }
 
     public ValidationState<L> getInitialState() {
-        final Set<L> setWithInitialLocation = new HashSet<>();
+        final Set<L> setWithInitialLocation = new LinkedHashSet<>();
         setWithInitialLocation.add(automaton.getInitialLocation());
         return new ValidationState<>(PairSourceToReached.getIdentityPairs(setWithInitialLocation), null);
     }
@@ -114,7 +114,7 @@ public class ValidationByAutomaton<L> {
             return getCommaInObjectSuccessor(state, nextSymbol);
         }
 
-        final Set<PairSourceToReached<L>> sourceToSuccessorLocations = new HashSet<>();
+        final Set<PairSourceToReached<L>> sourceToSuccessorLocations = new LinkedHashSet<>();
         for (final PairSourceToReached<L> sourceToReachedLocation : state.getSourceToReachedLocations()) {
             final L reachedAfterTransition = automaton
                     .getInternalSuccessor(sourceToReachedLocation.getReachedLocation(), currentIntSymbol);
@@ -160,7 +160,7 @@ public class ValidationByAutomaton<L> {
                     .getIdentityPairs(graph.getLocationsReadingKey(nextSymbol));
             newStack.addKey(nextSymbol);
         } else {
-            successorSourceToReachedLocations = new HashSet<>();
+            successorSourceToReachedLocations = new LinkedHashSet<>();
             successorSourceToReachedLocations
                     .add(PairSourceToReached.of(automaton.getInitialLocation(), automaton.getInitialLocation()));
         }
@@ -184,7 +184,7 @@ public class ValidationByAutomaton<L> {
 
         final Set<PairSourceToReached<L>> sourceToReachedLocations = state.getSourceToReachedLocations();
 
-        final Set<PairSourceToReached<L>> successorSourceToReachedLocations = new HashSet<>();
+        final Set<PairSourceToReached<L>> successorSourceToReachedLocations = new LinkedHashSet<>();
 
         if (retSymbol.equals(JSONSymbol.closingBracketSymbol)) {
             if (!callSymbol.equals(JSONSymbol.openingBracketSymbol)) {

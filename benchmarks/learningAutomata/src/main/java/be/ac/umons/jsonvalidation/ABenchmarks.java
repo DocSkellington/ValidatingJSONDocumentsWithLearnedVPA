@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -88,9 +88,9 @@ public abstract class ABenchmarks {
 
     protected static VPDAlphabet<JSONSymbol> extractSymbolsFromSchema(final JSONSchema schema)
             throws JSONSchemaException {
-        final Set<JSONSymbol> internalSymbols = new HashSet<>();
-        final Set<JSONSymbol> callSymbols = new HashSet<>();
-        final Set<JSONSymbol> returnSymbols = new HashSet<>();
+        final Set<JSONSymbol> internalSymbols = new LinkedHashSet<>();
+        final Set<JSONSymbol> callSymbols = new LinkedHashSet<>();
+        final Set<JSONSymbol> returnSymbols = new LinkedHashSet<>();
 
         callSymbols.add(JSONSymbol.openingBracketSymbol);
         callSymbols.add(JSONSymbol.openingCurlyBraceSymbol);

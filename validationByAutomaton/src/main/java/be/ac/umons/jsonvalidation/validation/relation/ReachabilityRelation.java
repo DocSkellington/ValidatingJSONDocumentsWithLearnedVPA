@@ -1,7 +1,7 @@
 package be.ac.umons.jsonvalidation.validation.relation;
 
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -20,11 +20,7 @@ import net.automatalib.words.Alphabet;
  * @author Gaëtan Staquet
  */
 public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
-    private final Set<InRelation<L>> relation;
-
-    ReachabilityRelation() {
-        this.relation = new HashSet<>();
-    }
+    private final Set<InRelation<L>> relation = new LinkedHashSet<>();
 
     /**
      * Tests whether there is triplet in the relation equals to
@@ -113,7 +109,7 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
     }
 
     private Set<L> allLocationsOnAcceptingPath(OneSEVPA<L, JSONSymbol> automaton) {
-        final Set<L> locations = new HashSet<>();
+        final Set<L> locations = new LinkedHashSet<>();
         for (final InRelation<L> inRelation : this) {
             if (inRelation.getStart().equals(automaton.getInitialLocation()) && automaton.isAcceptingLocation(inRelation.getTarget())) {
                 locations.addAll(inRelation.getLocationsSeenBetweenStartAndTarget());
@@ -133,7 +129,7 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
      * @return A set with the bin locations
      */
     public Set<L> identifyBinLocations(OneSEVPA<L, JSONSymbol> automaton) {
-        Set<L> binLocations = new HashSet<>(automaton.getLocations());
+        Set<L> binLocations = new LinkedHashSet<>(automaton.getLocations());
         binLocations.removeAll(allLocationsOnAcceptingPath(automaton));
         return binLocations;
     }
@@ -152,52 +148,28 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
         return newRelation;
     }
 
-    /**
-     * Compute the result of the Post operation on this relation for the given call
-     * and return symbols.
-     * 
-     * The Post operation is defined as the reachability relation obtained from this
-     * relation such that the well-matched words we consider start with the call
-     * symbol and end with the return symbol (and the middle comes from this
-     * relation). That is, each time Post is applied, we allow one more nesting.
-     * 
-     * @param automaton    The VPA
-     * @param callSymbol   The call symbol to consider
-     * @param returnSymbol The return symbol to consider
-     * @return The new relation
-     */
-    ReachabilityRelation<L> post(final OneSEVPA<L, JSONSymbol> automaton, final JSONSymbol callSymbol,
-            final JSONSymbol returnSymbol) {
-        final ReachabilityRelation<L> newRelation = new ReachabilityRelation<L>();
+    private static Word<JSONSymbol> constructWitness() {
+        return Word.epsilon();
+    }
 
-        for (final L start : automaton.getLocations()) {
-            final L callTarget = automaton.getInitialLocation();
-            final int stackSym = automaton.encodeStackSym(start, callSymbol);
-            if (callTarget == null) {
-                continue;
-            }
+    private static Word<JSONSymbol> constructWitness(JSONSymbol symbol) {
+        return Word.fromLetter(symbol);
+    }
 
-            for (final InRelation<L> inRelation : relation) {
-                if (Objects.equals(inRelation.getStart(), callTarget)) {
-                    final L target = automaton.getReturnSuccessor(inRelation.getTarget(), returnSymbol, stackSym);
-                    if (target != null) {
-                        final InRelation<L> newInRelation = InRelation.of(start, target);
-                        newInRelation.addSeenLocations(inRelation.getLocationsSeenBetweenStartAndTarget());
-                        newRelation.add(newInRelation);
-                    }
-                }
-            }
-        }
+    private static <L> Word<JSONSymbol> constructWitness(InRelation<L> left, InRelation<L> right) {
+        return left.getWitness().concat(right.getWitness());
+    }
 
-        return newRelation;
+    private static <L> Word<JSONSymbol> constructWitness(JSONSymbol callSymbol, InRelation<L> inRelation, JSONSymbol returnSymbol) {
+        return Word.fromLetter(callSymbol).concat(inRelation.getWitness()).append(returnSymbol);
     }
 
     /**
      * Compose this relation with the provided relation.
      * 
-     * The composition operation creates a new relation that contains triplets
-     * {@code (q, k, p)} if and only if there is {@code (q, k, q')} in this relation
-     * and {@code (q', k', p)} in the other relation.
+     * The composition operation creates a new relation that contains pairs
+     * {@code (q, p)} if and only if there is {@code (q, q')} in this relation
+     * and {@code (q', p)} in the other relation.
      * 
      * @param other The other relation
      * @return The composed relation
