@@ -194,4 +194,12 @@ public class TestReachabilityGraph {
         KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
         Assert.assertFalse(graph.isValid());
     }
+
+    @Test
+    public void testAutomatonWithCycle() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithCycleReadingAKey();
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton);
+        Assert.assertFalse(graph.isValid());
+        Assert.assertNotNull(graph.getWitnessCycle());
+    }
 }

@@ -15,6 +15,7 @@ import com.google.common.base.Objects;
 import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
+import com.google.common.graph.Graphs;
 import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.Traverser;
 
@@ -23,6 +24,8 @@ import be.ac.umons.jsonvalidation.validation.PairSourceToReached;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.commons.util.Pair;
 import net.automatalib.words.Alphabet;
+import net.automatalib.words.Word;
+import net.automatalib.words.WordBuilder;
 import net.automatalib.words.impl.Alphabets;
 
 /**
@@ -57,6 +60,7 @@ public class KeyGraph<L> {
     private final List<NodeInGraph<L>> startingNodes = new LinkedList<>();
     private final boolean cyclic;
     private final boolean duplicateKeys;
+    private final Word<JSONSymbol> witnessCycle;
 
     public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
         final ReachabilityRelation<L> commaRelation = ReachabilityRelation.computeCommaRelation(automaton, computeWitnesses);
@@ -76,25 +80,21 @@ public class KeyGraph<L> {
 
         this.graph = constructGraph(commaRelation, internalRelation, wellMatchedRelation);
 
-        boolean cyclic = false, duplicateKeys = false;
+        boolean duplicateKeys = false;
         for (NodeInGraph<L> start : startingNodes) {
-            Set<NodeInGraph<L>> seenNodes = new LinkedHashSet<>();
             Set<JSONSymbol> symbols = new LinkedHashSet<>();
             for (NodeInGraph<L> node : Traverser.forGraph(graph).depthFirstPreOrder(start)) {
-                if (!seenNodes.add(node)) {
-                    cyclic = true;
-                }
                 if (!symbols.add(node.getSymbol())) {
                     duplicateKeys = true;
                 }
             }
         }
 
-        this.cyclic = cyclic;
+        this.cyclic = Graphs.hasCycle(graph);
         this.duplicateKeys = duplicateKeys;
 
         if (cyclic) {
-            witnessCycle = constructWitnessCycle();
+            witnessCycle = constructWitnessCycle(commaRelation, internalRelation, wellMatchedRelation);
         }
         else {
             witnessCycle = null;
@@ -204,11 +204,85 @@ public class KeyGraph<L> {
         return builder.build();
     }
 
-        propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
+    private Word<JSONSymbol> constructWitnessCycle(ReachabilityRelation<L> commaRelation, ReachabilityRelation<L> internalRelation, ReachabilityRelation<L> wellMatchedRelation) {
+        if (isValid()) {
+            return null;
+        }
+        
+        final ReachabilityRelation<L> closedRelation = ReachabilityRelation.closeRelations(commaRelation, internalRelation, wellMatchedRelation);
+        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, commaRelation, internalRelation, wellMatchedRelation, closedRelation);
+
+        final List<NodeInGraph<L>> cycle = new LinkedList<>();
+        for (NodeInGraph<L> starting : startingNodes) {
+            identifyOneCycle(starting, new LinkedHashSet<>(), new LinkedHashSet<>(), cycle);
+            if (!cycle.isEmpty()) {
+                break;
+            }
+        }
+
+        assert !cycle.isEmpty();
+        assert cycle.get(0) == cycle.get(cycle.size() - 1);
+
+        InWitnessRelation<L> witnessToAndFromStartCycle = witnessRelation.getInRelation(cycle.get(0).getStartLocation(), cycle.get(0).getTargetLocation());
+
+        final WordBuilder<JSONSymbol> cycleWord = pathToWord(cycle, closedRelation);
+        final WordBuilder<JSONSymbol> wordBuilder = new WordBuilder<>();
+        wordBuilder.append(witnessToAndFromStartCycle.getWitnessToStart());
+        wordBuilder.append(cycleWord);
+        wordBuilder.append(witnessToAndFromStartCycle.getWitnessFromTarget());
+
+        return wordBuilder.toWord();
+    }
+
+    private WordBuilder<JSONSymbol> pathToWord(List<NodeInGraph<L>> path, ReachabilityRelation<L> closedRelation) {
+        final WordBuilder<JSONSymbol> wordBuilder = new WordBuilder<>();
+
+        int i = 0;
+        for (NodeInGraph<L> currentNode : path) {
+            L currentLocation = currentNode.getStartLocation();
+
+            wordBuilder.add(currentNode.getSymbol());
+            currentLocation = automaton.getInternalSuccessor(currentLocation, currentNode.getSymbol());
+            wordBuilder.append(closedRelation.getWitness(currentLocation, currentNode.getTargetLocation()));
+
+            if (++i < path.size()) {
+                wordBuilder.add(JSONSymbol.commaSymbol);
+            }
+        }
+
+        return wordBuilder;
+    }
+
+    private boolean identifyOneCycle(NodeInGraph<L> currentNode, Set<NodeInGraph<L>> frontier, Set<NodeInGraph<L>> explored, List<NodeInGraph<L>> cycle) {
+        frontier.add(currentNode);
+        for (NodeInGraph<L> adjacent : graph.adjacentNodes(currentNode)) {
+            if (frontier.contains(adjacent)) {
+                cycle.add(currentNode);
+                cycle.add(adjacent);
+                return true;
+            }
+
+            boolean partOfCycle = identifyOneCycle(adjacent, frontier, explored, cycle);
+            if (!cycle.isEmpty()) {
+                if (partOfCycle) {
+                    cycle.add(0, currentNode);
+                    return cycle.get(cycle.size() - 1) != currentNode;
+                }
+                return false;
+            }
+        }
+        frontier.remove(currentNode);
+        explored.add(currentNode);
+
+        return false;
     }
 
     public boolean isValid() {
         return !cyclic && !duplicateKeys;
+    }
+
+    public Word<JSONSymbol> getWitnessCycle() {
+        return witnessCycle;
     }
 
     private void propagateIsOnPathToAcceptingForLocations(Collection<L> locations) {

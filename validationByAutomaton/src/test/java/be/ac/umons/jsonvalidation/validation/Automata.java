@@ -455,4 +455,33 @@ public class Automata {
 
         return automaton;
     }
+
+    public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithCycleReadingAKey() {
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1"),
+            JSONSymbol.commaSymbol,
+            JSONSymbol.stringSymbol
+        );
+        DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
+        JSONSymbol k1Symbol = JSONSymbol.toSymbol("k1");
+
+        List<Location> locations = new ArrayList<>();
+
+        locations.add(automaton.addInitialLocation(false));
+        for (int i = 1 ; i <= 2 ; i++) {
+            locations.add(automaton.addLocation(false));
+        }
+        locations.add(automaton.addLocation(true));
+
+        int q0StackSymbol = automaton.encodeStackSym(locations.get(0), JSONSymbol.openingCurlyBraceSymbol);
+        automaton.setInternalSuccessor(locations.get(0), k1Symbol, locations.get(1));
+
+        automaton.setInternalSuccessor(locations.get(1), JSONSymbol.stringSymbol, locations.get(2));
+
+        automaton.setInternalSuccessor(locations.get(2), JSONSymbol.commaSymbol, locations.get(0));
+        automaton.setReturnSuccessor(locations.get(2), JSONSymbol.closingCurlyBraceSymbol, q0StackSymbol, locations.get(3));
+
+        return automaton;
+    }
 }

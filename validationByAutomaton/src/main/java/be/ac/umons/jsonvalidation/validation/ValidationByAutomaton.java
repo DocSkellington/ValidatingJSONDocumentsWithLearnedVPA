@@ -2,6 +2,7 @@ package be.ac.umons.jsonvalidation.validation;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
@@ -9,6 +10,7 @@ import be.ac.umons.jsonvalidation.validation.relation.KeyGraph;
 import be.ac.umons.jsonvalidation.validation.relation.NodeInGraph;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.VPDAlphabet;
+import net.automatalib.words.Word;
 
 /**
  * An automaton that allows permutations of pairs key-value inside a JSON
@@ -63,9 +65,18 @@ public class ValidationByAutomaton<L> {
         // @formatter:on
     }
 
-    public boolean accepts(Iterable<JSONSymbol> input) {
-        ValidationState<L> state = getState(input);
-        return isAccepting(state);
+    public boolean accepts(List<JSONSymbol> input) {
+        if (input.isEmpty() || !input.get(0).equals(JSONSymbol.openingCurlyBraceSymbol)) {
+            return false;
+        }
+        return isAccepting(getState(input));
+    }
+
+    public boolean accepts(Word<JSONSymbol> input) {
+        if (input.isEmpty() || !input.getSymbol(0).equals(JSONSymbol.openingCurlyBraceSymbol)) {
+            return false;
+        }
+        return isAccepting(getState(input));
     }
 
     public ValidationState<L> getState(Iterable<JSONSymbol> input) {

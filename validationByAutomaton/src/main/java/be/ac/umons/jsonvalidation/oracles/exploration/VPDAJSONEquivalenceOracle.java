@@ -13,6 +13,7 @@ import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.exploration.DefaultExplorationGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.WordConversion;
+import be.ac.umons.jsonvalidation.validation.relation.KeyGraph;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.VPDAlphabet;
@@ -41,8 +42,13 @@ public class VPDAJSONEquivalenceOracle
 
             final Word<JSONSymbol> totalWord = loopingWord.concat(validWord);
             if (hypo.accepts(totalWord)) {
-                return new DefaultQuery<JSONSymbol,Boolean>(totalWord, false);
+                return new DefaultQuery<>(totalWord, false);
             }
+        }
+
+        final Word<JSONSymbol> fromCycle = counterexampleFromKeyGraph(hypo);
+        if (fromCycle != null) {
+            return new DefaultQuery<>(fromCycle, false);
         }
 
         return super.findCounterExample(hypo, inputs);
@@ -66,5 +72,13 @@ public class VPDAJSONEquivalenceOracle
             builder.add(loopingSymbols.get(index));
         }
         return builder.toWord();
+    }
+
+    private <L> Word<JSONSymbol> counterexampleFromKeyGraph(OneSEVPA<L, JSONSymbol> hypo) {
+        KeyGraph<L> keyGraph = KeyGraph.graphFor(hypo);
+        if (keyGraph.isValid()) {
+            return null;
+        }
+        return keyGraph.getWitnessCycle();
     }
 }

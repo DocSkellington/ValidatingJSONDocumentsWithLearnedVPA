@@ -24,20 +24,27 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
     private final Set<InRelation<L>> relation = new LinkedHashSet<>();
 
     /**
-     * Tests whether there is triplet in the relation equals to
-     * {@code (q, symbol, p)}.
+     * Tests whether there is a couple in the relation equals to
+     * {@code (q, p)}.
      * 
-     * @param q      The starting state in the triplet
-     * @param symbol The symbol in the triplet
-     * @param p      The target state in the triplet
+     * @param start      The starting state in the triplet
+     * @param target      The target state in the triplet
      * @return True iff there is such a triplet
      */
-    public boolean areInRelation(final L q, final L p) {
-        return relation.contains(InRelation.of(q, p, Word.epsilon()));
+    public boolean areInRelation(final L start, final L target) {
+        return areInRelation(InRelation.of(start, target, Word.epsilon()));
     }
 
-    public boolean areInRelation(final InRelation<L> inRelation) {
+    private boolean areInRelation(final InRelation<L> inRelation) {
         return relation.contains(inRelation);
+    }
+
+    public Word<JSONSymbol> getWitness(final L start, final L target) {
+        return getWitness(InRelation.of(start, target, Word.epsilon()));
+    }
+
+    private Word<JSONSymbol> getWitness(final InRelation<L> inRelation) {
+        return relation.stream().filter(inRel -> inRel.equals(inRelation)).findAny().get().getWitness();
     }
     
     @Override
@@ -365,8 +372,35 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
     private static <L> ReachabilityRelation<L> getIdentityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
         final ReachabilityRelation<L> relation = new ReachabilityRelation<>();
         for (final L loc : automaton.getLocations()) {
-            relation.add(loc, loc);
+            relation.add(InRelation.of(loc, loc, constructWitness()));
         }
         return relation;
+    }
+
+    public static <L> ReachabilityRelation<L> closeRelations(ReachabilityRelation<L> commaRelation, ReachabilityRelation<L> internalRelation, ReachabilityRelation<L> wellMatchedRelation) {
+        final ReachabilityRelation<L> closedRelation = new ReachabilityRelation<>();
+        closedRelation.addAll(commaRelation);
+        closedRelation.addAll(internalRelation);
+        closedRelation.addAll(wellMatchedRelation);
+
+        while (true) {
+            final ReachabilityRelation<L> newLocationsInRelation = new ReachabilityRelation<>();
+            for (InRelation<L> left : closedRelation) {
+                for (InRelation<L> right : closedRelation) {
+                    if (left.getTarget().equals(right.getStart())) {
+                        final Word<JSONSymbol> witness = constructWitness(left, right);
+                        final InRelation<L> closed = InRelation.of(left.getStart(), right.getTarget(), witness);
+                        // We do not need the intermediate locations for this relation. So, we can just add the new pair without having to modify already existing pairs
+                        newLocationsInRelation.add(closed);
+                    }
+                }
+            }
+
+            if (!closedRelation.addAll(newLocationsInRelation)) {
+                break;
+            }
+        }
+
+        return closedRelation;
     }
 }
