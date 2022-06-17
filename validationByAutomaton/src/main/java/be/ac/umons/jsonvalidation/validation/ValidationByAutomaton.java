@@ -37,10 +37,13 @@ public class ValidationByAutomaton<L> {
     private final VPDAlphabet<JSONSymbol> alphabet;
 
     public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton) {
-        this(automaton, KeyGraph.graphFor(automaton));
+        this(automaton, KeyGraph.graphFor(automaton, false));
     }
 
     public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton, KeyGraph<L> graph) {
+        if (!graph.isValid()) {
+            throw new RuntimeException("The key graph is cyclic");
+        }
         this.graph = graph;
         this.automaton = automaton;
         this.alphabet = automaton.getInputAlphabet();
@@ -166,7 +169,7 @@ public class ValidationByAutomaton<L> {
                 .push(sourceToReachedLocations, currentCallSymbol, currentStack);
 
         final Set<PairSourceToReached<L>> successorSourceToReachedLocations;
-        if (currentCallSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
+        if (currentCallSymbol.equals(JSONSymbol.openingCurlyBraceSymbol) && !nextSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
             successorSourceToReachedLocations = PairSourceToReached
                     .getIdentityPairs(graph.getLocationsReadingKey(nextSymbol));
             newStack.addKey(nextSymbol);
@@ -197,23 +200,7 @@ public class ValidationByAutomaton<L> {
 
         final Set<PairSourceToReached<L>> successorSourceToReachedLocations = new LinkedHashSet<>();
 
-        if (retSymbol.equals(JSONSymbol.closingBracketSymbol)) {
-            if (!callSymbol.equals(JSONSymbol.openingBracketSymbol)) {
-                return null;
-            }
-
-            for (final PairSourceToReached<L> sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
-                final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),
-                        callSymbol);
-                for (final PairSourceToReached<L> currentSourceToReached : state.getSourceToReachedLocations()) {
-                    final L target = automaton.getReturnSuccessor(currentSourceToReached.getReachedLocation(),
-                            retSymbol, stackSymbol);
-                    if (target != null) {
-                        successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transitionToReached(target));
-                    }
-                }
-            }
-        } else if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
+        if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol) && currentStack.peekCurrentKey() != null) {
             if (!callSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
                 return null;
             }
@@ -229,6 +216,25 @@ public class ValidationByAutomaton<L> {
                         callSymbol);
                 for (final L beforeReturnLocation : acceptingLocations) {
                     final L target = automaton.getReturnSuccessor(beforeReturnLocation, retSymbol, stackSymbol);
+                    if (target != null) {
+                        successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transitionToReached(target));
+                    }
+                }
+            }
+        } else if (retSymbol.equals(JSONSymbol.closingBracketSymbol) || (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol) && currentStack.peekCurrentKey() == null)) {
+            if (retSymbol.equals(JSONSymbol.closingBracketSymbol) && !callSymbol.equals(JSONSymbol.openingBracketSymbol)) {
+                return null;
+            }
+            if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol) && !callSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
+                return null;
+            }
+
+            for (final PairSourceToReached<L> sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
+                final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),
+                        callSymbol);
+                for (final PairSourceToReached<L> currentSourceToReached : state.getSourceToReachedLocations()) {
+                    final L target = automaton.getReturnSuccessor(currentSourceToReached.getReachedLocation(),
+                            retSymbol, stackSymbol);
                     if (target != null) {
                         successorSourceToReachedLocations.add(sourceToReachedBeforeCall.transitionToReached(target));
                     }
