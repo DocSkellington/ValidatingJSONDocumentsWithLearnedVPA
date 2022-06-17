@@ -84,9 +84,9 @@ public class ValidationBenchmarks {
     private List<String> getValidationHeader() {
         // @formatter:off
         return List.of(
+            "Document ID",
             "Length document",
             "Depth document",
-            "Depth schema",
             "Automaton time (ms)",
             "Automaton memory",
             "Automaton output",
@@ -99,7 +99,7 @@ public class ValidationBenchmarks {
 
     public void runBenchmarks() throws JSONException, IOException, JSONSchemaException {
         for (int experimentId = 0 ; experimentId < nExperiments ; experimentId++) {
-            System.out.println((experimentId + 1) / nExperiments);
+            System.out.println((experimentId + 1) + " / nExperiments");
 
             ValidationByAutomaton<Location> automaton = constructAutomaton(vpa);
             if (automaton == null) {
@@ -119,22 +119,25 @@ public class ValidationBenchmarks {
     }
 
     private ValidationByAutomaton<Location> constructAutomaton(DefaultOneSEVPA<JSONSymbol> vpa) throws IOException {
+        System.gc();
         final long memoryAtStart = getMemoryUse();
         final Stopwatch watch = Stopwatch.createStarted();
 
-        final ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(vpa);
-        final ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(vpa);
-        final ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(vpa, commaRelation, internalRelation);
+        final ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(vpa, false);
+        final ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(vpa, false);
+        final ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(vpa, commaRelation, internalRelation, false);
 
         final long timeRelations = watch.stop().elapsed().toMillis();
         final long memoryForRelations = getMemoryUse() - memoryAtStart;
 
+        System.gc();
         watch.reset().start();
         final KeyGraph<Location> graph = new KeyGraph<>(vpa, commaRelation, internalRelation, wellMatchedRelation);
 
         final long timeGraph = watch.stop().elapsed().toMillis();
         final long memoryForGraph = getMemoryUse() - memoryForRelations;
 
+        System.gc();
         watch.reset().start();
         final ValidationByAutomaton<Location> automaton = new ValidationByAutomaton<>(vpa, graph);
 
@@ -180,12 +183,14 @@ public class ValidationBenchmarks {
         final Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random());
         assert word.length() != 0;
 
+        System.gc();
         final Stopwatch watch = Stopwatch.createStarted();
         final Pair<Boolean, Long> automatonResult = runValidationByAutomaton(automaton, word);
         final long automatonTime = watch.stop().elapsed().toMillis();
         final boolean automatonOutput = automatonResult.getFirst();
         final long automatonMemory = automatonResult.getSecond();
 
+        System.gc();
         boolean validatorOutput;
         boolean validatorError;
         watch.reset().start();
@@ -201,11 +206,10 @@ public class ValidationBenchmarks {
 
         final List<Object> statistics = new ArrayList<>(nValidationColumns);
 
-        statistics.add(document.toString());
+        statistics.add(documentId);
 
         statistics.add(word.length());
         statistics.add(depthDocument(word));
-        statistics.add(schema.depth());
 
         statistics.add(automatonTime);
         statistics.add(automatonMemory);
@@ -230,6 +234,9 @@ public class ValidationBenchmarks {
         final long memoryStart = getMemoryUse();
 
         long maxMemory = memoryStart;
+        if (word.isEmpty() || !word.getSymbol(0).equals(JSONSymbol.openingCurlyBraceSymbol)) {
+            return Pair.of(false, 0L);
+        }
         JSONSymbol currentSymbol = word.getSymbol(0);
         ValidationState<Location> validationState = automaton.getInitialState();
         for (int i = 1 ; i < word.size() ; i++) {
@@ -245,7 +252,7 @@ public class ValidationBenchmarks {
         validationState = automaton.getSuccessor(validationState, currentSymbol, null);
         maxMemory = Math.max(maxMemory, getMemoryUse());
 
-        return Pair.of(automaton.isAccepting(validationState), maxMemory);
+        return Pair.of(automaton.isAccepting(validationState), maxMemory - memoryStart);
     }
 
     private int depthDocument(final Word<JSONSymbol> word) {

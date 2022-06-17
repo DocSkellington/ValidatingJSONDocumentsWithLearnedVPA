@@ -23,13 +23,17 @@ import net.automatalib.serialization.dot.DOTParsers;
 public class Benchmarks {
     private enum Goal {
         GENERATE,
-        VALIDATE
+        VALIDATE,
+        DEPTH
     }
 
     public static void main(String[] args) throws InterruptedException, IOException, JSONSchemaException, JSONException, GeneratorException, URISyntaxException {
         final Goal goal = Goal.valueOf(args[0].toUpperCase());
 
         switch(goal) {
+            case DEPTH:
+                System.out.println(getSchemaDepth(args));
+                break;
             case GENERATE:
                 getGenerateDocuments(args).generate();
                 break;
@@ -37,6 +41,12 @@ public class Benchmarks {
                 getValidationBenchmarks(args).runBenchmarks();
                 break;
         }
+    }
+
+    private static int getSchemaDepth(String[] args) throws MalformedURLException, FileNotFoundException, JSONSchemaException, URISyntaxException {
+        final Path pathToSchema = Paths.get(args[1]);
+        final JSONSchema schema = loadSchema(pathToSchema, true);
+        return schema.depth();
     }
 
     private static GenerateDocuments getGenerateDocuments(String[] args) throws IOException, JSONSchemaException, URISyntaxException {

@@ -175,12 +175,13 @@ public abstract class VPDABenchmarks extends ABenchmarks {
     }
             
     private <L> DefaultOneSEVPA<JSONSymbol> removeBinState(OneSEVPA<L, JSONSymbol> learned) {
-        final ReachabilityRelation<L> commaRelation = ReachabilityRelation.computeCommaRelation(learned);
-        final ReachabilityRelation<L> internalRelation = ReachabilityRelation.computeInternalRelation(learned);
-        final ReachabilityRelation<L> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(learned, commaRelation, internalRelation);
+        final ReachabilityRelation<L> commaRelation = ReachabilityRelation.computeCommaRelation(learned, false);
+        final ReachabilityRelation<L> internalRelation = ReachabilityRelation.computeInternalRelation(learned, false);
+        final ReachabilityRelation<L> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(learned, commaRelation, internalRelation, false);
         LOGGER.info("Reachability relation computed");
 
         final Set<L> binLocations = wellMatchedRelation.identifyBinLocations(learned);
+        LOGGER.info("Bin locations " + binLocations);
 
         final VPDAlphabet<JSONSymbol> alphabet = learned.getInputAlphabet();
         final DefaultOneSEVPA<JSONSymbol> withoutBin = new DefaultOneSEVPA<>(alphabet);
