@@ -80,18 +80,8 @@ public class KeyGraph<L> {
 
         this.graph = constructGraph(commaRelation, internalRelation, wellMatchedRelation);
 
-        boolean duplicateKeys = false;
-        for (NodeInGraph<L> start : startingNodes) {
-            Set<JSONSymbol> symbols = new LinkedHashSet<>();
-            for (NodeInGraph<L> node : Traverser.forGraph(graph).depthFirstPreOrder(start)) {
-                if (!symbols.add(node.getSymbol())) {
-                    duplicateKeys = true;
-                }
-            }
-        }
-
         this.cyclic = Graphs.hasCycle(graph);
-        this.duplicateKeys = duplicateKeys;
+        this.duplicateKeys = hasDuplicateKeys();
 
         if (cyclic) {
             witnessCycle = constructWitnessCycle(commaRelation, internalRelation, wellMatchedRelation);
@@ -202,6 +192,32 @@ public class KeyGraph<L> {
         }
 
         return builder.build();
+    }
+
+    private boolean hasDuplicateKeys() {
+        for (NodeInGraph<L> start : startingNodes) {
+            if (hasDuplicateKeys(start, new LinkedHashSet<>(), new LinkedHashSet<>())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasDuplicateKeys(NodeInGraph<L> currentNode, Set<NodeInGraph<L>> seenNodes, Set<JSONSymbol> keys) {
+        seenNodes.add(currentNode);
+        if (!keys.add(currentNode.getSymbol())) {
+            return true;
+        }
+
+        for (NodeInGraph<L> successor : graph.successors(currentNode)) {
+            if (!seenNodes.contains(successor)) {
+                if (hasDuplicateKeys(successor, seenNodes, keys)) {
+                    return true;
+                }
+            }
+        }
+        keys.remove(currentNode.getSymbol());
+        return false;
     }
 
     private Word<JSONSymbol> constructWitnessCycle(ReachabilityRelation<L> commaRelation, ReachabilityRelation<L> internalRelation, ReachabilityRelation<L> wellMatchedRelation) {
