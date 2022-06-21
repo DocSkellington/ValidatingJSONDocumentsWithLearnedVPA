@@ -65,8 +65,6 @@ total_time_mean = total_time.mean()
 
 statistics_df = pandas.DataFrame(
     {
-        f"TO ({timelimit_in_s}s)": [n_timeouts],
-        "MO (16GB)": [n_errors],
         "Time (s)": [total_time_mean["Total time (ms)"]],
         "Membership": [numbers_mean["Membership queries"]],
         "Equivalence": [numbers_mean["Equivalence queries"]],
@@ -84,5 +82,5 @@ styler.format(precision=2)
 styler.hide(level=0, axis="index")
 
 styler.to_latex(
-    f"figures/{name}.tex",
+    f"learning/{name}.tex",
 )

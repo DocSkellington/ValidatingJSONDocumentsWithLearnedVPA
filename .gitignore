@@ -32,3 +32,6 @@ Dot/
 out_*
 error_*
 *.dot*
+
+results/data/
+results/learning/

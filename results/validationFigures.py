@@ -13,11 +13,6 @@ import numpy as np
 
 filepath = sys.argv[1]
 name = sys.argv[2]
-schema_depth = sys.argv[3]
-if schema_depth == "inf":
-    schema_depth = float("inf")
-else:
-    schema_depth = int(schema_depth)
 df = pandas.read_csv(filepath)
 
 document_description = [
