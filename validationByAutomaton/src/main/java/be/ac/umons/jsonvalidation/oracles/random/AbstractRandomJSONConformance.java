@@ -10,13 +10,14 @@ import be.ac.umons.jsonschematools.random.DefaultRandomGenerator;
 import be.ac.umons.jsonschematools.random.RandomGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.oracles.AbstractJSONConformance;
+import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.ts.acceptors.DeterministicAcceptorTS;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
 public abstract class AbstractRandomJSONConformance<A extends DeterministicAcceptorTS<?, JSONSymbol>>
-        extends AbstractJSONConformance<A> {
+        extends AbstractJSONConformance<A> implements EquivalenceOracle<A, JSONSymbol, Boolean> {
     private final RandomGenerator generator;
     private final Iterator<JSONObject> validIterator;
     private final Iterator<JSONObject> invalidIterator;

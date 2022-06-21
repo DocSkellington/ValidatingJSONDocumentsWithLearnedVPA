@@ -1,19 +1,25 @@
 package be.ac.umons.jsonvalidation.oracles.random;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Random;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.json.JSONObject;
 
 import be.ac.umons.jsonschematools.JSONSchema;
+import be.ac.umons.jsonschematools.random.DefaultRandomGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import de.learnlib.api.oracle.EquivalenceOracle;
+import be.ac.umons.jsonvalidation.oracles.IVPDAJSONEquivalenceOracle;
+import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Alphabet;
 
 public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<OneSEVPA<?, JSONSymbol>>
-        implements EquivalenceOracle<OneSEVPA<?, JSONSymbol>, JSONSymbol, Boolean> {
+        implements IVPDAJSONEquivalenceOracle {
+
+    private static final LearnLogger LOGGER = LearnLogger.getLogger(VPDAJSONEquivalenceOracle.class);
 
     public VPDAJSONEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
             int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
@@ -25,7 +31,26 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
     @Override
     public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(OneSEVPA<?, JSONSymbol> hypo,
             Collection<? extends JSONSymbol> inputs) {
-        return super.findCounterExample(hypo);
+        DefaultQuery<JSONSymbol, Boolean> query = counterexampleByLoopingOverInitial(hypo, getRandom());
+        if (query != null) {
+            return query;
+        }
+        
+        query = super.findCounterExample(hypo);
+        if (query != null) {
+            return query;
+        }
+
+        LOGGER.info("Creating graph");
+        query = counterexampleFromKeyGraph(hypo);
+        return query;
+    }
+
+    @Override
+    public JSONObject getOneValidDocument() {
+        final Iterator<JSONObject> iterator = new DefaultRandomGenerator(getMaxProperties(), getMaxItems()).createIterator(getSchema());
+        assert iterator.hasNext();
+        return iterator.next();
     }
 
 }
