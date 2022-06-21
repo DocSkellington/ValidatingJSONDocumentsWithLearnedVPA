@@ -25,6 +25,7 @@ import com.google.common.base.Stopwatch;
 import be.ac.umons.jsonschematools.AbstractConstants;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
+import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.filter.statistic.Counter;
 import de.learnlib.util.AbstractExperiment;
 import de.learnlib.util.statistics.SimpleProfiler;
@@ -35,6 +36,8 @@ import net.automatalib.words.VPDAlphabet;
 import net.automatalib.words.impl.DefaultVPDAlphabet;
 
 public abstract class ABenchmarks {
+    private static final LearnLogger LOGGER = LearnLogger.getLogger(ABenchmarks.class);
+
     protected final CSVPrinter csvPrinter;
     protected final int nColumns;
     protected final Duration timeout;
@@ -67,7 +70,7 @@ public abstract class ABenchmarks {
             final boolean canGenerateInvalid, final int maxDocumentDepth, final int nRepetitions,
             final boolean shuffleKeys) throws InterruptedException, IOException, JSONSchemaException {
         for (int i = 0; i < nRepetitions; i++) {
-            System.out.println((i + 1) + "/" + nRepetitions);
+            LOGGER.info((i + 1) + "/" + nRepetitions);
             runExperiment(new Random(i), schema, schemaName, nTests, canGenerateInvalid, maxDocumentDepth, shuffleKeys,
                     i);
         }

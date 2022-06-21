@@ -16,11 +16,14 @@ import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.JSONSchemaStore;
 import be.ac.umons.jsonschematools.random.GeneratorException;
+import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.serialization.InputModelDeserializer;
 import net.automatalib.serialization.dot.DOTParsers;
 
 public class Benchmarks {
+    private static final LearnLogger LOGGER = LearnLogger.getLogger(Benchmarks.class);
+
     private enum Goal {
         GENERATE,
         VALIDATE,
@@ -54,11 +57,10 @@ public class Benchmarks {
         final GenerateDocuments.GenerationType generationType = GenerateDocuments.GenerationType.valueOf(args[2].toUpperCase());
         final Path pathToDocuments = Paths.get(args[3]);
         final int nDocuments = Integer.valueOf(args[4]);
-        final boolean canGenerateInvalid = Boolean.valueOf(args[5]);
-        final int maxDocumentDepth = Integer.valueOf(args[6]);
-        final int maxProperties = Integer.valueOf(args[7]);
-        final int maxItems = Integer.valueOf(args[8]);
-        final boolean ignoreAdditionalProperties = Boolean.valueOf(args[9]);
+        final int maxDocumentDepth = Integer.valueOf(args[5]);
+        final int maxProperties = Integer.valueOf(args[6]);
+        final int maxItems = Integer.valueOf(args[7]);
+        final boolean ignoreAdditionalProperties = Boolean.valueOf(args[8]);
 
         if (!pathToDocuments.toFile().isDirectory()) {
             throw new IOException("The path to write the documents in must be a directory");
@@ -66,7 +68,7 @@ public class Benchmarks {
         final JSONSchema schema = loadSchema(pathToSchema, ignoreAdditionalProperties);
         final String schemaName = pathToSchema.getFileName().toString();
 
-        return new GenerateDocuments(schema, schemaName, generationType, pathToDocuments, nDocuments, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems);
+        return new GenerateDocuments(schema, schemaName, generationType, pathToDocuments, nDocuments, maxDocumentDepth, maxProperties, maxItems);
     }
 
     private static ValidationBenchmarks getValidationBenchmarks(String[] args) throws JSONSchemaException, URISyntaxException, IOException {
@@ -86,13 +88,13 @@ public class Benchmarks {
         final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers.oneSEVPA(JSONSymbol::toSymbol);
         final DefaultOneSEVPA<JSONSymbol> vpa = parser.readModel(pathToVPA.toFile()).model;
 
-        System.out.println("Starting validation by automaton benchmarks");
-        System.out.println("Schema name: " + schemaName + "; VPA Dot file: " + VPAName);
-        System.out.println("Path to JSON documents: " + pathToDocuments);
-        System.out.println("Number of experiments: " + nExperiments);
-        System.out.println("Call alphabet: " + vpa.getInputAlphabet().getCallAlphabet());
-        System.out.println("Return alphabet: " + vpa.getInputAlphabet().getReturnAlphabet());
-        System.out.println("Internal alphabet: " + vpa.getInputAlphabet().getInternalAlphabet());
+        LOGGER.info("Starting validation by automaton benchmarks");
+        LOGGER.info("Schema name: " + schemaName + "; VPA Dot file: " + VPAName);
+        LOGGER.info("Path to JSON documents: " + pathToDocuments);
+        LOGGER.info("Number of experiments: " + nExperiments);
+        LOGGER.info("Call alphabet: " + vpa.getInputAlphabet().getCallAlphabet());
+        LOGGER.info("Return alphabet: " + vpa.getInputAlphabet().getReturnAlphabet());
+        LOGGER.info("Internal alphabet: " + vpa.getInputAlphabet().getInternalAlphabet());
 
         final Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "Validation");
         pathToCSVFolder.toFile().mkdirs();

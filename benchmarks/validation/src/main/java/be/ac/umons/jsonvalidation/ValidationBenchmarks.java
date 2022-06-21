@@ -99,7 +99,7 @@ public class ValidationBenchmarks {
 
     public void runBenchmarks() throws JSONException, IOException, JSONSchemaException {
         for (int experimentId = 0 ; experimentId < nExperiments ; experimentId++) {
-            System.out.println((experimentId + 1) + " / nExperiments");
+            LOGGER.info((experimentId + 1) + " / " + nExperiments);
 
             ValidationByAutomaton<Location> automaton = constructAutomaton(vpa);
             if (automaton == null) {
@@ -107,12 +107,13 @@ public class ValidationBenchmarks {
             }
 
             Validator validator = new DefaultValidator();
-            int documentId = 0;
-            for (final File file : pathToDocuments.toFile().listFiles()) {
+            File[] listFiles = pathToDocuments.toFile().listFiles();
+            for (int i = 0 ; i < listFiles.length ; i++) {
+                LOGGER.info("File " + (i+1) + " / " + listFiles.length);
+                final File file = listFiles[i];
                 if (file.isFile()) {
                     final JSONObject document = new JSONObject(new JSONTokener(new FileReader(file)));
-                    runExperiment(automaton, validator, schema, document, documentId);
-                    documentId++;
+                    runExperiment(automaton, validator, schema, document, file.getName());
                 }
             }
         }
@@ -130,14 +131,12 @@ public class ValidationBenchmarks {
         final long timeRelations = watch.stop().elapsed().toMillis();
         final long memoryForRelations = getMemoryUse() - memoryAtStart;
 
-        System.gc();
         watch.reset().start();
         final KeyGraph<Location> graph = new KeyGraph<>(vpa, commaRelation, internalRelation, wellMatchedRelation);
 
         final long timeGraph = watch.stop().elapsed().toMillis();
         final long memoryForGraph = getMemoryUse() - memoryForRelations;
 
-        System.gc();
         watch.reset().start();
         final ValidationByAutomaton<Location> automaton = new ValidationByAutomaton<>(vpa, graph);
 
@@ -179,7 +178,7 @@ public class ValidationBenchmarks {
         }
     }
 
-    private void runExperiment(final ValidationByAutomaton<Location> automaton, final Validator validator, final JSONSchema schema, final JSONObject document, final int documentId) throws IOException, JSONSchemaException {
+    private void runExperiment(final ValidationByAutomaton<Location> automaton, final Validator validator, final JSONSchema schema, final JSONObject document, final String documentName) throws IOException, JSONSchemaException {
         final Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random());
         assert word.length() != 0;
 
@@ -206,7 +205,7 @@ public class ValidationBenchmarks {
 
         final List<Object> statistics = new ArrayList<>(nValidationColumns);
 
-        statistics.add(documentId);
+        statistics.add("valid" + documentName);
 
         statistics.add(word.length());
         statistics.add(depthDocument(word));
@@ -273,7 +272,6 @@ public class ValidationBenchmarks {
 
     private long getMemoryUse() {
         final Runtime runtime = Runtime.getRuntime();
-        runtime.gc();
         return (runtime.totalMemory() - runtime.freeMemory()) / 1024;
     }
 }

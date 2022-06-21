@@ -17,8 +17,11 @@ import be.ac.umons.jsonvalidation.exploration.ExplorationVPDABenchmarks;
 import be.ac.umons.jsonvalidation.random.RandomROCABenchmarks;
 import be.ac.umons.jsonvalidation.random.RandomVCABenchmarks;
 import be.ac.umons.jsonvalidation.random.RandomVPDABenchmarks;
+import de.learnlib.api.logging.LearnLogger;
 
 public class Benchmarks {
+    private static final LearnLogger LOGGER = LearnLogger.getLogger(Benchmarks.class);
+
     private enum AutomatonType {
         VCA,
         ROCA,
@@ -60,10 +63,15 @@ public class Benchmarks {
             return;
         }
 
-        System.out.println("Starting JSON benchmarks with the following parameters:");
-        System.out.println("Schema name: " + schemaName + "; schema contents: " + schema);
-        System.out.println("Number of tests for equivalence: " + nTests);
-        System.out.println("Number of repetitions: " + nRepetitions);
+        LOGGER.info("Starting JSON benchmarks with the following parameters:");
+        LOGGER.info("Schema name: " + schemaName);
+        LOGGER.info("Number of tests for equivalence: " + nTests);
+        LOGGER.info("Can generate invalid documents: " + canGenerateInvalid);
+        LOGGER.info("Max depth of generated document: " + maxDocumentDepth);
+        LOGGER.info("maximum number of properties in an object: " + maxProperties);
+        LOGGER.info("maximum number of items in an array: " + maxItems);
+        LOGGER.info("Are true additional properties ignored: " + ignoreAdditionalProperties);
+        LOGGER.info("Number of repetitions: " + nRepetitions);
 
         Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON");
         pathToCSVFolder.toFile().mkdirs();
