@@ -33,5 +33,6 @@ out_*
 error_*
 *.dot*
 
-results/data/
 results/learning/
+results/preprocessing/
+results/validation/

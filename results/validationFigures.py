@@ -75,5 +75,5 @@ whole_grouped.rename(rename_dict, axis="columns", inplace=True)
 
 print(whole_grouped)
 
-with open("data/" + name + ".dat", "w") as f:
+with open("validation/" + name + ".dat", "w") as f:
     whole_grouped.to_string(f, index=False)
