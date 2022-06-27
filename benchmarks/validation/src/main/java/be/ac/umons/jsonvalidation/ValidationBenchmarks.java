@@ -73,9 +73,7 @@ public class ValidationBenchmarks {
             "Graph memory",
             "Automaton time",
             "Automaton memory",
-            "Size comma",
-            "Size internal",
-            "Size well-matched",
+            "Size relation",
             "Size graph"
         );
         // @formatter:on
@@ -124,15 +122,13 @@ public class ValidationBenchmarks {
         final long memoryAtStart = getMemoryUse();
         final Stopwatch watch = Stopwatch.createStarted();
 
-        final ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(vpa, false);
-        final ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(vpa, false);
-        final ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(vpa, commaRelation, internalRelation, false);
+        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, false);
 
         final long timeRelations = watch.stop().elapsed().toMillis();
         final long memoryForRelations = getMemoryUse() - memoryAtStart;
 
         watch.reset().start();
-        final KeyGraph<Location> graph = new KeyGraph<>(vpa, commaRelation, internalRelation, wellMatchedRelation);
+        final KeyGraph<Location> graph = new KeyGraph<>(vpa, reachabilityRelation);
 
         final long timeGraph = watch.stop().elapsed().toMillis();
         final long memoryForGraph = getMemoryUse() - memoryForRelations;
@@ -162,9 +158,7 @@ public class ValidationBenchmarks {
         statistics.add(memoryForGraph);
         statistics.add(timeAutomaton);
         statistics.add(memoryForAutomaton);
-        statistics.add(commaRelation.size());
-        statistics.add(internalRelation.size());
-        statistics.add(wellMatchedRelation.size());
+        statistics.add(reachabilityRelation.size());
         statistics.add(graph.size());
         
         preprocessingCSVPrinter.printRecord(statistics);
