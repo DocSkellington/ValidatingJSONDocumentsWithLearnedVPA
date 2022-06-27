@@ -12,12 +12,12 @@ public class DotWriter {
 
         output.append("strict digraph G {\n");
         for (final NodeInGraph<L> node : nodes) {
-            output.append("    \"" + node + "\" [shape=\"circle\"];\n");
+            output.append("    '" + node + "' [shape=\"circle\"];\n");
         }
         for (final EndpointPair<NodeInGraph<L>> edge : edges) {
             final NodeInGraph<L> source = edge.nodeU();
             final NodeInGraph<L> target = edge.nodeV();
-            output.append("    \"" + source + "\" -> \"" + target + "\";\n");
+            output.append("    '" + source + "' -> '" + target + "';\n");
         }
         output.append("}");
     }
