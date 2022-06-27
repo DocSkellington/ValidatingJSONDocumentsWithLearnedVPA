@@ -1,7 +1,5 @@
 package be.ac.umons.jsonvalidation.validation.relation;
 
-import java.util.Set;
-
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -9,258 +7,422 @@ import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.Automata;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
-import net.automatalib.words.VPDAlphabet;
 import net.automatalib.words.Word;
 
 public class TestReachabilityRelation {
     @Test
-    public void testCompose() {
-        JSONSymbol symbol = JSONSymbol.toSymbol("test");
-        VPDAlphabet<JSONSymbol> alphabet = Automata.constructAlphabet(symbol);
-        Location q0 = new Location(alphabet, 0, false);
-        Location q1 = new Location(alphabet, 1, false);
-        Location q2 = new Location(alphabet, 2, false);
-        Location q3 = new Location(alphabet, 3, false);
-
-        ReachabilityRelation<Location> rel1 = new ReachabilityRelation<>();
-        ReachabilityRelation<Location> rel2 = new ReachabilityRelation<>();
-
-        rel1.add(InRelation.of(q0, q1, Word.fromLetter(symbol)));
-        rel1.add(InRelation.of(q1, q2, Word.fromLetter(symbol)));
-
-        rel2.add(InRelation.of(q1, q3, Word.fromLetter(symbol)));
-        rel2.add(InRelation.of(q2, q0, Word.fromLetter(symbol)));
-
-        ReachabilityRelation<Location> result = rel1.compose(rel2, false);
-        Assert.assertEquals(result.size(), 2);
-        Assert.assertTrue(result.areInRelation(q0, q3));
-        Assert.assertTrue(result.areInRelation(q1, q0));
-
-        result = rel2.compose(rel1, false);
-        Assert.assertEquals(result.size(), 1);
-        Assert.assertTrue(result.areInRelation(q2, q1));
-    }
-
-    @Test
-    public void testSmallTwoBranchesAutomatonCommaRelation() {
+    public void testSmallTwoBranchesAutomatonReachabilityRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton, false);
-        Assert.assertEquals(commaRelation.size(), 2);
-        Assert.assertTrue(commaRelation.areInRelation(automaton.getLocation(2), automaton.getLocation(3)));
-        Assert.assertTrue(commaRelation.areInRelation(automaton.getLocation(7), automaton.getLocation(8)));
-    }
-
-    @Test
-    public void testSmallTwoBranchesAutomatonInternalRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton, false);
-        Assert.assertEquals(internalRelation.size(), 7);
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(1)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), automaton.getLocation(2)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), automaton.getLocation(7)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(3), automaton.getLocation(4)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(5)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(8), automaton.getLocation(9)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(9), automaton.getLocation(5)));
-    }
-
-    @Test
-    public void testSmallTwoBranchesAutomatonWellMatchedRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton, false);
-        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton, false);
-        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
-                commaRelation, internalRelation, false);
-
-        Assert.assertEquals(wellMatchedRelation.size(), 1);
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(6)));
-
-        Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
-    }
-
-    @Test
-    public void testAutomatonWithOptionalKeysWellMatchedRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
-
-        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton, false);
-        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton, false);
-        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
-                commaRelation, internalRelation, false);
-
-        Assert.assertEquals(wellMatchedRelation.size(), 2);
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(11)));
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(7)));
-
-        Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
-    }
-
-    @Test
-    public void testAutomatonWithOptionalKeysAndExplicitBinStateWellMatchedRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
-
-        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton, false);
-        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton, false);
-        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
-                commaRelation, internalRelation, false);
-
-        Assert.assertEquals(wellMatchedRelation.size(), 15);
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(11)));
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(7)));
-        for (Location source : automaton.getLocations()) {
-            Assert.assertTrue(wellMatchedRelation.areInRelation(source, automaton.getLocation(12)));
-        }
-
-        Set<Location> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
-        Assert.assertEquals(1, binLocations.size());
-        Assert.assertTrue(binLocations.contains(automaton.getLocation(12)));
-    }
-
-    @Test
-    public void testAutomatonWithTwoKeysOnSameTransitionInternalRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithTwoKeysOnSameTransition();
-
-        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton, false);
-        Assert.assertEquals(internalRelation.size(), 3);
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(1)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(1), automaton.getLocation(2)));
-        Assert.assertTrue(internalRelation.areInRelation(automaton.getLocation(3), automaton.getLocation(4)));
-    }
-
-    @Test
-    public void testAutomatonWithTwoKeysOnSameTransitionWellMatchedRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithTwoKeysOnSameTransition();
-
-        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton, false);
-        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton, false);
-        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
-                commaRelation, internalRelation, false);
-
-        Assert.assertEquals(wellMatchedRelation.size(), 2);
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(0), automaton.getLocation(6)));
-        Assert.assertTrue(wellMatchedRelation.areInRelation(automaton.getLocation(4), automaton.getLocation(5)));
-
-        Assert.assertTrue(wellMatchedRelation.identifyBinLocations(automaton).isEmpty());
-    }
-
-    @Test
-    public void testSmallTwoBranchesAutomatonCloseRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-
-        ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(automaton, true);
-        ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(automaton, true);
-        ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
-                commaRelation, internalRelation, true);
-
-        ReachabilityRelation<Location> closedRelation = ReachabilityRelation.closeRelations(commaRelation, internalRelation, wellMatchedRelation, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
 
         final JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
 
-        Assert.assertEquals(closedRelation.size(), 28);
-        for (InRelation<Location> inRelation : closedRelation) {
+        Assert.assertEquals(reachabilityRelation.size(), 38);
+        for (InRelation<Location> inRelation : reachabilityRelation) {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
             Word<JSONSymbol> witness = inRelation.getWitness();
 
-            if (start.equals(automaton.getLocation(0))) {
-                if (target.equals(automaton.getLocation(1))) {
+            if (start == automaton.getLocation(0)) {
+                if (target == automaton.getLocation(0)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else if (target == automaton.getLocation(1)) {
                     Assert.assertEquals(witness, Word.fromSymbols(k1Sym));
-                }
-                else if (target.equals(automaton.getLocation(2))) {
+                } else if (target == automaton.getLocation(2)) {
                     Assert.assertEquals(witness, Word.fromSymbols(k1Sym, JSONSymbol.integerSymbol));
-                }
-                else if (target.equals(automaton.getLocation(3))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol));
-                }
-                else if (target.equals(automaton.getLocation(4))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym));
-                }
-                else if (target.equals(automaton.getLocation(5))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol));
-                }
-                else if (target.equals(automaton.getLocation(6))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol, JSONSymbol.closingCurlyBraceSymbol));
-                }
-                else if (target.equals(automaton.getLocation(7))) {
+                } else if (target == automaton.getLocation(3)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(4)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym));
+                } else if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(k1Sym, JSONSymbol.integerSymbol,
+                            JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol));
+                } else if (target == automaton.getLocation(6)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol));
+                } else if (target == automaton.getLocation(7)) {
                     Assert.assertEquals(witness, Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol));
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, k2Sym));
                 }
-                else if (target.equals(automaton.getLocation(8))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol));
-                }
-                else if (target.equals(automaton.getLocation(9))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, k2Sym));
-                }
-            }
-            else if (start.equals(automaton.getLocation(1))) {
-                if (target.equals(automaton.getLocation(2))) {
+            } else if (start == automaton.getLocation(1)) {
+                Assert.assertNotEquals(target, automaton.getLocation(0));
+                if (target == automaton.getLocation(1)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else if (target == automaton.getLocation(2)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol));
-                }
-                else if (target.equals(automaton.getLocation(3))) {
+                } else if (target == automaton.getLocation(3)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol));
-                }
-                else if (target.equals(automaton.getLocation(4))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym));
-                }
-                else if (target.equals(automaton.getLocation(5))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol));
-                }
-                else if (target.equals(automaton.getLocation(7))) {
+                } else if (target == automaton.getLocation(4)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym));
+                } else if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol,
+                            k2Sym, JSONSymbol.trueSymbol));
+                } else if (target == automaton.getLocation(7)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol));
-                }
-                else if (target.equals(automaton.getLocation(8))) {
+                } else if (target == automaton.getLocation(8)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, k2Sym));
                 }
-                else if (target.equals(automaton.getLocation(9))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, k2Sym));
-                }
-            }
-            else if (start.equals(automaton.getLocation(2))) {
-                if (target.equals(automaton.getLocation(3))) {
+            } else if (start == automaton.getLocation(2)) {
+                if (target == automaton.getLocation(2)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else if (target == automaton.getLocation(3)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol));
-                }
-                else if (target.equals(automaton.getLocation(4))) {
+                } else if (target == automaton.getLocation(4)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym));
+                } else if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
                 }
-                else if (target.equals(automaton.getLocation(5))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol));
-                }
-            }
-            else if (start.equals(automaton.getLocation(3))) {
-                if (target.equals(automaton.getLocation(4))) {
+            } else if (start == automaton.getLocation(3)) {
+                if (target == automaton.getLocation(3)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else if (target == automaton.getLocation(4)) {
                     Assert.assertEquals(witness, Word.fromSymbols(k2Sym));
+                } else if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(k2Sym, JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
                 }
-                else if (target.equals(automaton.getLocation(5))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(k2Sym, JSONSymbol.falseSymbol));
+            } else if (start == automaton.getLocation(4)) {
+                if (target == automaton.getLocation(4)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
                 }
-            }
-            else if (start.equals(automaton.getLocation(4))) {
-                if (target.equals(automaton.getLocation(5))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.falseSymbol));
+            } else if (start == automaton.getLocation(5)) {
+                if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else {
+                    Assert.fail(inRelation.toString());
                 }
-            }
-            else if (start.equals(automaton.getLocation(7))) {
-                if (target.equals(automaton.getLocation(5))) {
-                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym, JSONSymbol.stringSymbol));
+            } else if (start == automaton.getLocation(6)) {
+                if (target == automaton.getLocation(6)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else {
+                    Assert.fail(inRelation.toString());
                 }
-                else if (target.equals(automaton.getLocation(8))) {
+            } else if (start == automaton.getLocation(7)) {
+                if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym, JSONSymbol.stringSymbol));
+                } else if (target == automaton.getLocation(7)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else if (target == automaton.getLocation(8)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol));
-                }
-                else if (target.equals(automaton.getLocation(9))) {
+                } else if (target == automaton.getLocation(9)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym));
+                } else {
+                    Assert.fail(inRelation.toString());
                 }
-            }
-            else if (start.equals(automaton.getLocation(8))) {
-                if (target.equals(automaton.getLocation(5))) {
+            } else if (start == automaton.getLocation(8)) {
+                if (target == automaton.getLocation(5)) {
                     Assert.assertEquals(witness, Word.fromSymbols(k2Sym, JSONSymbol.stringSymbol));
-                }
-                else if (target.equals(automaton.getLocation(9))) {
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else if (target == automaton.getLocation(9)) {
                     Assert.assertEquals(witness, Word.fromSymbols(k2Sym));
+                } else {
+                    Assert.fail(inRelation.toString());
                 }
-            }
-            else if (start.equals(automaton.getLocation(9))) {
-                if (target.equals(automaton.getLocation(5))) {
+            } else if (start == automaton.getLocation(9)) {
+                if (target == automaton.getLocation(5)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else {
+                    Assert.fail(inRelation.toString());
                 }
+            } else {
+                Assert.fail(inRelation.toString());
+            }
+        }
+    }
+
+    @Test
+    public void testAutomatonWithOptionalKeysReachabilityRelation() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+
+        final JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
+        final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
+        final JSONSymbol o1Sym = JSONSymbol.toSymbol("o1");
+        final JSONSymbol o2Sym = JSONSymbol.toSymbol("o2");
+
+        System.out.println(reachabilityRelation);
+        System.out.println(reachabilityRelation.getWitness(automaton.getLocation(0), automaton.getLocation(11)));
+
+        for (InRelation<Location> inRelation : reachabilityRelation) {
+            Location start = inRelation.getStart();
+            Location target = inRelation.getTarget();
+            Word<JSONSymbol> witness = inRelation.getWitness();
+
+            if (start == automaton.getLocation(0)) {
+                if (target == automaton.getLocation(0)) {
+                    Assert.assertEquals(witness, Word.epsilon());
+                } else if (target == automaton.getLocation(1)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(k1Sym));
+                } else if (target == automaton.getLocation(2)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol));
+                } else if (target == automaton.getLocation(3)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(4)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, o1Sym));
+                } else if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(k2Sym));
+                } else if (target == automaton.getLocation(6)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(k2Sym, JSONSymbol.integerSymbol));
+                } else if (target == automaton.getLocation(7)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol));
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym));
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(k1Sym, JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym,
+                                    JSONSymbol.trueSymbol));
+                } else if (target == automaton.getLocation(11)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym,
+                            JSONSymbol.stringSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(1)) {
+                if (target == automaton.getLocation(1)) {
+                    Word.epsilon();
+                } else if (target == automaton.getLocation(2)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol));
+                } else if (target == automaton.getLocation(3)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(4)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, o1Sym));
+                } else if (target == automaton.getLocation(7)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol));
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym));
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.commaSymbol,
+                            o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                            JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym, JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(2)) {
+                if (target == automaton.getLocation(2)) {
+                    Word.epsilon();
+                } else if (target == automaton.getLocation(3)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(4)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym));
+                } else if (target == automaton.getLocation(7)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                                    JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                                    JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol,
+                                    JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                                    JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol,
+                                    JSONSymbol.commaSymbol, o2Sym));
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                                    JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol,
+                                    JSONSymbol.commaSymbol, o2Sym, JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(3)) {
+                if (target == automaton.getLocation(3)) {
+                    Word.epsilon();
+                } else if (target == automaton.getLocation(4)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(o1Sym));
+                } else if (target == automaton.getLocation(7)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                            JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                            JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym));
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym,
+                                    JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(4)) {
+                if (target == automaton.getLocation(4)) {
+                    Word.epsilon();
+                } else if (target == automaton.getLocation(7)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                            JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                            JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym));
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym,
+                                    JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(5)) {
+                if (target == automaton.getLocation(3)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(4)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, o1Sym));
+                } else if (target == automaton.getLocation(5)) {
+                    Word.epsilon();
+                } else if (target == automaton.getLocation(6)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol));
+                } else if (target == automaton.getLocation(7)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol));
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, o1Sym,
+                                    JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                                    JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym));
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol,
+                            o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym, JSONSymbol.integerSymbol,
+                            JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.commaSymbol, o2Sym, JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(6)) {
+                if (target == automaton.getLocation(3)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(4)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym));
+                } else if (target == automaton.getLocation(6)) {
+                    Word.epsilon();
+                } else if (target == automaton.getLocation(7)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                                    JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                                    JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol,
+                                    JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                                    JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol,
+                                    JSONSymbol.commaSymbol, o2Sym));
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, o1Sym, JSONSymbol.openingCurlyBraceSymbol, k2Sym,
+                                    JSONSymbol.integerSymbol, JSONSymbol.closingCurlyBraceSymbol,
+                                    JSONSymbol.commaSymbol, o2Sym, JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(7)) {
+                if (target == automaton.getLocation(7)) {
+                    Word.epsilon();
+                } else if (target == automaton.getLocation(8)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol));
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.commaSymbol, o2Sym));
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.commaSymbol, o2Sym, JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(8)) {
+                if (target == automaton.getLocation(8)) {
+                    Word.epsilon();
+                } else if (target == automaton.getLocation(9)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(o2Sym));
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(o2Sym, JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(9)) {
+                if (target == automaton.getLocation(9)) {
+                    Word.epsilon();
+                } else if (target == automaton.getLocation(10)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.trueSymbol));
+                } else {
+                    Assert.fail(inRelation.toString());
+                }
+            } else if (start == automaton.getLocation(10) && target == automaton.getLocation(10)) {
+                Assert.assertEquals(witness, Word.epsilon());
+            } else if (start == automaton.getLocation(11) && target == automaton.getLocation(11)) {
+                Assert.assertEquals(witness, Word.epsilon());
+            } else {
+                Assert.fail(inRelation.toString());
             }
         }
     }
