@@ -22,7 +22,6 @@ import com.google.common.graph.Traverser;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.PairSourceToReached;
 import net.automatalib.automata.vpda.OneSEVPA;
-import net.automatalib.commons.util.Pair;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
@@ -63,28 +62,24 @@ public class KeyGraph<L> {
     private final Word<JSONSymbol> witnessCycle;
 
     public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
-        final ReachabilityRelation<L> commaRelation = ReachabilityRelation.computeCommaRelation(automaton, computeWitnesses);
-        final ReachabilityRelation<L> internalRelation = ReachabilityRelation.computeInternalRelation(automaton, computeWitnesses);
-        final ReachabilityRelation<L> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(automaton,
-                commaRelation, internalRelation, computeWitnesses);
-        if (wellMatchedRelation.size() == 0) {
+        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, computeWitnesses);
+        if (reachabilityRelation.size() == 0) {
             return null;
         }
 
-        return new KeyGraph<>(automaton, commaRelation, internalRelation, wellMatchedRelation);
+        return new KeyGraph<>(automaton, reachabilityRelation);
     }
 
-    public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> commaRelation,
-            final ReachabilityRelation<L> internalRelation, final ReachabilityRelation<L> wellMatchedRelation) {
+    public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation) {
         this.automaton = automaton;
 
-        this.graph = constructGraph(commaRelation, internalRelation, wellMatchedRelation);
+        this.graph = constructGraph(reachabilityRelation);
 
         this.cyclic = Graphs.hasCycle(graph);
         this.duplicateKeys = hasDuplicateKeys();
 
         if (cyclic) {
-            witnessCycle = constructWitnessCycle(commaRelation, internalRelation, wellMatchedRelation);
+            witnessCycle = constructWitnessCycle(reachabilityRelation);
         }
         else {
             witnessCycle = null;
@@ -93,12 +88,21 @@ public class KeyGraph<L> {
         propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
     }
 
-    private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> commaRelation, ReachabilityRelation<L> internalRelation, ReachabilityRelation<L> wellMatchedRelation) {
-        final Set<L> binLocations = wellMatchedRelation.identifyBinLocations(automaton);
+    private Alphabet<JSONSymbol> getKeyAlphabet() {
+        final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
+        final Alphabet<JSONSymbol> primitiveValuesAlphabet = JSONSymbol.primitiveValuesAlphabet;
+        // @formatter:off
+        return internalAlphabet.stream()
+            .filter(symbol -> !primitiveValuesAlphabet.contains(symbol) && symbol != JSONSymbol.commaSymbol)
+            .collect(Alphabets.collector());
+        // @formatter:on
+    }
 
-        final ReachabilityRelation<L> unionRelation = internalRelation.union(wellMatchedRelation);
+    private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> reachabilityRelation) {
+        final Set<L> binLocations = reachabilityRelation.identifyBinLocations(automaton);
+        System.out.println(binLocations);
 
-        final ReachabilityRelation<L> keyValueRelation = unionRelation.compose(unionRelation, false);
+        final ReachabilityRelation<L> valueReachabilityRelation = ReachabilityRelation.computeValueReachabilityRelation(automaton, reachabilityRelation, false);
 
         // @formatter:off
         final ImmutableGraph.Builder<NodeInGraph<L>> builder = GraphBuilder
@@ -108,44 +112,35 @@ public class KeyGraph<L> {
             .incidentEdgeOrder(ElementOrder.stable())
             .<NodeInGraph<L>>immutable()
         ;
-        List<JSONSymbol> notKeySymbols = List.of(
-            JSONSymbol.commaSymbol,
-            JSONSymbol.integerSymbol,
-            JSONSymbol.numberSymbol,
-            JSONSymbol.stringSymbol,
-            JSONSymbol.enumSymbol,
-            JSONSymbol.trueSymbol,
-            JSONSymbol.falseSymbol,
-            JSONSymbol.nullSymbol
-        );
-        final Alphabet<JSONSymbol> keyAlphabet = automaton.getInputAlphabet().getInternalAlphabet().stream()
-            .filter(symbol -> !notKeySymbols.contains(symbol))
-            .collect(Alphabets.collector());
         // @formatter:on
+        final Alphabet<JSONSymbol> keyAlphabet = getKeyAlphabet();
 
         // We create the nodes
-        final Map<Pair<InRelation<L>, JSONSymbol>, NodeInGraph<L>> relationToNode = new HashMap<>();
-        for (final InRelation<L> inRel : keyValueRelation) {
-            if (binLocations.contains(inRel.getStart()) || binLocations.contains(inRel.getTarget())) {
+        final List<NodeInGraph<L>> nodes = new LinkedList<>();
+        for (final L startLocation : automaton.getLocations()) {
+            if (binLocations.contains(startLocation)) {
                 continue;
             }
 
-            // @formatter:off
-            final boolean binStateOnPath = inRel.getLocationsSeenBetweenStartAndTarget().stream()
-                .filter(location -> binLocations.contains(location))
-                .findAny().isPresent();
-            // @formatter:on
-            if (binStateOnPath) {
-                continue;
-            }
+            for (final JSONSymbol key : keyAlphabet) {
+                final L locationAfterKey = automaton.getInternalSuccessor(startLocation, key);
+                if (locationAfterKey == null || binLocations.contains(locationAfterKey)) {
+                    continue;
+                }
+                for (final InRelation<L> inValueRelation : valueReachabilityRelation.getPairsWithStartLocation(locationAfterKey)) {
+                    // @formatter:off
+                    final boolean binStateOnPath = inValueRelation.getLocationsSeenBetweenStartAndTarget().stream()
+                        .filter(location -> binLocations.contains(location))
+                        .findAny().isPresent();
+                    // @formatter:on
+                    if (binStateOnPath) {
+                        continue;
+                    }
 
-            for (JSONSymbol key : keyAlphabet) {
-                L target = automaton.getInternalSuccessor(inRel.getStart(), key);
-                if (internalRelation.areInRelation(target, inRel.getTarget())
-                        || wellMatchedRelation.areInRelation(target, inRel.getTarget())) {
-                    final NodeInGraph<L> node = new NodeInGraph<>(inRel, key, automaton, binLocations);
-                    relationToNode.put(Pair.of(inRel, key), node);
+                    final L locationAfterValue = inValueRelation.getTarget();
+                    final NodeInGraph<L> node = new NodeInGraph<>(startLocation, locationAfterValue, key, automaton, binLocations);
                     builder.addNode(node);
+                    nodes.add(node);
 
                     if (keyToNodes.containsKey(key)) {
                         keyToNodes.get(key).add(node);
@@ -159,34 +154,20 @@ public class KeyGraph<L> {
                         keyToLocations.put(key, setLocations);
                     }
 
-                    if (inRel.getStart().equals(automaton.getInitialLocation())) {
+                    if (startLocation == automaton.getInitialLocation()) {
                         startingNodes.add(node);
                     }
                 }
             }
         }
+
         // We create the edges
-        for (final InRelation<L> source : keyValueRelation) {
-            if (binLocations.contains(source.getStart()) || binLocations.contains(source.getTarget())) {
-                continue;
-            }
-            for (final InRelation<L> target : keyValueRelation) {
-                if (binLocations.contains(target.getStart()) || binLocations.contains(target.getTarget())) {
-                    continue;
-                }
-                if (commaRelation.areInRelation(source.getTarget(), target.getStart())) {
-                    for (JSONSymbol keyInSource : keyAlphabet) {
-                        NodeInGraph<L> sourceNode = relationToNode.get(Pair.of(source, keyInSource));
-                        if (sourceNode == null) {
-                            continue;
-                        }
-                        for (JSONSymbol keyInTarget : keyAlphabet) {
-                            NodeInGraph<L> targetNode = relationToNode.get(Pair.of(target, keyInTarget));
-                            if (targetNode != null) {
-                                builder.putEdge(sourceNode, targetNode);
-                            }
-                        }
-                    }
+        for (final NodeInGraph<L> startNode : nodes) {
+            final L locationBeforeComma = startNode.getTargetLocation();
+            for (final NodeInGraph<L> targetNode : nodes) {
+                final L locationAfterComma = targetNode.getStartLocation();
+                if (automaton.getInternalSuccessor(locationBeforeComma, JSONSymbol.commaSymbol) == locationAfterComma) {
+                    builder.putEdge(startNode, targetNode);
                 }
             }
         }
@@ -220,16 +201,15 @@ public class KeyGraph<L> {
         return false;
     }
 
-    private Word<JSONSymbol> constructWitnessCycle(ReachabilityRelation<L> commaRelation, ReachabilityRelation<L> internalRelation, ReachabilityRelation<L> wellMatchedRelation) {
+    private Word<JSONSymbol> constructWitnessCycle(final ReachabilityRelation<L> reachabilityRelation) {
         if (isValid()) {
             return null;
         }
         
-        final ReachabilityRelation<L> closedRelation = ReachabilityRelation.closeRelations(commaRelation, internalRelation, wellMatchedRelation);
-        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, commaRelation, internalRelation, wellMatchedRelation, closedRelation);
+        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, reachabilityRelation);
 
         final List<NodeInGraph<L>> cycle = new LinkedList<>();
-        for (NodeInGraph<L> starting : startingNodes) {
+        for (final NodeInGraph<L> starting : startingNodes) {
             identifyOneCycle(starting, new LinkedHashSet<>(), new LinkedHashSet<>(), cycle);
             if (!cycle.isEmpty()) {
                 break;
@@ -241,7 +221,7 @@ public class KeyGraph<L> {
 
         InWitnessRelation<L> witnessToAndFromStartCycle = witnessRelation.getInRelation(cycle.get(0).getStartLocation(), cycle.get(0).getTargetLocation());
 
-        final WordBuilder<JSONSymbol> cycleWord = pathToWord(cycle, closedRelation);
+        final WordBuilder<JSONSymbol> cycleWord = pathToWord(cycle, reachabilityRelation);
         final WordBuilder<JSONSymbol> wordBuilder = new WordBuilder<>();
         wordBuilder.append(witnessToAndFromStartCycle.getWitnessToStart());
         wordBuilder.append(cycleWord);
@@ -250,16 +230,16 @@ public class KeyGraph<L> {
         return wordBuilder.toWord();
     }
 
-    private WordBuilder<JSONSymbol> pathToWord(List<NodeInGraph<L>> path, ReachabilityRelation<L> closedRelation) {
+    private WordBuilder<JSONSymbol> pathToWord(List<NodeInGraph<L>> path, ReachabilityRelation<L> reachabilityRelation) {
         final WordBuilder<JSONSymbol> wordBuilder = new WordBuilder<>();
 
         int i = 0;
-        for (NodeInGraph<L> currentNode : path) {
+        for (final NodeInGraph<L> currentNode : path) {
             L currentLocation = currentNode.getStartLocation();
 
             wordBuilder.add(currentNode.getSymbol());
             currentLocation = automaton.getInternalSuccessor(currentLocation, currentNode.getSymbol());
-            wordBuilder.append(closedRelation.getWitness(currentLocation, currentNode.getTargetLocation()));
+            wordBuilder.append(reachabilityRelation.getWitness(currentLocation, currentNode.getTargetLocation()));
 
             if (++i < path.size()) {
                 wordBuilder.add(JSONSymbol.commaSymbol);
@@ -269,23 +249,24 @@ public class KeyGraph<L> {
         return wordBuilder;
     }
 
-    private boolean identifyOneCycle(NodeInGraph<L> currentNode, Set<NodeInGraph<L>> frontier, Set<NodeInGraph<L>> explored, List<NodeInGraph<L>> cycle) {
+    private boolean identifyOneCycle(NodeInGraph<L> currentNode, Set<NodeInGraph<L>> frontier, Set<NodeInGraph<L>> explored, List<NodeInGraph<L>> path) {
         frontier.add(currentNode);
-        for (NodeInGraph<L> adjacent : graph.adjacentNodes(currentNode)) {
-            if (frontier.contains(adjacent)) {
-                cycle.add(currentNode);
-                cycle.add(adjacent);
+        for (final NodeInGraph<L> successor : graph.successors(currentNode)) {
+            if (frontier.contains(successor)) {
+                path.add(currentNode);
+                path.add(successor);
+                int indexOfFirst = path.indexOf(successor);
+                while (indexOfFirst-- > 0) {
+                    path.remove(0);
+                }
                 return true;
             }
 
-            boolean partOfCycle = identifyOneCycle(adjacent, frontier, explored, cycle);
-            if (!cycle.isEmpty()) {
-                if (partOfCycle) {
-                    cycle.add(0, currentNode);
-                    return cycle.get(cycle.size() - 1) != currentNode;
-                }
-                return false;
+            path.add(currentNode);
+            if (identifyOneCycle(successor, frontier, explored, path)) {
+                return true;
             }
+            path.remove(path.size() - 1);
         }
         frontier.remove(currentNode);
         explored.add(currentNode);

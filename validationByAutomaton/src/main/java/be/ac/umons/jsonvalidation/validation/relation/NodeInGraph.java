@@ -25,8 +25,8 @@ public class NodeInGraph<L> {
     private final BitSet acceptingForLocation;
     private final BitSet onPathToAcceptingForLocation;
 
-    public NodeInGraph(InRelation<L> inRelation, JSONSymbol symbol, OneSEVPA<L, JSONSymbol> automaton, Set<L> binLocations) {
-        this.pairLocations = PairSourceToReached.of(inRelation.getStart(), inRelation.getTarget());
+    public NodeInGraph(L startLocation, L targetLocation, JSONSymbol symbol, OneSEVPA<L, JSONSymbol> automaton, Set<L> binLocations) {
+        this.pairLocations = PairSourceToReached.of(startLocation, targetLocation);
         this.symbol = symbol;
         this.acceptingForLocation = new BitSet(automaton.size());
         this.onPathToAcceptingForLocation = new BitSet(automaton.size());
@@ -43,7 +43,7 @@ public class NodeInGraph<L> {
             }
 
             final int stackSym = automaton.encodeStackSym(locationBeforeCall, callSymbol);
-            final L locationAfterReturn = automaton.getReturnSuccessor(inRelation.getTarget(), returnSymbol, stackSym);
+            final L locationAfterReturn = automaton.getReturnSuccessor(targetLocation, returnSymbol, stackSym);
             if (locationAfterReturn != null && !binLocations.contains(locationAfterReturn)) {
                 acceptingForLocation.set(i);
                 onPathToAcceptingForLocation.set(i);

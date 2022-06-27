@@ -14,11 +14,9 @@ public class TestWitnessRelation {
     public void testWitnessRelationSmallTwoBranchesAutomaton() {
         final DefaultOneSEVPA<JSONSymbol> vpa = Automata.constructSmallTwoBranchesAutomaton();
 
-        final ReachabilityRelation<Location> commaRelation = ReachabilityRelation.computeCommaRelation(vpa);
-        final ReachabilityRelation<Location> internalRelation = ReachabilityRelation.computeInternalRelation(vpa);
-        final ReachabilityRelation<Location> wellMatchedRelation = ReachabilityRelation.computeWellMatchedRelation(vpa, commaRelation, internalRelation);
+        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, true);
 
-        final WitnessRelation<Location> witnessRelation = WitnessRelation.computeWitnessRelation(vpa, commaRelation, internalRelation, wellMatchedRelation);
+        final WitnessRelation<Location> witnessRelation = WitnessRelation.computeWitnessRelation(vpa, reachabilityRelation);
 
         final JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
@@ -33,6 +31,7 @@ public class TestWitnessRelation {
 
             if (start.equals(vpa.getLocation(0))) {
                 if (target.equals(vpa.getLocation(0)) || target.equals(vpa.getLocation(6))) {
+                    System.out.println(inRelation);
                     Assert.assertEquals(witnessToStart, Word.epsilon());
                 }
                 else {
@@ -73,18 +72,18 @@ public class TestWitnessRelation {
             }
             else if (start.equals(vpa.getLocation(5))) {
                 if (target.equals(vpa.getLocation(0)) || target.equals(vpa.getLocation(6))) {
-                    Assert.assertEquals(witnessToStart, Word.fromSymbols(k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol));
+                    Assert.assertEquals(witnessToStart, Word.fromSymbols(k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol));
                 }
                 else {
-                    Assert.assertEquals(witnessToStart, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol));
+                    Assert.assertEquals(witnessToStart, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol));
                 }
             }
             else if (start.equals(vpa.getLocation(6))) {
                 if (target.equals(vpa.getLocation(0)) || target.equals(vpa.getLocation(6))) {
-                    Assert.assertEquals(witnessToStart, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                    Assert.assertEquals(witnessToStart, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
                 }
                 else {
-                    Assert.assertEquals(witnessToStart, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                    Assert.assertEquals(witnessToStart, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
                 }
             }
             else if (start.equals(vpa.getLocation(7))) {
@@ -113,19 +112,19 @@ public class TestWitnessRelation {
             }
 
             if (target.equals(vpa.getLocation(0))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
             }
             else if (target.equals(vpa.getLocation(1))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
             }
             else if (target.equals(vpa.getLocation(2))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym, JSONSymbol.falseSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
             }
             else if (target.equals(vpa.getLocation(3))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(k2Sym, JSONSymbol.falseSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
             }
             else if (target.equals(vpa.getLocation(4))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.falseSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
             }
             else if (target.equals(vpa.getLocation(5))) {
                 Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.closingCurlyBraceSymbol));

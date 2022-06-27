@@ -1,6 +1,7 @@
 package be.ac.umons.jsonvalidation.validation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
@@ -13,7 +14,11 @@ import net.automatalib.words.impl.DefaultVPDAlphabet;
 
 public class Automata {
     public static VPDAlphabet<JSONSymbol> constructAlphabet(JSONSymbol... symbols) {
-        Alphabet<JSONSymbol> internalAlphabet = Alphabets.fromArray(symbols);
+        List<JSONSymbol> internalSymbols = new ArrayList<>();
+        internalSymbols.addAll(Arrays.asList(symbols));
+        internalSymbols.addAll(JSONSymbol.primitiveValuesAlphabet);
+        internalSymbols.add(JSONSymbol.commaSymbol);
+        Alphabet<JSONSymbol> internalAlphabet = Alphabets.fromList(internalSymbols);
         Alphabet<JSONSymbol> callAlphabet = Alphabets.fromArray(JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.openingBracketSymbol);
         Alphabet<JSONSymbol> returnAlphabet = Alphabets.fromArray(JSONSymbol.closingCurlyBraceSymbol, JSONSymbol.closingBracketSymbol);
         return new DefaultVPDAlphabet<>(internalAlphabet, callAlphabet, returnAlphabet);
@@ -23,11 +28,7 @@ public class Automata {
         // @formatter:off
         VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
             JSONSymbol.toSymbol("k1"),
-            JSONSymbol.toSymbol("k2"),
-            JSONSymbol.commaSymbol,
-            JSONSymbol.integerSymbol,
-            JSONSymbol.stringSymbol,
-            JSONSymbol.trueSymbol
+            JSONSymbol.toSymbol("k2")
         );
         // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
@@ -60,12 +61,7 @@ public class Automata {
         // @formatter:off
         VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
             JSONSymbol.toSymbol("k1"),
-            JSONSymbol.toSymbol("k2"),
-            JSONSymbol.commaSymbol,
-            JSONSymbol.integerSymbol,
-            JSONSymbol.stringSymbol,
-            JSONSymbol.falseSymbol,
-            JSONSymbol.trueSymbol
+            JSONSymbol.toSymbol("k2")
         );
         // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
@@ -111,11 +107,7 @@ public class Automata {
             JSONSymbol.toSymbol("k1"),
             JSONSymbol.toSymbol("k2"),
             JSONSymbol.toSymbol("o1"),
-            JSONSymbol.toSymbol("o2"),
-            JSONSymbol.commaSymbol,
-            JSONSymbol.integerSymbol,
-            JSONSymbol.stringSymbol,
-            JSONSymbol.trueSymbol
+            JSONSymbol.toSymbol("o2")
         );
         // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
@@ -171,11 +163,7 @@ public class Automata {
             JSONSymbol.toSymbol("k1"),
             JSONSymbol.toSymbol("k2"),
             JSONSymbol.toSymbol("o1"),
-            JSONSymbol.toSymbol("o2"),
-            JSONSymbol.commaSymbol,
-            JSONSymbol.integerSymbol,
-            JSONSymbol.stringSymbol,
-            JSONSymbol.trueSymbol
+            JSONSymbol.toSymbol("o2")
         );
         // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
@@ -249,10 +237,7 @@ public class Automata {
         VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
             JSONSymbol.toSymbol("k1"),
             JSONSymbol.toSymbol("k2"),
-            JSONSymbol.toSymbol("o1"),
-            JSONSymbol.commaSymbol,
-            JSONSymbol.integerSymbol,
-            JSONSymbol.stringSymbol
+            JSONSymbol.toSymbol("o1")
         );
         // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
@@ -290,11 +275,7 @@ public class Automata {
         VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
             JSONSymbol.toSymbol("k1"),
             JSONSymbol.toSymbol("k2"),
-            JSONSymbol.toSymbol("k3"),
-            JSONSymbol.commaSymbol,
-            JSONSymbol.integerSymbol,
-            JSONSymbol.stringSymbol,
-            JSONSymbol.trueSymbol
+            JSONSymbol.toSymbol("k3")
         );
         // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
@@ -356,11 +337,7 @@ public class Automata {
         // @formatter:off
         VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
             JSONSymbol.toSymbol("k1"),
-            JSONSymbol.toSymbol("k2"),
-            JSONSymbol.commaSymbol,
-            JSONSymbol.integerSymbol,
-            JSONSymbol.stringSymbol,
-            JSONSymbol.trueSymbol
+            JSONSymbol.toSymbol("k2")
         );
         // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
@@ -416,10 +393,7 @@ public class Automata {
         // @formatter:off
         VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
             JSONSymbol.toSymbol("k1"),
-            JSONSymbol.toSymbol("k2"),
-            JSONSymbol.commaSymbol,
-            JSONSymbol.integerSymbol,
-            JSONSymbol.stringSymbol
+            JSONSymbol.toSymbol("k2")
         );
         // @formatter:on
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
@@ -459,9 +433,7 @@ public class Automata {
     public static DefaultOneSEVPA<JSONSymbol> constructAutomatonWithCycleReadingAKey() {
         // @formatter:off
         VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
-            JSONSymbol.toSymbol("k1"),
-            JSONSymbol.commaSymbol,
-            JSONSymbol.stringSymbol
+            JSONSymbol.toSymbol("k1")
         );
         DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
         JSONSymbol k1Symbol = JSONSymbol.toSymbol("k1");
@@ -480,6 +452,34 @@ public class Automata {
         automaton.setInternalSuccessor(locations.get(1), JSONSymbol.stringSymbol, locations.get(2));
 
         automaton.setInternalSuccessor(locations.get(2), JSONSymbol.commaSymbol, locations.get(0));
+        automaton.setReturnSuccessor(locations.get(2), JSONSymbol.closingCurlyBraceSymbol, q0StackSymbol, locations.get(3));
+
+        return automaton;
+    }
+
+    public static DefaultOneSEVPA<JSONSymbol> constructAutomatonAcceptingEmptyObject() {
+        // @formatter:off
+        VPDAlphabet<JSONSymbol> alphabet = constructAlphabet(
+            JSONSymbol.toSymbol("k1")
+        );
+        // @formatter:on
+        DefaultOneSEVPA<JSONSymbol> automaton = new DefaultOneSEVPA<>(alphabet);
+        JSONSymbol k1Symbol = JSONSymbol.toSymbol("k1");
+
+        List<Location> locations = new ArrayList<>();
+
+        locations.add(automaton.addInitialLocation(false));
+        for (int i = 1 ; i <= 2 ; i++) {
+            locations.add(automaton.addLocation(false));
+        }
+        locations.add(automaton.addLocation(true));
+
+        int q0StackSymbol = automaton.encodeStackSym(locations.get(0), JSONSymbol.openingCurlyBraceSymbol);
+        automaton.setInternalSuccessor(locations.get(0), k1Symbol, locations.get(1));
+        automaton.setReturnSuccessor(locations.get(0), JSONSymbol.closingCurlyBraceSymbol, q0StackSymbol, locations.get(3));
+
+        automaton.setInternalSuccessor(locations.get(1), JSONSymbol.stringSymbol, locations.get(2));
+
         automaton.setReturnSuccessor(locations.get(2), JSONSymbol.closingCurlyBraceSymbol, q0StackSymbol, locations.get(3));
 
         return automaton;

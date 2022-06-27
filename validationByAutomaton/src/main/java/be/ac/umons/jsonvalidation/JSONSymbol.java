@@ -14,12 +14,15 @@
  */
 package be.ac.umons.jsonvalidation;
 
+import java.util.List;
 import java.util.Objects;
 
 import be.ac.umons.jsonschematools.AbstractConstants;
+import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 import net.automatalib.words.abstractimpl.AbstractSymbol;
+import net.automatalib.words.impl.Alphabets;
 
 /**
  * Special symbol used for the JSON benchmarks.
@@ -42,6 +45,22 @@ public class JSONSymbol extends AbstractSymbol<JSONSymbol> {
     public static final JSONSymbol enumSymbol = JSONSymbol.toSymbol("\"" + AbstractConstants.enumConstant + "\"");
     public static final JSONSymbol trueSymbol = JSONSymbol.toSymbol("true");
     public static final JSONSymbol falseSymbol = JSONSymbol.toSymbol("false");
+    public static final Alphabet<JSONSymbol> primitiveValuesAlphabet;
+
+    static {
+        // @formatter:off
+        final List<JSONSymbol> primitiveValuesSymbols = List.of(
+            JSONSymbol.nullSymbol,
+            JSONSymbol.integerSymbol,
+            JSONSymbol.numberSymbol,
+            JSONSymbol.stringSymbol,
+            JSONSymbol.enumSymbol,
+            JSONSymbol.trueSymbol,
+            JSONSymbol.falseSymbol
+        );
+        // @formatter:on
+        primitiveValuesAlphabet = Alphabets.fromList(primitiveValuesSymbols);
+    }
 
     private final String actualSymbols;
 
@@ -57,7 +76,7 @@ public class JSONSymbol extends AbstractSymbol<JSONSymbol> {
         if (!(obj instanceof JSONSymbol)) {
             return false;
         }
-        JSONSymbol o = (JSONSymbol)obj;
+        JSONSymbol o = (JSONSymbol) obj;
         return Objects.equals(actualSymbols, o.actualSymbols);
     }
 
