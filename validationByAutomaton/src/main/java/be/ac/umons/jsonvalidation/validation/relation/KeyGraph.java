@@ -100,7 +100,6 @@ public class KeyGraph<L> {
 
     private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> reachabilityRelation) {
         final Set<L> binLocations = reachabilityRelation.identifyBinLocations(automaton);
-        System.out.println(binLocations);
 
         final ReachabilityRelation<L> valueReachabilityRelation = ReachabilityRelation.computeValueReachabilityRelation(automaton, reachabilityRelation, false);
 
@@ -221,7 +220,14 @@ public class KeyGraph<L> {
 
         InWitnessRelation<L> witnessToAndFromStartCycle = witnessRelation.getInRelation(cycle.get(0).getStartLocation(), cycle.get(0).getTargetLocation());
 
+        System.out.println("Witness initial to accepting " + witnessRelation.getInRelation(automaton.getInitialLocation(), automaton.getInitialLocation()));
+
         final WordBuilder<JSONSymbol> cycleWord = pathToWord(cycle, reachabilityRelation);
+        System.out.println("Cycle starts at " + cycle.get(0));
+        System.out.println("Witness " + witnessToAndFromStartCycle.getWitnessToStart());
+        System.out.println("Cycle word " + cycleWord);
+        System.out.println("Cycle ends at " + cycle.get(0));
+        System.out.println("Witness " + witnessToAndFromStartCycle.getWitnessFromTarget());
         final WordBuilder<JSONSymbol> wordBuilder = new WordBuilder<>();
         wordBuilder.append(witnessToAndFromStartCycle.getWitnessToStart());
         wordBuilder.append(cycleWord);

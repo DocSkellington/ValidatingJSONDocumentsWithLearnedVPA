@@ -168,8 +168,7 @@ public class TestReachabilityRelation {
         final JSONSymbol o1Sym = JSONSymbol.toSymbol("o1");
         final JSONSymbol o2Sym = JSONSymbol.toSymbol("o2");
 
-        System.out.println(reachabilityRelation);
-        System.out.println(reachabilityRelation.getWitness(automaton.getLocation(0), automaton.getLocation(11)));
+        Assert.assertEquals(reachabilityRelation.size(), 64);
 
         for (InRelation<Location> inRelation : reachabilityRelation) {
             Location start = inRelation.getStart();
