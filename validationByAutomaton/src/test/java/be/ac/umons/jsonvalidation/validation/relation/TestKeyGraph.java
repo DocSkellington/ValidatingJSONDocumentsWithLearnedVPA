@@ -1,5 +1,6 @@
 package be.ac.umons.jsonvalidation.validation.relation;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,9 +14,10 @@ import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.Automata;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
-import net.automatalib.words.Word;
+import net.automatalib.serialization.InputModelDeserializer;
+import net.automatalib.serialization.dot.DOTParsers;
 
-public class TestReachabilityGraph {
+public class TestKeyGraph {
     @Test
     public void testStraightforwardAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
@@ -187,8 +189,17 @@ public class TestReachabilityGraph {
     @Test
     public void testAutomatonWithCycle() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithCycleReadingAKey();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
         Assert.assertFalse(graph.isValid());
         Assert.assertNotNull(graph.getWitnessCycle());
+    }
+
+    @Test
+    public void testWitnessCycleInGraph() throws IOException {
+        final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers.oneSEVPA(JSONSymbol::toSymbol);
+        final DefaultOneSEVPA<JSONSymbol> vpa = parser.readModel(getClass().getResource("/automaton.dot")).model;
+        KeyGraph<Location> graph = KeyGraph.graphFor(vpa, true);
+        Assert.assertNotNull(graph.getWitnessCycle());
+        Assert.assertTrue(vpa.accepts(graph.getWitnessCycle()));
     }
 }
