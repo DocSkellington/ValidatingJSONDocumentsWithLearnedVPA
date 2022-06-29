@@ -47,11 +47,10 @@ public class Benchmarks {
         final int nTests = Integer.valueOf(args[4]);
         final boolean canGenerateInvalid = Boolean.valueOf(args[5]);
         final int maxDocumentDepth = Integer.valueOf(args[6]);
-        final int nRepetitions = Integer.valueOf(args[7]);
-        final boolean shuffleKeys = Boolean.valueOf(args[8]);
-        final int maxProperties = Integer.valueOf(args[9]);
-        final int maxItems = Integer.valueOf(args[10]);
-        final boolean ignoreAdditionalProperties = Boolean.valueOf(args[11]);
+        final int maxProperties = Integer.valueOf(args[7]);
+        final int maxItems = Integer.valueOf(args[8]);
+        final boolean ignoreAdditionalProperties = Boolean.valueOf(args[9]);
+        final int nRepetitions = Integer.valueOf(args[10]);
 
         final JSONSchemaStore schemaStore = new JSONSchemaStore(ignoreAdditionalProperties);
         final JSONSchema schema;
@@ -73,31 +72,46 @@ public class Benchmarks {
         LOGGER.info("Are true additional properties ignored: " + ignoreAdditionalProperties);
         LOGGER.info("Number of repetitions: " + nRepetitions);
 
-        Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON");
+        Path pathToDotFiles = Paths.get(System.getProperty("user.dir"), "Results", "Learning", equivalenceType.toString(), "DOT", automatonType.toString());
+        pathToDotFiles.toFile().mkdirs();
+
+        Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "Learning", equivalenceType.toString());
         pathToCSVFolder.toFile().mkdirs();
-        Path pathToCSVFile = pathToCSVFolder.resolve("" + timeLimit + "s-" + schemaName + "-" + automatonType + "-"
-                + nTests + "-" + nRepetitions + "-" + shuffleKeys + "-" + dtf.format(now) + ".csv");
+        // @formatter:off
+        Path pathToCSVFile = pathToCSVFolder.resolve("" + timeLimit + "s-"
+            + schemaName + "-"
+            + automatonType + "-"
+            + nTests + "-"
+            + canGenerateInvalid + "-"
+            + maxDocumentDepth + "-"
+            + maxProperties + "-"
+            + maxItems + "-"
+            + ignoreAdditionalProperties + "-"
+            + nRepetitions + "-"
+            + dtf.format(now) + ".csv"
+        );
+        // @formatter:on
         ABenchmarks benchmarks;
         if (automatonType == AutomatonType.VPA) {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomVPDABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
+                benchmarks = new RandomVPDABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
             } else {
-                benchmarks = new ExplorationVPDABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
+                benchmarks = new ExplorationVPDABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
             }
         } else if (automatonType == AutomatonType.VCA) {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomVCABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
+                benchmarks = new RandomVCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
             } else {
-                benchmarks = new ExplorationVCABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
+                benchmarks = new ExplorationVCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
             }
         } else {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomROCABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
+                benchmarks = new RandomROCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
             } else {
-                benchmarks = new ExplorationROCABenchmarks(pathToCSVFile, timeout, maxProperties, maxItems);
+                benchmarks = new ExplorationROCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
             }
         }
         benchmarks.runBenchmarks(schema, schemaName, nTests, canGenerateInvalid, maxDocumentDepth, nRepetitions,
-                shuffleKeys);
+                false);
     }
 }

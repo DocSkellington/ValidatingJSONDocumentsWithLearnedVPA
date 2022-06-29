@@ -27,8 +27,8 @@ import net.automatalib.words.Alphabet;
 
 public abstract class ROCABenchmarks extends ABenchmarks {
 
-    public ROCABenchmarks(Path pathToCSVFile, Duration timeout, int maxProperties, int maxItems) throws IOException {
-        super(pathToCSVFile, timeout, maxProperties, maxItems);
+    public ROCABenchmarks(Path pathToCSVFile, Path pathToDotFiles, Duration timeout, int maxProperties, int maxItems) throws IOException {
+        super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
     }
 
     @Override
@@ -110,7 +110,7 @@ public abstract class ROCABenchmarks extends ABenchmarks {
             statistics.add(alphabet.size());
             statistics.add(learntROCA.size());
 
-            writeModelToDot(learntROCA, schemaName, currentId, "ROCA");
+            writeModelToDot(learntROCA, schemaName, currentId);
         } else if (results.error) {
             for (int i = statistics.size(); i < nColumns; i++) {
                 statistics.add("Error");

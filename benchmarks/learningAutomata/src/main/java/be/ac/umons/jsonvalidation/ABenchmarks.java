@@ -3,7 +3,6 @@ package be.ac.umons.jsonvalidation;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,9 +42,11 @@ public abstract class ABenchmarks {
     protected final Duration timeout;
     private final int maxProperties;
     private final int maxItems;
+    private final Path pathToDotFiles;
 
-    public ABenchmarks(final Path pathToCSVFile, final Duration timeout, int maxProperties, int maxItems)
+    public ABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout, int maxProperties, int maxItems)
             throws IOException {
+        this.pathToDotFiles = pathToDotFiles;
         this.maxProperties = maxProperties;
         this.maxItems = maxItems;
         csvPrinter = new CSVPrinter(new FileWriter(pathToCSVFile.toFile()), CSVFormat.DEFAULT);
@@ -89,7 +90,7 @@ public abstract class ABenchmarks {
         }
     }
 
-    protected static VPDAlphabet<JSONSymbol> extractSymbolsFromSchema(final JSONSchema schema)
+    protected VPDAlphabet<JSONSymbol> extractSymbolsFromSchema(final JSONSchema schema)
             throws JSONSchemaException {
         final Set<JSONSymbol> internalSymbols = new LinkedHashSet<>();
         final Set<JSONSymbol> callSymbols = new LinkedHashSet<>();
@@ -111,26 +112,26 @@ public abstract class ABenchmarks {
         internalSymbols.add(JSONSymbol.enumSymbol);
 
         internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\":"));
-        schema.getAllKeysDefinedInSchema().stream().map(k -> "\"" + k + "\":").map(k -> JSONSymbol.toSymbol(k))
-                .forEach(k -> internalSymbols.add(k));
+        // @formatter:off
+        schema.getAllKeysDefinedInSchema().stream()
+            .map(k -> "\"" + k + "\":")
+            .map(k -> JSONSymbol.toSymbol(k))
+            .forEach(k -> internalSymbols.add(k));
+        // @formatter:on
 
         return new DefaultVPDAlphabet<>(internalSymbols, callSymbols, returnSymbols);
     }
 
-    protected void writeModelToDot(Graph<?, ?> automaton, String schemaName, int currentId, String modelType)
+    protected void writeModelToDot(Graph<?, ?> automaton, String schemaName, int currentId)
             throws IOException {
-        Path pathToDOTFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON", "Dot", modelType);
-        pathToDOTFolder.toFile().mkdirs();
-        Path pathToDotFile = pathToDOTFolder.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
+        Path pathToDotFile = pathToDotFiles.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
         FileWriter writer = new FileWriter(pathToDotFile.toFile());
         GraphDOT.write(automaton, writer);
     }
 
-    protected void writeModelToDot(GraphViewable automaton, String schemaName, int currentId, String modelType)
+    protected void writeModelToDot(GraphViewable automaton, String schemaName, int currentId)
             throws IOException {
-        Path pathToDOTFolder = Paths.get(System.getProperty("user.dir"), "Results", "JSON", "Dot", modelType);
-        pathToDOTFolder.toFile().mkdirs();
-        Path pathToDotFile = pathToDOTFolder.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
+        Path pathToDotFile = pathToDotFiles.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
         FileWriter writer = new FileWriter(pathToDotFile.toFile());
         GraphDOT.write(automaton, writer);
     }

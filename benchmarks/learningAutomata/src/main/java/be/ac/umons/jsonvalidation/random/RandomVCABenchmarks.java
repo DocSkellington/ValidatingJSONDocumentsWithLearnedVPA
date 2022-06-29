@@ -16,9 +16,9 @@ import net.automatalib.words.VPDAlphabet;
 
 public class RandomVCABenchmarks extends VCABenchmarks {
 
-    public RandomVCABenchmarks(final Path pathToCSVFile, final Duration timeout, int maxProperties, int maxItems)
+    public RandomVCABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout, int maxProperties, int maxItems)
             throws IOException {
-        super(pathToCSVFile, timeout, maxProperties, maxItems);
+        super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
     }
 
     @Override

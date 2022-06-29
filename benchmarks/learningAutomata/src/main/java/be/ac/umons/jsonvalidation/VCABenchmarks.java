@@ -24,8 +24,8 @@ import net.automatalib.words.VPDAlphabet;
 
 public abstract class VCABenchmarks extends ABenchmarks {
 
-    public VCABenchmarks(Path pathToCSVFile, Duration timeout, int maxProperties, int maxItems) throws IOException {
-        super(pathToCSVFile, timeout, maxProperties, maxItems);
+    public VCABenchmarks(Path pathToCSVFile, Path pathToDotFiles, Duration timeout, int maxProperties, int maxItems) throws IOException {
+        super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
     }
 
     @Override
@@ -88,7 +88,7 @@ public abstract class VCABenchmarks extends ABenchmarks {
             statistics.add(alphabet.size());
             statistics.add(learntVCA.size());
 
-            writeModelToDot(learntVCA, schemaName, currentId, "VCA");
+            writeModelToDot(learntVCA, schemaName, currentId);
         } else if (results.error) {
             for (int i = statistics.size(); i < nColumns; i++) {
                 statistics.add("Error");

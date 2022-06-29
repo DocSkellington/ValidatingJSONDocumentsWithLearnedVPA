@@ -36,8 +36,8 @@ import net.automatalib.words.VPDAlphabet;
 public abstract class VPDABenchmarks extends ABenchmarks {
     private static final LearnLogger LOGGER = LearnLogger.getLogger(VPDABenchmarks.class);
 
-    public VPDABenchmarks(Path pathToCSVFile, Duration timeout, int maxProperties, int maxItems) throws IOException {
-        super(pathToCSVFile, timeout, maxProperties, maxItems);
+    public VPDABenchmarks(Path pathToCSVFile, Path pathToDotFiles, Duration timeout, int maxProperties, int maxItems) throws IOException {
+        super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
     }
 
     @Override
@@ -103,7 +103,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
             statistics.add(numberOfCallTransitions(vpda));
             statistics.add(computeDiameter(vpda));
 
-            writeModelToDot(learnedVPDA, schemaName, currentId, "VPDA");
+            writeModelToDot(learnedVPDA, schemaName, currentId);
         } else if (results.error) {
             for (int i = statistics.size(); i < nColumns; i++) {
                 statistics.add("Error");
