@@ -207,12 +207,11 @@ public class KeyGraph<L> {
 
         final L start = path.get(0).getStartLocation();
         final L target = path.get(path.size() - 1).getTargetLocation();
-        assert witnessRelation.areInRelation(start, target);
-
-        final InWitnessRelation<L> witness = witnessRelation.getInRelation(start, target);
+        assert witnessRelation.getWitnessToStart(start, target) != null;
+        assert witnessRelation.getWitnessFromTarget(start, target) != null;
 
         final WordBuilder<JSONSymbol> builder = new WordBuilder<>();
-        builder.append(witness.getWitnessToStart());
+        builder.append(witnessRelation.getWitnessToStart(start, target));
         int i = 0;
         for (final NodeInGraph<L> node : path) {
             builder.append(node.getSymbol());
@@ -222,7 +221,7 @@ public class KeyGraph<L> {
                 builder.append(JSONSymbol.commaSymbol);
             }
         }
-        builder.append(witness.getWitnessFromTarget());
+        builder.append(witnessRelation.getWitnessFromTarget(start, target));
 
         return builder.toWord();
     }

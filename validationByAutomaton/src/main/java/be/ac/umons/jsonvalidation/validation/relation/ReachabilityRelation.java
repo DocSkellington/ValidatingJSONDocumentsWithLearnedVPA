@@ -22,7 +22,7 @@ import net.automatalib.words.WordBuilder;
  * @author Gaëtan Staquet
  */
 public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
-    private final Map<InRelation<L>, InRelation<L>> relation = new LinkedHashMap<>();
+    private final Map<InRelation<L>, Word<JSONSymbol>> relation = new LinkedHashMap<>();
 
     /**
      * Tests whether there is a couple in the relation equals to
@@ -33,23 +33,19 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
      * @return True iff there is such a triplet
      */
     public boolean areInRelation(final L start, final L target) {
-        return areInRelation(InRelation.of(start, target, Word.epsilon()));
+        return areInRelation(InRelation.of(start, target));
     }
 
     private boolean areInRelation(final InRelation<L> inRelation) {
         return relation.containsKey(inRelation);
     }
 
-    private InRelation<L> getInRelation(final InRelation<L> inRelation) {
-        return relation.get(inRelation);
-    }
-
     public Word<JSONSymbol> getWitness(final L start, final L target) {
-        return getWitness(InRelation.of(start, target, Word.epsilon()));
+        return getWitness(InRelation.of(start, target));
     }
 
-    private Word<JSONSymbol> getWitness(final InRelation<L> inRelation) {
-        return getInRelation(inRelation).getWitness();
+    Word<JSONSymbol> getWitness(final InRelation<L> inRelation) {
+        return relation.get(inRelation);
     }
     
     @Override
@@ -64,7 +60,11 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
 
     @Override
     public Iterator<InRelation<L>> iterator() {
-        return this.relation.values().iterator();
+        return this.relation.keySet().iterator();
+    }
+
+    private Set<Map.Entry<InRelation<L>, Word<JSONSymbol>>> entrySet() {
+        return this.relation.entrySet();
     }
 
     @Override
@@ -84,16 +84,17 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
         return this.relation.size();
     }
 
-    private boolean add(final InRelation<L> inRel) {
-        if (relation.containsKey(inRel)) {
-            return getInRelation(inRel).addSeenLocations(inRel);
-        } else {
-            return relation.put(inRel, inRel) == null;
+    private boolean add(final InRelation<L> inRel, final Word<JSONSymbol> witness) {
+        for (final InRelation<L> alreadyInRelation : this) {
+            if (Objects.equals(alreadyInRelation, inRel)) {
+                return alreadyInRelation.addSeenLocations(inRel);
+            }
         }
+        return relation.put(inRel, witness) == null;
     }
 
-    boolean add(final L startLocation, final L targetLocation, final Word<JSONSymbol> witness) {
-        return add(InRelation.of(startLocation, targetLocation, witness));
+    private boolean add(final L startLocation, final L targetLocation, final Word<JSONSymbol> witness) {
+        return add(InRelation.of(startLocation, targetLocation), witness);
     }
 
     /**
@@ -103,8 +104,8 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
      */
     private boolean addAll(final ReachabilityRelation<L> rel) {
         boolean change = false;
-        for (InRelation<L> inRel : rel) {
-            change = this.add(inRel) || change;
+        for (Map.Entry<InRelation<L>, Word<JSONSymbol>> inRel : rel.entrySet()) {
+            change = this.add(inRel.getKey(), inRel.getValue()) || change;
         }
         return change;
     }
@@ -152,19 +153,19 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
         }
     }
 
-    private static <L> Word<JSONSymbol> constructWitness(InRelation<L> left, InRelation<L> right, boolean computeWitnesses) {
+    private Word<JSONSymbol> constructWitness(InRelation<L> left, InRelation<L> right, boolean computeWitnesses) {
         if (computeWitnesses) {
-            return left.getWitness().concat(right.getWitness());
+            return getWitness(left).concat(getWitness(right));
         } else {
             return null;
         }
     }
 
-    private static <L> Word<JSONSymbol> constructWitness(JSONSymbol callSymbol, InRelation<L> inRelation, JSONSymbol returnSymbol, boolean computeWitnesses) {
+    private Word<JSONSymbol> constructWitness(JSONSymbol callSymbol, InRelation<L> inRelation, JSONSymbol returnSymbol, boolean computeWitnesses) {
         if (computeWitnesses) {
             final WordBuilder<JSONSymbol> builder = new WordBuilder<>();
             builder.add(callSymbol);
-            builder.append(inRelation.getWitness());
+            builder.append(getWitness(inRelation));
             builder.add(returnSymbol);
             return builder.toWord();
         }
@@ -175,12 +176,11 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
 
     public Iterable<InRelation<L>> getPairsWithStartLocation(final L start) {
         return new Iterable<InRelation<L>>() {
-
             @Override
             public Iterator<InRelation<L>> iterator() {
                 return new Iterator<InRelation<L>>() {
 
-                    final Iterator<InRelation<L>> inRelation = relation.values().iterator();
+                    final Iterator<InRelation<L>> inRelation = relation.keySet().iterator();
                     InRelation<L> next = findNext();
 
                     private InRelation<L> findNext() {
@@ -243,12 +243,12 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
                     if (intermediateLocation == right.getStart()) {
                         final L targetLocation = right.getTarget();
 
-                        final Word<JSONSymbol> witness = constructWitness(left, right, computeWitnesses);
-                        final InRelation<L> startToTarget = InRelation.of(startLocation, targetLocation, witness);
+                        final Word<JSONSymbol> witness = reachabilityRelation.constructWitness(left, right, computeWitnesses);
+                        final InRelation<L> startToTarget = InRelation.of(startLocation, targetLocation);
                         startToTarget.addSeenLocations(left);
                         startToTarget.addSeenLocations(right);
 
-                        newLocationsInRelation.add(startToTarget);
+                        newLocationsInRelation.add(startToTarget, witness);
                     }
                 }
             }
@@ -264,11 +264,11 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
                             for (final JSONSymbol returnSymbol : returnAlphabet) {
                                 final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSymbol, stackSym);
                                 if (locationAfterReturn != null) {
-                                    final Word<JSONSymbol> witness = constructWitness(callSymbol, inRelation, returnSymbol, computeWitnesses);
-                                    final InRelation<L> callReturn = InRelation.of(locationBeforeCall, locationAfterReturn, witness);
+                                    final Word<JSONSymbol> witness = reachabilityRelation.constructWitness(callSymbol, inRelation, returnSymbol, computeWitnesses);
+                                    final InRelation<L> callReturn = InRelation.of(locationBeforeCall, locationAfterReturn);
                                     callReturn.addSeenLocations(inRelation);
 
-                                    newLocationsInRelation.add(callReturn);
+                                    newLocationsInRelation.add(callReturn, witness);
                                 }
                             }
                         }
@@ -307,7 +307,7 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
                     for (final JSONSymbol returnSymbol : returnAlphabet) {
                         final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSymbol, stackSymbol);
                         if (locationAfterReturn != null) {
-                            final Word<JSONSymbol> witness = constructWitness(callSymbol, inRelation, returnSymbol, computeWitnesses);
+                            final Word<JSONSymbol> witness = reachabilityRelation.constructWitness(callSymbol, inRelation, returnSymbol, computeWitnesses);
                             valueReachabilityRelation.add(startLocation, locationAfterReturn, witness);
                         }
                     }

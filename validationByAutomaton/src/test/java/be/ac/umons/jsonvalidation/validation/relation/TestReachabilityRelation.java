@@ -23,7 +23,7 @@ public class TestReachabilityRelation {
         for (InRelation<Location> inRelation : reachabilityRelation) {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
-            Word<JSONSymbol> witness = inRelation.getWitness();
+            Word<JSONSymbol> witness = reachabilityRelation.getWitness(inRelation);
 
             if (start == automaton.getLocation(0)) {
                 if (target == automaton.getLocation(0)) {
@@ -173,7 +173,7 @@ public class TestReachabilityRelation {
         for (InRelation<Location> inRelation : reachabilityRelation) {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
-            Word<JSONSymbol> witness = inRelation.getWitness();
+            Word<JSONSymbol> witness = reachabilityRelation.getWitness(inRelation);
 
             if (start == automaton.getLocation(0)) {
                 if (target == automaton.getLocation(0)) {

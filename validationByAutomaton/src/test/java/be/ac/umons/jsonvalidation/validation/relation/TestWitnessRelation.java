@@ -23,15 +23,14 @@ public class TestWitnessRelation {
 
         Assert.assertEquals(witnessRelation.size(), vpa.size() * vpa.size());
 
-        for (InWitnessRelation<Location> inRelation : witnessRelation) {
+        for (InRelation<Location> inRelation : witnessRelation) {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
-            Word<JSONSymbol> witnessToStart = inRelation.getWitnessToStart();
-            Word<JSONSymbol> witnessFromTarget = inRelation.getWitnessFromTarget();
+            Word<JSONSymbol> witnessToStart = witnessRelation.getWitnessToStart(inRelation.getStart(), inRelation.getTarget());
+            Word<JSONSymbol> witnessFromTarget = witnessRelation.getWitnessFromTarget(inRelation.getStart(), inRelation.getTarget());
 
             if (start.equals(vpa.getLocation(0))) {
                 if (target.equals(vpa.getLocation(0)) || target.equals(vpa.getLocation(6))) {
-                    System.out.println(inRelation);
                     Assert.assertEquals(witnessToStart, Word.epsilon());
                 }
                 else {
