@@ -15,7 +15,6 @@ import com.google.common.base.Objects;
 import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
-import com.google.common.graph.Graphs;
 import com.google.common.graph.ImmutableGraph;
 import com.google.common.graph.Traverser;
 
@@ -57,8 +56,7 @@ public class KeyGraph<L> {
     private final Map<JSONSymbol, List<NodeInGraph<L>>> keyToNodes = new HashMap<>();
     private final Map<JSONSymbol, Set<L>> keyToLocations = new HashMap<>();
     private final List<NodeInGraph<L>> startingNodes = new LinkedList<>();
-    private final boolean cyclic;
-    private final boolean duplicateKeys;
+    private final boolean hasPathWithDuplicateKeys;
     private final Word<JSONSymbol> witnessInvalid;
 
     public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
@@ -74,22 +72,11 @@ public class KeyGraph<L> {
         this.automaton = automaton;
 
         this.graph = constructGraph(reachabilityRelation);
-
-        this.cyclic = Graphs.hasCycle(graph);
-        final List<NodeInGraph<L>> nodesOnPathWithDuplicateKeys = hasDuplicateKeys();
-        this.duplicateKeys = !nodesOnPathWithDuplicateKeys.isEmpty();
-
-        if (cyclic) {
-            witnessInvalid = constructWitnessCycle(reachabilityRelation);
-        }
-        else if (duplicateKeys) {
-            witnessInvalid = constructWitnessDuplicate(nodesOnPathWithDuplicateKeys, reachabilityRelation);
-        }
-        else {
-            witnessInvalid = null;
-        }
-
         propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
+
+        final List<NodeInGraph<L>> pathWithDuplicateKeys = hasPathWithDuplicateKeys();
+        this.hasPathWithDuplicateKeys = !pathWithDuplicateKeys.isEmpty();
+        witnessInvalid = constructWitnessDuplicate(pathWithDuplicateKeys, reachabilityRelation);
     }
 
     private Alphabet<JSONSymbol> getKeyAlphabet() {
@@ -178,31 +165,36 @@ public class KeyGraph<L> {
         return builder.build();
     }
 
-    private List<NodeInGraph<L>> hasDuplicateKeys() {
+    private List<NodeInGraph<L>> hasPathWithDuplicateKeys() {
         for (NodeInGraph<L> start : startingNodes) {
             List<NodeInGraph<L>> seenNodes = new LinkedList<>();
-            if (hasDuplicateKeys(start, seenNodes, new LinkedHashSet<>())) {
+            if (hasPathWithDuplicateKeys(start, seenNodes, new LinkedHashSet<>())) {
                 return seenNodes;
             }
         }
         return Collections.emptyList();
     }
 
-    private boolean hasDuplicateKeys(NodeInGraph<L> currentNode, List<NodeInGraph<L>> seenNodes, Set<JSONSymbol> keys) {
+    private boolean hasPathWithDuplicateKeys(NodeInGraph<L> currentNode, List<NodeInGraph<L>> seenNodes, Set<JSONSymbol> keys) {
+        // We have a loop
+        if (seenNodes.contains(currentNode)) {
+            seenNodes.add(currentNode);
+            return true;
+        }
+
         seenNodes.add(currentNode);
+        // We have a duplicate key
         if (!keys.add(currentNode.getSymbol())) {
             return true;
         }
 
         for (NodeInGraph<L> successor : graph.successors(currentNode)) {
-            if (!seenNodes.contains(successor)) {
-                if (hasDuplicateKeys(successor, seenNodes, keys)) {
-                    return true;
-                }
+            if (hasPathWithDuplicateKeys(successor, seenNodes, keys)) {
+                return true;
             }
         }
         keys.remove(currentNode.getSymbol());
-        seenNodes.remove(currentNode);
+        seenNodes.remove(seenNodes.size() - 1);
         return false;
     }
 
@@ -235,80 +227,8 @@ public class KeyGraph<L> {
         return builder.toWord();
     }
 
-    private Word<JSONSymbol> constructWitnessCycle(final ReachabilityRelation<L> reachabilityRelation) {
-        if (isValid()) {
-            return null;
-        }
-
-        final List<NodeInGraph<L>> cycle = new LinkedList<>();
-        for (final NodeInGraph<L> starting : startingNodes) {
-            identifyOneCycle(starting, new LinkedHashSet<>(), new LinkedHashSet<>(), cycle);
-            if (!cycle.isEmpty()) {
-                break;
-            }
-        }
-
-        assert !cycle.isEmpty();
-        assert cycle.get(0) == cycle.get(cycle.size() - 1);
-
-        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, reachabilityRelation);
-        InWitnessRelation<L> witnessToAndFromStartCycle = witnessRelation.getInRelation(cycle.get(0).getStartLocation(), cycle.get(0).getTargetLocation());
-
-        final WordBuilder<JSONSymbol> cycleWord = pathToWord(cycle, reachabilityRelation);
-        final WordBuilder<JSONSymbol> wordBuilder = new WordBuilder<>();
-        wordBuilder.append(witnessToAndFromStartCycle.getWitnessToStart());
-        wordBuilder.append(cycleWord);
-        wordBuilder.append(witnessToAndFromStartCycle.getWitnessFromTarget());
-
-        return wordBuilder.toWord();
-    }
-
-    private WordBuilder<JSONSymbol> pathToWord(List<NodeInGraph<L>> path, ReachabilityRelation<L> reachabilityRelation) {
-        final WordBuilder<JSONSymbol> wordBuilder = new WordBuilder<>();
-
-        int i = 0;
-        for (final NodeInGraph<L> currentNode : path) {
-            L currentLocation = currentNode.getStartLocation();
-
-            wordBuilder.add(currentNode.getSymbol());
-            currentLocation = automaton.getInternalSuccessor(currentLocation, currentNode.getSymbol());
-            wordBuilder.append(reachabilityRelation.getWitness(currentLocation, currentNode.getTargetLocation()));
-
-            if (++i < path.size()) {
-                wordBuilder.add(JSONSymbol.commaSymbol);
-            }
-        }
-
-        return wordBuilder;
-    }
-
-    private boolean identifyOneCycle(NodeInGraph<L> currentNode, Set<NodeInGraph<L>> frontier, Set<NodeInGraph<L>> explored, List<NodeInGraph<L>> path) {
-        frontier.add(currentNode);
-        for (final NodeInGraph<L> successor : graph.successors(currentNode)) {
-            if (frontier.contains(successor)) {
-                path.add(currentNode);
-                path.add(successor);
-                int indexOfFirst = path.indexOf(successor);
-                while (indexOfFirst-- > 0) {
-                    path.remove(0);
-                }
-                return true;
-            }
-
-            path.add(currentNode);
-            if (identifyOneCycle(successor, frontier, explored, path)) {
-                return true;
-            }
-            path.remove(path.size() - 1);
-        }
-        frontier.remove(currentNode);
-        explored.add(currentNode);
-
-        return false;
-    }
-
     public boolean isValid() {
-        return !cyclic && !duplicateKeys;
+        return !hasPathWithDuplicateKeys;
     }
 
     public Word<JSONSymbol> getWitnessCycle() {

@@ -184,6 +184,7 @@ public class TestKeyGraph {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithDuplicateKeys();
         KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
         Assert.assertFalse(graph.isValid());
+        Assert.assertNotNull(graph.getWitnessCycle());
     }
 
     @Test
