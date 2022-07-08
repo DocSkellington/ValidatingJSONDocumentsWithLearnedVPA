@@ -53,6 +53,7 @@ public interface IVPDAJSONEquivalenceOracle extends EquivalenceOracle<OneSEVPA<?
         if (keyGraph == null || keyGraph.isValid()) {
             return null;
         }
+        assert keyGraph.getWitnessCycle() != null;
         assert hypo.accepts(keyGraph.getWitnessCycle());
         return new DefaultQuery<>(keyGraph.getWitnessCycle(), false);
     }

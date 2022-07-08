@@ -36,6 +36,10 @@ class WitnessRelation<L> implements Iterable<InWitnessRelation<L>> {
         return relation.get(InWitnessRelation.of(start, target, null, null));
     }
 
+    public boolean areInRelation(L start, L target) {
+        return relation.containsKey(InWitnessRelation.of(start, target, null, null));
+    }
+
     private boolean add(L start, L target, Word<JSONSymbol> witnessToStart, Word<JSONSymbol> witnessFromTarget) {
         return add(InWitnessRelation.of(start, target, witnessToStart, witnessFromTarget));
     }

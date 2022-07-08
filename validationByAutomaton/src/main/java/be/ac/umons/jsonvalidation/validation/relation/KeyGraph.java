@@ -59,7 +59,7 @@ public class KeyGraph<L> {
     private final List<NodeInGraph<L>> startingNodes = new LinkedList<>();
     private final boolean cyclic;
     private final boolean duplicateKeys;
-    private final Word<JSONSymbol> witnessCycle;
+    private final Word<JSONSymbol> witnessInvalid;
 
     public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
         final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, computeWitnesses);
@@ -76,13 +76,17 @@ public class KeyGraph<L> {
         this.graph = constructGraph(reachabilityRelation);
 
         this.cyclic = Graphs.hasCycle(graph);
-        this.duplicateKeys = hasDuplicateKeys();
+        final List<NodeInGraph<L>> nodesOnPathWithDuplicateKeys = hasDuplicateKeys();
+        this.duplicateKeys = !nodesOnPathWithDuplicateKeys.isEmpty();
 
         if (cyclic) {
-            witnessCycle = constructWitnessCycle(reachabilityRelation);
+            witnessInvalid = constructWitnessCycle(reachabilityRelation);
+        }
+        else if (duplicateKeys) {
+            witnessInvalid = constructWitnessDuplicate(nodesOnPathWithDuplicateKeys, reachabilityRelation);
         }
         else {
-            witnessCycle = null;
+            witnessInvalid = null;
         }
 
         propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
@@ -174,16 +178,17 @@ public class KeyGraph<L> {
         return builder.build();
     }
 
-    private boolean hasDuplicateKeys() {
+    private List<NodeInGraph<L>> hasDuplicateKeys() {
         for (NodeInGraph<L> start : startingNodes) {
-            if (hasDuplicateKeys(start, new LinkedHashSet<>(), new LinkedHashSet<>())) {
-                return true;
+            List<NodeInGraph<L>> seenNodes = new LinkedList<>();
+            if (hasDuplicateKeys(start, seenNodes, new LinkedHashSet<>())) {
+                return seenNodes;
             }
         }
-        return false;
+        return Collections.emptyList();
     }
 
-    private boolean hasDuplicateKeys(NodeInGraph<L> currentNode, Set<NodeInGraph<L>> seenNodes, Set<JSONSymbol> keys) {
+    private boolean hasDuplicateKeys(NodeInGraph<L> currentNode, List<NodeInGraph<L>> seenNodes, Set<JSONSymbol> keys) {
         seenNodes.add(currentNode);
         if (!keys.add(currentNode.getSymbol())) {
             return true;
@@ -197,15 +202,43 @@ public class KeyGraph<L> {
             }
         }
         keys.remove(currentNode.getSymbol());
+        seenNodes.remove(currentNode);
         return false;
+    }
+
+    private Word<JSONSymbol> constructWitnessDuplicate(final List<NodeInGraph<L>> path, final ReachabilityRelation<L> reachabilityRelation) {
+        if (isValid()) {
+            return null;
+        }
+
+        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, reachabilityRelation);
+
+        final L start = path.get(0).getStartLocation();
+        final L target = path.get(path.size() - 1).getTargetLocation();
+        assert witnessRelation.areInRelation(start, target);
+
+        final InWitnessRelation<L> witness = witnessRelation.getInRelation(start, target);
+
+        final WordBuilder<JSONSymbol> builder = new WordBuilder<>();
+        builder.append(witness.getWitnessToStart());
+        int i = 0;
+        for (final NodeInGraph<L> node : path) {
+            builder.append(node.getSymbol());
+            final L intermediate = automaton.getInternalSuccessor(node.getStartLocation(), node.getSymbol());
+            builder.append(reachabilityRelation.getWitness(intermediate, node.getTargetLocation()));
+            if (++i < path.size()) {
+                builder.append(JSONSymbol.commaSymbol);
+            }
+        }
+        builder.append(witness.getWitnessFromTarget());
+
+        return builder.toWord();
     }
 
     private Word<JSONSymbol> constructWitnessCycle(final ReachabilityRelation<L> reachabilityRelation) {
         if (isValid()) {
             return null;
         }
-        
-        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, reachabilityRelation);
 
         final List<NodeInGraph<L>> cycle = new LinkedList<>();
         for (final NodeInGraph<L> starting : startingNodes) {
@@ -218,16 +251,10 @@ public class KeyGraph<L> {
         assert !cycle.isEmpty();
         assert cycle.get(0) == cycle.get(cycle.size() - 1);
 
+        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, reachabilityRelation);
         InWitnessRelation<L> witnessToAndFromStartCycle = witnessRelation.getInRelation(cycle.get(0).getStartLocation(), cycle.get(0).getTargetLocation());
 
-        System.out.println("Witness initial to accepting " + witnessRelation.getInRelation(automaton.getInitialLocation(), automaton.getInitialLocation()));
-
         final WordBuilder<JSONSymbol> cycleWord = pathToWord(cycle, reachabilityRelation);
-        System.out.println("Cycle starts at " + cycle.get(0));
-        System.out.println("Witness " + witnessToAndFromStartCycle.getWitnessToStart());
-        System.out.println("Cycle word " + cycleWord);
-        System.out.println("Cycle ends at " + cycle.get(0));
-        System.out.println("Witness " + witnessToAndFromStartCycle.getWitnessFromTarget());
         final WordBuilder<JSONSymbol> wordBuilder = new WordBuilder<>();
         wordBuilder.append(witnessToAndFromStartCycle.getWitnessToStart());
         wordBuilder.append(cycleWord);
@@ -285,7 +312,7 @@ public class KeyGraph<L> {
     }
 
     public Word<JSONSymbol> getWitnessCycle() {
-        return witnessCycle;
+        return witnessInvalid;
     }
 
     private void propagateIsOnPathToAcceptingForLocations(Collection<L> locations) {
