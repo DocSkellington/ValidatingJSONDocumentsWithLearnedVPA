@@ -41,16 +41,14 @@ descriptions = df_grouped[document_description].min()
 values = df_grouped.agg(numerical_agg)
 outputs = df_grouped.agg(boolean_agg)
 
-print(descriptions)
-print(values)
-print(outputs)
-
 whole_df = pandas.concat([descriptions, values, outputs], axis=1)
 
-print(whole_df)
 whole_df.sort_values(by=["Length document"], inplace=True)
 
+whole_df["Count"] = whole_df.groupby(by="Length document")["Length document"].transform("count")
+
 whole_grouped = whole_df.groupby(by="Length document").mean().reset_index()
+whole_grouped["Count"] = whole_grouped["Count"].astype(int)
 
 rename_dict = {
     "Length document": "LengthDocument",
@@ -72,8 +70,6 @@ rename_dict.update({
 })
 
 whole_grouped.rename(rename_dict, axis="columns", inplace=True)
-
-print(whole_grouped)
 
 with open("validation/" + name + ".dat", "w") as f:
     whole_grouped.to_string(f, index=False)

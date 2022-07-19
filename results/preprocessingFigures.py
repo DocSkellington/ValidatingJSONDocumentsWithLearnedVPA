@@ -14,7 +14,7 @@ filepath = sys.argv[1]
 name = sys.argv[2]
 df = pandas.read_csv(filepath)
 
-# Number of queries, sizes of sets/functions, and diameter
+# Numerical values
 columns = [
     "Relation time",
     "Relation memory",
@@ -22,9 +22,7 @@ columns = [
     "Graph memory",
     "Automaton time",
     "Automaton memory",
-    "Size comma",
-    "Size internal",
-    "Size well-matched",
+    "Size relation",
     "Size graph"
 ]
 numbers = df[columns]
