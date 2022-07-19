@@ -137,6 +137,13 @@ public abstract class ABenchmarks {
     }
 
     protected <A> ExperimentResults runExperiment(AbstractExperiment<A> experiment) throws InterruptedException {
+        if (timeout.isNegative()) { // No time limit
+            Stopwatch watch = Stopwatch.createStarted();
+            experiment.run();
+            watch.stop();
+            return new ExperimentResults(true, false, watch.elapsed().toMillis());
+        }
+
         final ExecutorService executor = Executors.newSingleThreadExecutor();
         SimpleProfiler.reset();
 
