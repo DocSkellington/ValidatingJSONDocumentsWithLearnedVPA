@@ -139,6 +139,13 @@ limitations under the License.
             <version>1.2.10</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava-testlib</artifactId>
+            <version>31.1-jre</version>
+        </dependency>
+
+
         <!-- TestNG -->
         <dependency>
             <groupId>org.testng</groupId>

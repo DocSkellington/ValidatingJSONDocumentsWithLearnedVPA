@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.testing.GcFinalization;
 
 import be.ac.umons.jsonschematools.DefaultValidator;
 import be.ac.umons.jsonschematools.JSONSchema;
@@ -118,7 +119,7 @@ public class ValidationBenchmarks {
     }
 
     private ValidationByAutomaton<Location> constructAutomaton(DefaultOneSEVPA<JSONSymbol> vpa) throws IOException {
-        System.gc();
+        GcFinalization.awaitFullGc();
         final long memoryAtStart = getMemoryUse();
         final Stopwatch watch = Stopwatch.createStarted();
 
@@ -176,14 +177,14 @@ public class ValidationBenchmarks {
         final Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random());
         assert word.length() != 0;
 
-        System.gc();
+        GcFinalization.awaitFullGc();
         final Stopwatch watch = Stopwatch.createStarted();
         final Pair<Boolean, Long> automatonResult = runValidationByAutomaton(automaton, word);
         final long automatonTime = watch.stop().elapsed().toMillis();
         final boolean automatonOutput = automatonResult.getFirst();
         final long automatonMemory = automatonResult.getSecond();
 
-        System.gc();
+        GcFinalization.awaitFullGc();
         boolean validatorOutput;
         boolean validatorError;
         watch.reset().start();
@@ -199,7 +200,7 @@ public class ValidationBenchmarks {
 
         final List<Object> statistics = new ArrayList<>(nValidationColumns);
 
-        statistics.add("valid" + documentName);
+        statistics.add(documentName);
 
         statistics.add(word.length());
         statistics.add(depthDocument(word));
@@ -209,8 +210,8 @@ public class ValidationBenchmarks {
         statistics.add(automatonOutput);
 
         if (validatorError) {
-            statistics.add("Error");
-            statistics.add("Error");
+            statistics.add(validatorTime);
+            statistics.add(validator.getMaxMemoryUsed());
             statistics.add("Error");
         }
         else {
