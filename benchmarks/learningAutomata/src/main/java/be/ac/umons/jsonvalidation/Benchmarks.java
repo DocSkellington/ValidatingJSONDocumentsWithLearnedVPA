@@ -65,6 +65,7 @@ public class Benchmarks {
         LOGGER.info("Starting JSON benchmarks with the following parameters:");
         LOGGER.info("Schema name: " + schemaName);
         LOGGER.info("Number of tests for equivalence: " + nTests);
+        LOGGER.info("Type of equivalence: " + equivalenceType);
         LOGGER.info("Can generate invalid documents: " + canGenerateInvalid);
         LOGGER.info("Max depth of generated document: " + maxDocumentDepth);
         LOGGER.info("maximum number of properties in an object: " + maxProperties);

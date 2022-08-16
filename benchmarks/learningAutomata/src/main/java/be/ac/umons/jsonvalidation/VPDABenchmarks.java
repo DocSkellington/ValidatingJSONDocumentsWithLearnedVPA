@@ -24,7 +24,6 @@ import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.oracle.MembershipOracle;
 import de.learnlib.filter.statistic.oracle.CounterEQOracle;
 import de.learnlib.filter.statistic.oracle.CounterOracle;
-import de.learnlib.util.Experiment;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.automata.vpda.OneSEVPA;
@@ -76,43 +75,49 @@ public abstract class VPDABenchmarks extends ABenchmarks {
 
         final TTTLearnerVPDA<JSONSymbol> learner = new TTTLearnerVPDA<>(alphabet, membershipOracle,
                 AcexAnalyzers.LINEAR_FWD);
-        final Experiment<OneSEVPA<?, JSONSymbol>> experiment = new Experiment<>(learner, equivalenceOracle, alphabet);
+        final StoppableExperiment<OneSEVPA<?, JSONSymbol>> experiment = new StoppableExperiment<>(learner, equivalenceOracle, alphabet);
         experiment.setLogModels(false);
         experiment.setProfile(true);
 
         final ExperimentResults results = runExperiment(experiment);
 
         final List<Object> statistics = new LinkedList<>();
-        if (results.finished) {
-            final OneSEVPA<?, JSONSymbol> learnedVPDA = experiment.getFinalHypothesis();
-            LOGGER.info("VPDA learned with " + learnedVPDA.size() + " states");
-            final DefaultOneSEVPA<JSONSymbol> vpda = removeBinState(learnedVPDA);
-            LOGGER.info("Bin state removed");
-            assert learnedVPDA.size() - vpda.size() <= 1;
-            assert OneSEVPAUtil.testEquivalence(vpda, learnedVPDA, alphabet);
-
-            statistics.add(results.timeInMillis);
-            statistics.add(membershipOracle.getStatisticalData().getCount());
-            statistics.add(equivalenceOracle.getStatisticalData().getCount());
-            statistics.add(experiment.getRounds().getCount());
-            statistics.add(vpda.size() != learnedVPDA.size());
-            statistics.add(alphabet.size());
-            statistics.add(vpda.size());
-            statistics.add(numberOfInternalTransitions(vpda));
-            statistics.add(numberOfReturnTransitions(vpda));
-            statistics.add(numberOfCallTransitions(vpda));
-            statistics.add(computeDiameter(vpda));
-
-            writeModelToDot(learnedVPDA, schemaName, currentId);
-        } else if (results.error) {
+        if (results.error) {
             for (int i = statistics.size(); i < nColumns; i++) {
                 statistics.add("Error");
             }
-        } else {
-            for (int i = statistics.size(); i < nColumns; i++) {
-                statistics.add("Timeout");
-            }
+            csvPrinter.printRecord(statistics);
+            csvPrinter.flush();
+            return;
         }
+
+        final OneSEVPA<?, JSONSymbol> hypothesis;
+        if (results.finished) {
+            hypothesis = experiment.getFinalHypothesis();
+            statistics.add(results.timeInMillis);
+        }
+        else { // Timeout
+            hypothesis = experiment.getCurrentHypothesis();
+            statistics.add("Timeout");
+        }
+        LOGGER.info("VPDA learned with " + hypothesis.size() + " states");
+        final DefaultOneSEVPA<JSONSymbol> vpda = removeBinState(hypothesis);
+        LOGGER.info("Bin state removed");
+        assert hypothesis.size() - vpda.size() <= 1;
+        assert OneSEVPAUtil.testEquivalence(vpda, hypothesis, alphabet);
+
+        statistics.add(membershipOracle.getStatisticalData().getCount());
+        statistics.add(equivalenceOracle.getStatisticalData().getCount());
+        statistics.add(experiment.getRounds().getCount());
+        statistics.add(vpda.size() != hypothesis.size());
+        statistics.add(alphabet.size());
+        statistics.add(vpda.size());
+        statistics.add(numberOfInternalTransitions(vpda));
+        statistics.add(numberOfReturnTransitions(vpda));
+        statistics.add(numberOfCallTransitions(vpda));
+        statistics.add(computeDiameter(vpda));
+
+        writeModelToDot(hypothesis, schemaName, currentId);
 
         csvPrinter.printRecord(statistics);
         csvPrinter.flush();
