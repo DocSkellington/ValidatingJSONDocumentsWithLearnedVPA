@@ -129,7 +129,7 @@ public class ValidationBenchmarks {
         final long memoryForRelations = getMemoryUse() - memoryAtStart;
 
         watch.reset().start();
-        final KeyGraph<Location> graph = new KeyGraph<>(vpa, reachabilityRelation);
+        final KeyGraph<Location> graph = new KeyGraph<>(vpa, reachabilityRelation, false);
 
         final long timeGraph = watch.stop().elapsed().toMillis();
         final long memoryForGraph = getMemoryUse() - memoryForRelations;

@@ -1,4 +1,4 @@
-package be.ac.umons.jsonvalidation.oracles.exploration;
+package be.ac.umons.jsonlearning.oracles.exploration;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -7,11 +7,11 @@ import java.util.Random;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.json.JSONObject;
 
+import be.ac.umons.jsonlearning.oracles.AbstractJSONConformance;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.generator.exploration.DefaultExplorationGenerator;
 import be.ac.umons.jsonschematools.generator.exploration.ExplorationGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.oracles.AbstractJSONConformance;
 import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;

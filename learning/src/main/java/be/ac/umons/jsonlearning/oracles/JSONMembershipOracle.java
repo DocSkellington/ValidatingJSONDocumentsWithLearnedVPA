@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package be.ac.umons.jsonvalidation.oracles;
+package be.ac.umons.jsonlearning.oracles;
 
 import java.util.Random;
 

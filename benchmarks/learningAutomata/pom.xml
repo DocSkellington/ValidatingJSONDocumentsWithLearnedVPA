@@ -79,6 +79,7 @@ limitations under the License.
 
         <!-- Dependency versions -->
         <jsonvalidation.version>2.0</jsonvalidation.version>
+        <jsonlearning.version>2.0</jsonlearning.version>
         <jsonschema.version>2.0</jsonschema.version>
         <automatalib.version>0.11.0-SNAPSHOT</automatalib.version>
         <learnlib.version>0.17.0-SNAPSHOT</learnlib.version>
@@ -104,6 +105,11 @@ limitations under the License.
             <groupId>be.ac.umons.jsonvalidation</groupId>
             <artifactId>jsonvalidation</artifactId>
             <version>${jsonvalidation.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>be.ac.umons.jsonlearning</groupId>
+            <artifactId>jsonlearning</artifactId>
+            <version>${jsonlearning.version}</version>
         </dependency>
 
         <!-- JSON schema -->

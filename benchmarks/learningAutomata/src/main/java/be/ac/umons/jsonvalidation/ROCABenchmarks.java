@@ -7,10 +7,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import be.ac.umons.jsonlearning.oracles.JSONCounterValueOracle;
+import be.ac.umons.jsonlearning.oracles.JSONMembershipOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonvalidation.oracles.JSONCounterValueOracle;
-import be.ac.umons.jsonvalidation.oracles.JSONMembershipOracle;
 import de.learnlib.algorithms.lstar.roca.LStarROCA;
 import de.learnlib.algorithms.lstar.roca.ObservationTableWithCounterValuesROCA;
 import de.learnlib.algorithms.lstar.roca.ROCAExperiment;

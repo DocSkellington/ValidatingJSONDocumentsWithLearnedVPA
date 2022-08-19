@@ -19,10 +19,10 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Random;
 
+import be.ac.umons.jsonlearning.oracles.random.VPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.VPDABenchmarks;
-import be.ac.umons.jsonvalidation.oracles.random.VPDAJSONEquivalenceOracle;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.VPDAlphabet;

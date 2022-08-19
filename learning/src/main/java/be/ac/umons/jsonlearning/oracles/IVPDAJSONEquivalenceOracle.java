@@ -1,4 +1,4 @@
-package be.ac.umons.jsonvalidation.oracles;
+package be.ac.umons.jsonlearning.oracles;
 
 import java.util.ArrayList;
 import java.util.List;

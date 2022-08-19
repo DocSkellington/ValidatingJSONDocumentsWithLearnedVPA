@@ -1,4 +1,4 @@
-package be.ac.umons.jsonvalidation.oracles.random;
+package be.ac.umons.jsonlearning.oracles.exploration;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -7,23 +7,20 @@ import java.util.Random;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.json.JSONObject;
 
+import be.ac.umons.jsonlearning.oracles.IVPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
-import be.ac.umons.jsonschematools.generator.random.DefaultRandomGenerator;
+import be.ac.umons.jsonschematools.generator.exploration.DefaultExplorationGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.oracles.IVPDAJSONEquivalenceOracle;
-import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.OneSEVPA;
-import net.automatalib.words.Alphabet;
+import net.automatalib.words.VPDAlphabet;
 
-public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<OneSEVPA<?, JSONSymbol>>
-        implements IVPDAJSONEquivalenceOracle {
-
-    private static final LearnLogger LOGGER = LearnLogger.getLogger(VPDAJSONEquivalenceOracle.class);
+public class VPDAJSONEquivalenceOracle
+        extends AbstractExplorationJSONConformanceVisiblyAlphabet<OneSEVPA<?, JSONSymbol>> implements IVPDAJSONEquivalenceOracle {
 
     public VPDAJSONEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
             int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
-            Alphabet<JSONSymbol> alphabet) {
+            VPDAlphabet<JSONSymbol> alphabet) {
         super(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys,
                 alphabet);
     }
@@ -35,22 +32,20 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
         if (query != null) {
             return query;
         }
-        
-        query = super.findCounterExample(hypo);
+
+        query = super.findCounterExample(hypo, inputs);
         if (query != null) {
             return query;
         }
 
-        LOGGER.info("Creating graph");
         query = counterexampleFromKeyGraph(hypo);
         return query;
     }
 
     @Override
     public JSONObject getOneValidDocument() {
-        final Iterator<JSONObject> iterator = new DefaultRandomGenerator(getMaxProperties(), getMaxItems()).createIterator(getSchema());
+        final Iterator<JSONObject> iterator = new DefaultExplorationGenerator(getMaxProperties(), getMaxItems()).createIterator(getSchema());
         assert iterator.hasNext();
         return iterator.next();
     }
-
 }

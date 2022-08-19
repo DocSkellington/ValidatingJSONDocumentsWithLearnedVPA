@@ -1,15 +1,15 @@
-package be.ac.umons.jsonvalidation.oracles.random;
+package be.ac.umons.jsonlearning.oracles.random;
 
 import java.util.Iterator;
 import java.util.Random;
 
 import org.json.JSONObject;
 
+import be.ac.umons.jsonlearning.oracles.AbstractJSONConformance;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.generator.random.DefaultRandomGenerator;
 import be.ac.umons.jsonschematools.generator.random.RandomGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.oracles.AbstractJSONConformance;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.ts.acceptors.DeterministicAcceptorTS;

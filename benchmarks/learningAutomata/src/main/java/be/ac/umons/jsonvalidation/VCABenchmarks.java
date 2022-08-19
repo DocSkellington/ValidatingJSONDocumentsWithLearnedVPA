@@ -7,9 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import be.ac.umons.jsonlearning.oracles.JSONMembershipOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonvalidation.oracles.JSONMembershipOracle;
 import de.learnlib.algorithms.lstar.vca.LStarVCA;
 import de.learnlib.algorithms.lstar.vca.StratifiedObservationTableWithCounterValues;
 import de.learnlib.algorithms.lstar.vca.VCAExperiment;

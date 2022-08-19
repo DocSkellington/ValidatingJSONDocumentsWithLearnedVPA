@@ -5,11 +5,11 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Random;
 
+import be.ac.umons.jsonlearning.oracles.exploration.JSONPartialEquivalenceOracle;
+import be.ac.umons.jsonlearning.oracles.exploration.ROCAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.ROCABenchmarks;
-import be.ac.umons.jsonvalidation.oracles.exploration.JSONPartialEquivalenceOracle;
-import be.ac.umons.jsonvalidation.oracles.exploration.ROCAJSONEquivalenceOracle;
 import de.learnlib.api.oracle.EquivalenceOracle.ROCAEquivalenceOracle;
 import de.learnlib.api.oracle.EquivalenceOracle.RestrictedAutomatonEquivalenceOracle;
 import net.automatalib.words.Alphabet;

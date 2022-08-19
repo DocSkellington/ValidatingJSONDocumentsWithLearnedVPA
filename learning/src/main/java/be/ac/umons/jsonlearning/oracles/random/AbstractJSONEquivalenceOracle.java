@@ -1,4 +1,4 @@
-package be.ac.umons.jsonvalidation.oracles.random;
+package be.ac.umons.jsonlearning.oracles.random;
 
 import java.util.Random;
 
