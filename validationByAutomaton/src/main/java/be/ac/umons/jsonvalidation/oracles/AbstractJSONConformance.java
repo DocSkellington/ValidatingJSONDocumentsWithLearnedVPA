@@ -5,10 +5,10 @@ import java.util.Random;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import be.ac.umons.jsonschematools.DefaultValidator;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonschematools.Validator;
+import be.ac.umons.jsonschematools.validator.DefaultValidator;
+import be.ac.umons.jsonschematools.validator.Validator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.WordConversion;
 import de.learnlib.api.query.DefaultQuery;

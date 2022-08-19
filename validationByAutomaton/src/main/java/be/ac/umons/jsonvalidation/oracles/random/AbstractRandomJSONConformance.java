@@ -6,8 +6,8 @@ import java.util.Random;
 import org.json.JSONObject;
 
 import be.ac.umons.jsonschematools.JSONSchema;
-import be.ac.umons.jsonschematools.random.DefaultRandomGenerator;
-import be.ac.umons.jsonschematools.random.RandomGenerator;
+import be.ac.umons.jsonschematools.generator.random.DefaultRandomGenerator;
+import be.ac.umons.jsonschematools.generator.random.RandomGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.oracles.AbstractJSONConformance;
 import de.learnlib.api.oracle.EquivalenceOracle;

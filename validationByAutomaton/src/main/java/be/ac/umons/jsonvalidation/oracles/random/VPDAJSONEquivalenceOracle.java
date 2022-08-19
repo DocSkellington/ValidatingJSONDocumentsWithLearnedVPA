@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.json.JSONObject;
 
 import be.ac.umons.jsonschematools.JSONSchema;
-import be.ac.umons.jsonschematools.random.DefaultRandomGenerator;
+import be.ac.umons.jsonschematools.generator.random.DefaultRandomGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.oracles.IVPDAJSONEquivalenceOracle;
 import de.learnlib.api.logging.LearnLogger;

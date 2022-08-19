@@ -18,10 +18,10 @@ import org.json.JSONTokener;
 import com.google.common.base.Stopwatch;
 import com.google.common.testing.GcFinalization;
 
-import be.ac.umons.jsonschematools.DefaultValidator;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonschematools.Validator;
+import be.ac.umons.jsonschematools.validator.DefaultValidator;
+import be.ac.umons.jsonschematools.validator.Validator;
 import be.ac.umons.jsonvalidation.validation.ValidationByAutomaton;
 import be.ac.umons.jsonvalidation.validation.ValidationState;
 import be.ac.umons.jsonvalidation.validation.relation.DotWriter;

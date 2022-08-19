@@ -15,7 +15,7 @@ import org.json.JSONException;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.JSONSchemaStore;
-import be.ac.umons.jsonschematools.random.GeneratorException;
+import be.ac.umons.jsonschematools.generator.random.GeneratorException;
 import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.serialization.InputModelDeserializer;

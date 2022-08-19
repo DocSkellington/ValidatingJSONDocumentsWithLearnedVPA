@@ -12,11 +12,11 @@ import org.json.JSONObject;
 
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonschematools.exploration.DefaultExplorationGenerator;
-import be.ac.umons.jsonschematools.exploration.ExplorationGenerator;
-import be.ac.umons.jsonschematools.random.DefaultRandomGenerator;
-import be.ac.umons.jsonschematools.random.GeneratorException;
-import be.ac.umons.jsonschematools.random.RandomGenerator;
+import be.ac.umons.jsonschematools.generator.exploration.DefaultExplorationGenerator;
+import be.ac.umons.jsonschematools.generator.exploration.ExplorationGenerator;
+import be.ac.umons.jsonschematools.generator.random.DefaultRandomGenerator;
+import be.ac.umons.jsonschematools.generator.random.GeneratorException;
+import be.ac.umons.jsonschematools.generator.random.RandomGenerator;
 
 public class GenerateDocuments {
     enum GenerationType {

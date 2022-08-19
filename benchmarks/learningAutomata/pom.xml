@@ -109,7 +109,7 @@ limitations under the License.
         <!-- JSON schema -->
         <dependency>
             <groupId>be.ac.umons.jsonschematools</groupId>
-            <artifactId>jsonschematools-tools</artifactId>
+            <artifactId>jsonschematools-core</artifactId>
             <version>${jsonschema.version}</version>
         </dependency>
         <dependency>

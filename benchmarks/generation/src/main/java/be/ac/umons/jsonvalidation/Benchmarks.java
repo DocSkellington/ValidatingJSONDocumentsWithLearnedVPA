@@ -21,8 +21,8 @@ import com.google.common.base.Stopwatch;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.JSONSchemaStore;
-import be.ac.umons.jsonschematools.exploration.DefaultExplorationGenerator;
-import be.ac.umons.jsonschematools.random.DefaultRandomGenerator;
+import be.ac.umons.jsonschematools.generator.exploration.DefaultExplorationGenerator;
+import be.ac.umons.jsonschematools.generator.random.DefaultRandomGenerator;
 import de.learnlib.api.logging.LearnLogger;
 
 public class Benchmarks {
