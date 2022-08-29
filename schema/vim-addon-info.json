@@ -1,0 +1,111 @@
+{
+  "$id": "https://json.schemastore.org/vim-addon-info",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "url": {
+      "type": "string"
+    },
+    "repoType": {
+      "enum": ["hg", "git", "svn", "bzr"]
+    },
+    "selfRepository": {
+      "type": "object",
+      "required": ["type", "url", "deprecated"],
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/repoType"
+        },
+        "url": {
+          "$ref": "#/definitions/url"
+        },
+        "deprecated": {
+          "type": "string"
+        }
+      }
+    },
+    "otherRepository": {
+      "type": "object",
+      "anyOf": [
+        {
+          "additionalProperties": false
+        },
+        {
+          "required": ["type", "url", "vim_script_nr", "script-type"],
+          "properties": {
+            "type": {
+              "enum": ["", "archive"]
+            },
+            "url": {
+              "$ref": "#/definitions/url"
+            },
+            "vim_script_nr": {
+              "type": "number"
+            },
+            "script-type": {
+              "enum": [
+                "color scheme",
+                "ftplugin",
+                "game",
+                "indent",
+                "syntax",
+                "utility",
+                "patch"
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "$ref": "#/definitions/repoType"
+            },
+            "url": {
+              "$ref": "#/definitions/url"
+            }
+          },
+          "required": ["type", "url"]
+        }
+      ],
+      "required": ["homepage", "addon-info"],
+      "properties": {
+        "homepage": {
+          "type": "string"
+        },
+        "addon-info": {
+          "$ref": "#"
+        }
+      }
+    }
+  },
+  "required": ["name", "version", "description", "homepage", "author", "maintainer", "repository", "dependencies"],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "homepage": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "maintainer": {
+      "type": "string"
+    },
+    "repository": {
+      "$ref": "#/definitions/selfRepository"
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/otherRepository"
+      }
+    }
+  },
+  "type": "object"
+}

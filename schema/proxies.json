@@ -1,0 +1,162 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "definitions": {
+    "proxy-schema": {
+      "type": "object",
+      "properties": {
+        "desc": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "matchCondition": {
+          "$ref": "#/definitions/match-condition-schema"
+        },
+        "backendUri": {
+          "type": "string"
+        },
+        "requestOverrides": {
+          "$ref": "#/definitions/requestOverrides-schema"
+        },
+        "responseOverrides": {
+          "$ref": "#/definitions/responseOverrides-schema"
+        },
+        "debug": {
+          "type": "boolean"
+        },
+        "disabled": {
+          "type": "boolean"
+        }
+      },
+      "required": ["matchCondition", "desc", "backendUri", "requestOverrides", "responseOverrides", "debug", "disabled"],
+      "additionalProperties": false
+    },
+    "match-condition-schema": {
+      "type": "object",
+      "properties": {
+        "route": {
+          "type": "string"
+        },
+        "methods": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/http-method-schema"
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false,
+      "required": ["route", "methods"]
+    },
+    "requestOverrides-schema": {
+      "type": "object",
+      "properties": {
+        "backend.request.method": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/http-method-schema"
+            },
+            {
+              "$ref": "#/definitions/request-overrides-value-expression-schema"
+            }
+          ]
+        },
+        "backend.request.querystring.<ParameterName>": {
+          "$ref": "#/definitions/request-overrides-value-expression-schema"
+        },
+        "backend.request.headers.<HeaderName>": {
+          "$ref": "#/definitions/request-overrides-value-expression-schema"
+        }
+      },
+      "patternProperties": {
+        "^backendrequestquerystring.+$": {
+          "$ref": "#/definitions/request-overrides-value-expression-schema"
+        },
+        "^backendrequestheaders.+$": {
+          "$ref": "#/definitions/request-overrides-value-expression-schema"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["backend.request.method", "backend.request.querystring.<ParameterName>", "backend.request.headers.<HeaderName>"]
+    },
+    "responseOverrides-schema": {
+      "type": "object",
+      "properties": {
+        "response.statusCode": {
+          "$ref": "#/definitions/response-overrides-value-expression-schema"
+        },
+        "response.statusReason": {
+          "$ref": "#/definitions/response-overrides-value-expression-schema"
+        },
+        "response.body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object"
+              }
+            }
+          ]
+        },
+        "response.headers.<HeaderName>": {
+          "$ref": "#/definitions/response-overrides-value-expression-schema"
+        }
+      },
+      "patternProperties": {
+        "^responseheaders.+$": {
+          "$ref": "#/definitions/response-overrides-value-expression-schema"
+        }
+      },
+      "additionalProperties": false,
+      "required": ["response.statusCode", "response.statusReason", "response.body", "response.headers.<HeaderName>"]
+    },
+    "request-overrides-value-expression-schema": {
+      "type": "string"
+    },
+    "response-overrides-value-expression-schema": {
+      "type": "string"
+    },
+    "http-method-schema": {
+      "enum": [
+        "GET",
+        "POST",
+        "HEAD",
+        "OPTIONS",
+        "PUT",
+        "TRACE",
+        "DELETE",
+        "PATCH",
+        "CONNECT"
+      ]
+    }
+  },
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "proxies": {
+      "type": "object",
+      "properties": {
+        "<ProxyName>": {
+          "$ref": "#/definitions/proxy-schema"
+        }
+      },
+      "required": ["<ProxyName>"],
+      "additionalProperties": {
+        "$ref": "#/definitions/proxy-schema"
+      }
+    }
+  },
+  "required": ["proxies", "$schema"],
+  "type": "object"
+}
