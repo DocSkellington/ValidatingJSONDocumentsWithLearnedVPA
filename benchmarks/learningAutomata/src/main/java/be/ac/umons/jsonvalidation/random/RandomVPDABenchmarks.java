@@ -18,6 +18,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Random;
+import java.util.Set;
+
+import org.json.JSONObject;
 
 import be.ac.umons.jsonlearning.oracles.random.VPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
@@ -34,9 +37,12 @@ import net.automatalib.words.VPDAlphabet;
  */
 public class RandomVPDABenchmarks extends VPDABenchmarks {
 
-    public RandomVPDABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout, int maxProperties, int maxItems)
+    private final Set<JSONObject> documentsToTest;
+
+    public RandomVPDABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout, int maxProperties, int maxItems, final Set<JSONObject> documentsToTest)
             throws IOException {
         super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
+        this.documentsToTest = documentsToTest;
     }
 
     @Override
@@ -44,6 +50,6 @@ public class RandomVPDABenchmarks extends VPDABenchmarks {
             boolean canGenerateInvalid, int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema,
             Random random, boolean shuffleKeys, VPDAlphabet<JSONSymbol> alphabet) {
         return new VPDAJSONEquivalenceOracle(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems,
-                schema, random, shuffleKeys, alphabet);
+                schema, random, shuffleKeys, alphabet, documentsToTest);
     }
 }

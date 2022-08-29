@@ -3,6 +3,7 @@ package be.ac.umons.jsonlearning.oracles.random;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.json.JSONObject;
@@ -21,16 +22,26 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
 
     private static final LearnLogger LOGGER = LearnLogger.getLogger(VPDAJSONEquivalenceOracle.class);
 
+    private final Set<JSONObject> documentsToTest;
+
     public VPDAJSONEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
             int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
-            Alphabet<JSONSymbol> alphabet) {
+            Alphabet<JSONSymbol> alphabet, Set<JSONObject> documentsToTest) {
         super(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys,
                 alphabet);
+        this.documentsToTest = documentsToTest;
     }
 
     @Override
     public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(OneSEVPA<?, JSONSymbol> hypo,
             Collection<? extends JSONSymbol> inputs) {
+        for (JSONObject document : documentsToTest) {
+            DefaultQuery<JSONSymbol, Boolean> query = checkDocument(hypo, document);
+            if (query != null) {
+                return query;
+            }
+        }
+
         DefaultQuery<JSONSymbol, Boolean> query = counterexampleByLoopingOverInitial(hypo, getRandom());
         if (query != null) {
             return query;

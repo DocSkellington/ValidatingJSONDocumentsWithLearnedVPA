@@ -1,5 +1,6 @@
 package be.ac.umons.jsonvalidation;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -7,6 +8,11 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
@@ -52,6 +58,12 @@ public class Benchmarks {
         final boolean ignoreAdditionalProperties = Boolean.valueOf(args[9]);
         final int nRepetitions = Integer.valueOf(args[10]);
 
+        final Set<JSONObject> documentsToTest = new LinkedHashSet<>();
+        for (int i = 11 ; i < args.length ; i++) {
+            JSONObject document = new JSONObject(new JSONTokener(new FileReader(args[i])));
+            documentsToTest.add(document);
+        }
+
         final JSONSchemaStore schemaStore = new JSONSchemaStore(ignoreAdditionalProperties);
         final JSONSchema schema;
         try {
@@ -95,7 +107,7 @@ public class Benchmarks {
         ABenchmarks benchmarks;
         if (automatonType == AutomatonType.VPA) {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomVPDABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
+                benchmarks = new RandomVPDABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems, documentsToTest);
             } else {
                 benchmarks = new ExplorationVPDABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
             }
