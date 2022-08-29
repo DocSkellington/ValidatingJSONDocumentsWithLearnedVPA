@@ -49,7 +49,7 @@ public interface IVPDAJSONEquivalenceOracle extends EquivalenceOracle<OneSEVPA<?
     }
 
     default <L> DefaultQuery<JSONSymbol, Boolean> counterexampleFromKeyGraph(OneSEVPA<L, JSONSymbol> hypo) {
-        KeyGraph<L> keyGraph = KeyGraph.graphFor(hypo, true);
+        KeyGraph<L> keyGraph = KeyGraph.graphFor(hypo, true, true);
         if (keyGraph == null || keyGraph.isValid()) {
             return null;
         }

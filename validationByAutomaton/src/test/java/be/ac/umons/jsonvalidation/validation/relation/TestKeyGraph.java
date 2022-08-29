@@ -21,7 +21,7 @@ public class TestKeyGraph {
     @Test
     public void testStraightforwardAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
         Assert.assertTrue(graph.isValid());
         Set<NodeInGraph<Location>> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
@@ -60,7 +60,7 @@ public class TestKeyGraph {
     @Test
     public void testSmallTwoBranchesAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
         Assert.assertTrue(graph.isValid());
         Set<NodeInGraph<Location>> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
@@ -168,21 +168,21 @@ public class TestKeyGraph {
     @Test
     public void testAutomatonWithOptionalKeysGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
 
     @Test
     public void testAutomatonWithOptionalKeysAndExplicitBinStateGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
 
     @Test
     public void testAutomatonWithDuplicateKeys() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithDuplicateKeys();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
         Assert.assertFalse(graph.isValid());
         Assert.assertNotNull(graph.getWitnessCycle());
     }
@@ -190,7 +190,7 @@ public class TestKeyGraph {
     @Test
     public void testAutomatonWithCycle() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithCycleReadingAKey();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
         Assert.assertFalse(graph.isValid());
         Assert.assertNotNull(graph.getWitnessCycle());
     }
@@ -199,7 +199,7 @@ public class TestKeyGraph {
     public void testWitnessCycleInGraph() throws IOException {
         final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers.oneSEVPA(JSONSymbol::toSymbol);
         final DefaultOneSEVPA<JSONSymbol> vpa = parser.readModel(getClass().getResource("/automaton.dot")).model;
-        KeyGraph<Location> graph = KeyGraph.graphFor(vpa, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(vpa, true, true);
         Assert.assertNotNull(graph.getWitnessCycle());
         Assert.assertTrue(vpa.accepts(graph.getWitnessCycle()));
     }
