@@ -15,10 +15,15 @@ filepath = sys.argv[1]
 name = sys.argv[2]
 df = pandas.read_csv(filepath)
 
+# print(df["Automaton time (ms)"].to_string())
+
 document_description = [
     "Length document",
     "Depth document",
 ]
+
+df["Automaton memory"] *= 1024
+df["Validator memory"] *= 1024
 
 numerical_columns = [
     "Automaton time (ms)",
@@ -40,8 +45,10 @@ df_grouped = df.groupby(by="Document ID")
 descriptions = df_grouped[document_description].min()
 values = df_grouped.agg(numerical_agg)
 outputs = df_grouped.agg(boolean_agg)
+number_different_outputs=(outputs["Automaton output", "sum"] - outputs["Validator output", "sum"]).abs()
 
-whole_df = pandas.concat([descriptions, values, outputs], axis=1)
+whole_df = pandas.concat([descriptions, values, outputs, number_different_outputs], axis=1)
+whole_df.rename({0: "DifferenceOutputs"}, axis="columns", inplace=True)
 
 whole_df.sort_values(by=["Length document"], inplace=True)
 
