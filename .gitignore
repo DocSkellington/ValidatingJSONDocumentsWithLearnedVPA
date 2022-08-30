@@ -36,3 +36,8 @@ error_*
 results/learning/
 results/preprocessing/
 results/validation/
+
+docs/.bundle
+docs/_site
+docs/vendor
+docs/Gemfile.lock
