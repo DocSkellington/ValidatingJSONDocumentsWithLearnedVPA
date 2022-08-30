@@ -4,6 +4,8 @@
   "definitions": {
     "Options": {
       "type": "object",
+      "required": ["ast", "auxiliaryCommentAfter", "auxiliaryCommentBefore", "code", "comments", "compact", "extends", "filename", "filenameRelative", "highlightCode", "ignore", "inputSourceMap", "keepModuleIdExtensions", "moduleId", "moduleIds", "moduleRoot", "only", "plugins", "presets", "retainLines", "sourceFileName", "sourceMaps", "sourceMapTarget", "sourceRoot"],
+      "additionalProperties": false,
       "properties": {
         "ast": {
           "description": "Include the AST in the returned object",
@@ -145,6 +147,7 @@
     }
   },
   "type": "object",
+  "required": ["env"],
   "allOf": [
     {
       "$ref": "#/definitions/Options"

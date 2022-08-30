@@ -50,6 +50,6 @@
       }
     },
     "additionalProperties": false,
-    "required": ["body"]
+    "required": ["prefix", "body", "description", "scope"]
   }
 }

@@ -1,0 +1,464 @@
+{
+  "$id": "https://aka.ms/winget-manifest.singleton.1.0.0.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "PackageIdentifier": {
+      "type": "string"
+    },
+    "PackageVersion": {
+      "type": "string"
+    },
+    "Locale": {
+      "type": ["string", "null"]
+    },
+    "Url": {
+      "type": ["string", "null"]
+    },
+    "Tag": {
+      "type": ["string", "null"]
+    },
+    "Channel": {
+      "type": ["string", "null"]
+    },
+    "Platform": {
+      "type": ["array", "null"],
+      "items": {
+        "title": "Platform",
+        "type": "string",
+        "enum": ["Windows.Desktop", "Windows.Universal"]
+      },
+      "maxItems": 2
+    },
+    "MinimumOSVersion": {
+      "type": ["string", "null"]
+    },
+    "InstallerType": {
+      "type": ["string", "null"],
+      "enum": [
+        "msix",
+        "msi",
+        "appx",
+        "exe",
+        "zip",
+        "inno",
+        "nullsoft",
+        "wix",
+        "burn",
+        "pwa"
+      ]
+    },
+    "Scope": {
+      "type": ["string", "null"],
+      "enum": ["user", "machine"]
+    },
+    "InstallModes": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string",
+        "enum": ["interactive", "silent", "silentWithProgress"]
+      },
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "InstallerSwitches": {
+      "type": "object",
+      "required": [
+        "Silent",
+        "SilentWithProgress",
+        "Interactive",
+        "InstallLocation",
+        "Log",
+        "Upgrade",
+        "Custom"
+      ],
+      "properties": {
+        "Silent": {
+          "type": ["string", "null"]
+        },
+        "SilentWithProgress": {
+          "type": ["string", "null"]
+        },
+        "Interactive": {
+          "type": ["string", "null"]
+        },
+        "InstallLocation": {
+          "type": ["string", "null"]
+        },
+        "Log": {
+          "type": ["string", "null"]
+        },
+        "Upgrade": {
+          "type": ["string", "null"]
+        },
+        "Custom": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "InstallerSuccessCodes": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "integer",
+        "not": {
+          "const": 0
+        }
+      },
+      "maxItems": 16
+    },
+    "UpgradeBehavior": {
+      "type": ["string", "null"],
+      "enum": ["install", "uninstallPrevious"]
+    },
+    "Commands": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 16
+    },
+    "Protocols": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 16
+    },
+    "FileExtensions": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      }
+    },
+    "Dependencies": {
+      "type": ["object", "null"],
+      "required": [
+        "WindowsFeatures",
+        "WindowsLibraries",
+        "PackageDependencies",
+        "ExternalDependencies"
+      ],
+      "properties": {
+        "WindowsFeatures": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16
+        },
+        "WindowsLibraries": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16
+        },
+        "PackageDependencies": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "object",
+            "properties": {
+              "PackageIdentifier": {
+                "$ref": "#/definitions/PackageIdentifier"
+              },
+              "MinimumVersion": {
+                "$ref": "#/definitions/PackageVersion"
+              }
+            },
+            "required": ["PackageIdentifier", "MinimumVersion"]
+          },
+          "maxItems": 16
+        },
+        "ExternalDependencies": {
+          "type": ["array", "null"],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 16
+        }
+      }
+    },
+    "PackageFamilyName": {
+      "type": ["string", "null"]
+    },
+    "ProductCode": {
+      "type": ["string", "null"]
+    },
+    "Capabilities": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 1000
+    },
+    "RestrictedCapabilities": {
+      "type": ["array", "null"],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 1000
+    },
+    "Installer": {
+      "type": "object",
+      "properties": {
+        "InstallerLocale": {
+          "$ref": "#/definitions/Locale"
+        },
+        "Platform": {
+          "$ref": "#/definitions/Platform"
+        },
+        "MinimumOSVersion": {
+          "$ref": "#/definitions/MinimumOSVersion"
+        },
+        "Architecture": {
+          "type": "string",
+          "enum": ["x86", "x64", "arm", "arm64", "neutral"]
+        },
+        "InstallerType": {
+          "$ref": "#/definitions/InstallerType"
+        },
+        "Scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "InstallerUrl": {
+          "type": "string"
+        },
+        "InstallerSha256": {
+          "type": "string"
+        },
+        "SignatureSha256": {
+          "type": ["string", "null"]
+        },
+        "InstallModes": {
+          "$ref": "#/definitions/InstallModes"
+        },
+        "InstallerSwitches": {
+          "$ref": "#/definitions/InstallerSwitches"
+        },
+        "InstallerSuccessCodes": {
+          "$ref": "#/definitions/InstallerSuccessCodes"
+        },
+        "UpgradeBehavior": {
+          "$ref": "#/definitions/UpgradeBehavior"
+        },
+        "Commands": {
+          "$ref": "#/definitions/Commands"
+        },
+        "Protocols": {
+          "$ref": "#/definitions/Protocols"
+        },
+        "FileExtensions": {
+          "$ref": "#/definitions/FileExtensions"
+        },
+        "Dependencies": {
+          "$ref": "#/definitions/Dependencies"
+        },
+        "PackageFamilyName": {
+          "$ref": "#/definitions/PackageFamilyName"
+        },
+        "ProductCode": {
+          "$ref": "#/definitions/ProductCode"
+        },
+        "Capabilities": {
+          "$ref": "#/definitions/Capabilities"
+        },
+        "RestrictedCapabilities": {
+          "$ref": "#/definitions/RestrictedCapabilities"
+        }
+      },
+      "required": [
+        "InstallerLocale",
+        "Platform",
+        "MinimumOSVersion",
+        "Architecture",
+        "InstallerType",
+        "Scope",
+        "InstallerUrl",
+        "InstallerSha256",
+        "SignatureSha256",
+        "InstallModes",
+        "InstallerSwitches",
+        "InstallerSuccessCodes",
+        "UpgradeBehavior",
+        "Commands",
+        "Protocols",
+        "FileExtensions",
+        "Dependencies",
+        "PackageFamilyName",
+        "ProductCode",
+        "Capabilities",
+        "RestrictedCapabilities"
+      ]
+    }
+  },
+  "properties": {
+    "PackageIdentifier": {
+      "$ref": "#/definitions/PackageIdentifier"
+    },
+    "PackageVersion": {
+      "$ref": "#/definitions/PackageVersion"
+    },
+    "PackageLocale": {
+      "type": "string"
+    },
+    "Publisher": {
+      "type": "string"
+    },
+    "PublisherUrl": {
+      "$ref": "#/definitions/Url"
+    },
+    "PublisherSupportUrl": {
+      "$ref": "#/definitions/Url"
+    },
+    "PrivacyUrl": {
+      "$ref": "#/definitions/Url"
+    },
+    "Author": {
+      "type": ["string", "null"]
+    },
+    "PackageName": {
+      "type": "string"
+    },
+    "PackageUrl": {
+      "$ref": "#/definitions/Url"
+    },
+    "License": {
+      "type": "string"
+    },
+    "LicenseUrl": {
+      "$ref": "#/definitions/Url"
+    },
+    "Copyright": {
+      "type": ["string", "null"]
+    },
+    "CopyrightUrl": {
+      "$ref": "#/definitions/Url"
+    },
+    "ShortDescription": {
+      "type": "string"
+    },
+    "Description": {
+      "type": ["string", "null"]
+    },
+    "Moniker": {
+      "$ref": "#/definitions/Tag"
+    },
+    "Tags": {
+      "type": ["array", "null"],
+      "items": {
+        "$ref": "#/definitions/Tag"
+      },
+      "maxItems": 16
+    },
+    "Channel": {
+      "$ref": "#/definitions/Channel"
+    },
+    "InstallerLocale": {
+      "$ref": "#/definitions/Locale"
+    },
+    "Platform": {
+      "$ref": "#/definitions/Platform"
+    },
+    "MinimumOSVersion": {
+      "$ref": "#/definitions/MinimumOSVersion"
+    },
+    "InstallerType": {
+      "$ref": "#/definitions/InstallerType"
+    },
+    "Scope": {
+      "$ref": "#/definitions/Scope"
+    },
+    "InstallModes": {
+      "$ref": "#/definitions/InstallModes"
+    },
+    "InstallerSwitches": {
+      "$ref": "#/definitions/InstallerSwitches"
+    },
+    "InstallerSuccessCodes": {
+      "$ref": "#/definitions/InstallerSuccessCodes"
+    },
+    "UpgradeBehavior": {
+      "$ref": "#/definitions/UpgradeBehavior"
+    },
+    "Commands": {
+      "$ref": "#/definitions/Commands"
+    },
+    "Protocols": {
+      "$ref": "#/definitions/Protocols"
+    },
+    "FileExtensions": {
+      "$ref": "#/definitions/FileExtensions"
+    },
+    "Dependencies": {
+      "$ref": "#/definitions/Dependencies"
+    },
+    "PackageFamilyName": {
+      "$ref": "#/definitions/PackageFamilyName"
+    },
+    "ProductCode": {
+      "$ref": "#/definitions/ProductCode"
+    },
+    "Capabilities": {
+      "$ref": "#/definitions/Capabilities"
+    },
+    "RestrictedCapabilities": {
+      "$ref": "#/definitions/RestrictedCapabilities"
+    },
+    "Installers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Installer"
+      },
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "ManifestType": {
+      "type": "string",
+      "const": "singleton"
+    },
+    "ManifestVersion": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "PackageIdentifier",
+    "PackageVersion",
+    "PackageLocale",
+    "Publisher",
+    "PublisherUrl",
+    "PublisherSupportUrl",
+    "PrivacyUrl",
+    "Author",
+    "PackageName",
+    "PackageUrl",
+    "License",
+    "LicenseUrl",
+    "Copyright",
+    "CopyrightUrl",
+    "ShortDescription",
+    "Description",
+    "Moniker",
+    "Tags",
+    "Channel",
+    "InstallerLocale",
+    "Platform",
+    "MinimumOSVersion",
+    "InstallerType",
+    "Scope",
+    "InstallModes",
+    "InstallerSwitches",
+    "InstallerSuccessCodes",
+    "UpgradeBehavior",
+    "Commands",
+    "Protocols",
+    "FileExtensions",
+    "Dependencies",
+    "PackageFamilyName",
+    "ProductCode",
+    "Capabilities",
+    "RestrictedCapabilities",
+    "Installers",
+    "ManifestType",
+    "ManifestVersion"
+  ],
+  "type": "object"
+}

@@ -1,12 +1,13 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemastore.org/codecov",
-  "title": "JSON schema for Codecov configuration files",
-  "description": "Schema for codecov.yml files.",
   "type": "object",
+  "required": ["codecov", "coverage", "ignore", "fixes", "flags", "comment"],
   "definitions": {
     "flag": {
       "type": "object",
+      "additionalProperties": false,
+      "required": ["joined", "required", "ignore", "paths", "assume"],
       "properties": {
         "joined": { "type": "boolean" },
         "required": { "type": "boolean" },
@@ -36,6 +37,8 @@
     },
     "notification": {
       "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "branches", "threshold", "message", "flags", "base", "only_pulls", "paths"],
       "properties": {
         "url": { "type": "string" },
         "branches": { "type": "string" },
@@ -50,18 +53,17 @@
   },
   "properties": {
     "codecov": {
-      "description": "See https://docs.codecov.io/docs/codecov-yaml for details",
       "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "slug", "bot", "branch", "ci", "assume_all_flags", "strict_yaml_branch", "max_report_age", "disable_default_path_fixes", "require_ci_to_pass", "allow_pseudo_compare", "archive", "notify", "ui"],
       "properties": {
         "url": { "type": "string" },
         "slug": { "type": "string" },
         "bot": {
-          "description": "Team bot. See https://docs.codecov.io/docs/team-bot for details",
           "type": "string"
         },
         "branch": { "type": "string" },
         "ci": {
-          "description": "Detecting CI services. See https://docs.codecov.io/docs/detecting-ci-services for details.",
           "type": "array",
           "items": { "type": "string" }
         },
@@ -73,10 +75,14 @@
         "allow_pseudo_compare": { "type": "boolean" },
         "archive": {
           "type": "object",
+          "additionalProperties": false,
+          "required": ["uploads"],
           "properties": { "uploads": { "type": "boolean" } }
         },
         "notify": {
           "type": "object",
+          "additionalProperties": false,
+          "required": ["after_n_builds", "countdown", "delay", "wait_for_ci"],
           "properties": {
             "after_n_builds": { "type": "integer" },
             "countdown": { "type": "integer" },
@@ -86,6 +92,8 @@
         },
         "ui": {
           "type": "object",
+          "additionalProperties": false,
+          "required": ["hide_density", "hide_complexity", "hide_contextual", "hide_sunburst", "hide_search"],
           "properties": {
             "hide_density": {
               "type": ["boolean", "array"],
@@ -103,8 +111,9 @@
       }
     },
     "coverage": {
-      "description": "Coverage configuration. See https://docs.codecov.io/docs/coverage-configuration for details.",
       "type": "object",
+      "additionalProperties": false,
+      "required": ["precision", "round", "range", "notify", "status"],
       "properties": {
         "precision": { "type": "integer", "minimum": 0, "maximum": 5 },
         "round": { "enum": ["down", "up", "nearest"] },
@@ -112,11 +121,14 @@
           "type": "string"
         },
         "notify": {
-          "description": "Notifications. See https://docs.codecov.io/docs/notifications for details.",
           "type": "object",
+          "additionalProperties": false,
+          "required": ["irc", "slack", "gitter", "hipchat", "webhook", "email"],
           "properties": {
             "irc": {
               "type": "object",
+              "additionalProperties": false,
+              "required": ["url", "branches", "threshold", "message", "flags", "base", "only_pulls", "paths", "channel", "password", "nickserv_password", "notice"],
               "properties": {
                 "url": { "type": "string" },
                 "branches": { "type": "string" },
@@ -133,8 +145,9 @@
               }
             },
             "slack": {
-              "description": "Slack. See https://docs.codecov.io/docs/notifications#section-slack for details.",
               "type": "object",
+              "additionalProperties": false,
+              "required": ["url", "branches", "threshold", "message", "flags", "base", "only_pulls", "paths", "attachments"],
               "properties": {
                 "url": { "type": "string" },
                 "branches": { "type": "string" },
@@ -150,8 +163,9 @@
               }
             },
             "gitter": {
-              "description": "Gitter. See https://docs.codecov.io/docs/notifications#section-gitter for details.",
               "type": "object",
+              "additionalProperties": false,
+              "required": ["url", "branches", "threshold", "message", "flags", "base", "only_pulls", "paths"],
               "properties": {
                 "url": { "type": "string" },
                 "branches": { "type": "string" },
@@ -164,8 +178,9 @@
               }
             },
             "hipchat": {
-              "description": "Hipchat. See https://docs.codecov.io/docs/notifications#section-hipchat for details.",
               "type": "object",
+              "additionalProperties": false,
+              "required": ["url", "branches", "threshold", "message", "flags", "base", "only_pulls", "paths", "card", "notify"],
               "properties": {
                 "url": { "type": "string" },
                 "branches": { "type": "string" },
@@ -181,6 +196,8 @@
             },
             "webhook": {
               "type": "object",
+              "additionalProperties": false,
+              "required": ["url", "branches", "threshold", "message", "flags", "base", "only_pulls", "paths"],
               "properties": {
                 "url": { "type": "string" },
                 "branches": { "type": "string" },
@@ -194,6 +211,8 @@
             },
             "email": {
               "type": "object",
+              "additionalProperties": false,
+              "required": ["url", "branches", "threshold", "message", "flags", "base", "only_pulls", "paths", "layout", "+to"],
               "properties": {
                 "url": { "type": "string" },
                 "branches": { "type": "string" },
@@ -210,34 +229,41 @@
           }
         },
         "status": {
-          "description": "Commit status. See https://docs.codecov.io/docs/commit-status for details.",
           "type": ["boolean", "object"],
+          "additionalProperties": false,
+          "required": ["project", "patch", "changes"],
           "properties": {
             "project": {
-              "type": ["boolean", "object"]
+              "type": ["boolean", "object"],
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "patch": {
-              "type": ["boolean", "object"]
+              "type": ["boolean", "object"],
+              "additionalProperties": {
+                "type": "string"
+              }
             },
             "changes": {
-              "type": ["boolean", "object"]
+              "type": ["boolean", "object"],
+              "additionalProperties": {
+                "type": "string"
+              }
             }
           }
         }
       }
     },
     "ignore": {
-      "description": "Ignoring paths. see https://docs.codecov.io/docs/ignoring-paths for details.",
       "type": "array",
       "items": { "type": "string" }
     },
     "fixes": {
-      "description": "Fixing paths. See https://docs.codecov.io/docs/fixing-paths for details.",
       "type": "array",
       "items": { "type": "string" }
     },
     "flags": {
-      "description": "Flags. See https://docs.codecov.io/docs/flags for details.",
       "oneOf": [
         {
           "type": "array",
@@ -250,10 +276,11 @@
       ]
     },
     "comment": {
-      "description": "Pull request comments. See https://docs.codecov.io/docs/pull-request-comments for details.",
       "oneOf": [
         {
           "type": "object",
+          "additionalProperties": false,
+          "required": ["layout", "require_changes", "require_base", "require_head", "branches", "behavior", "flags", "paths"],
           "properties": {
             "layout": { "$ref": "#/definitions/layout" },
             "require_changes": { "type": "boolean" },

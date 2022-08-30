@@ -1,0 +1,302 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": true,
+  "definitions": {
+    "engineOptions": {
+      "type": "object",
+      "required": ["ChromeBrowserPath"],
+      "properties": {
+        "ChromeBrowserPath": {
+          "description": "The path to the chrome/chromium executable on the machine",
+          "type": "string"
+        }
+      }
+    },
+    "serverSettings": {
+      "type": "object",
+      "required": ["Enabled", "DefaultPort", "RootPath"],
+      "properties": {
+        "Enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "DefaultPort": {
+          "type": "number"
+        },
+        "RootPath": {
+          "type": "string"
+        }
+      }
+    },
+    "templateOptions": {
+      "required": ["Mode", "Id", "Type"],
+      "type": "object",
+      "properties": {
+        "Mode": {
+          "enum": ["Raw", "Script"],
+          "default": "Raw"
+        },
+        "Id": {
+          "type": "string"
+        },
+        "Type": {
+          "type": "string"
+        }
+      }
+    },
+    "referenceSettings": {
+      "type": "object",
+      "required": ["Path", "Includes", "Excludes", "IncludeInTestHarness", "IsTestFrameworkFile", "TemplateOptions"],
+      "properties": {
+        "Path": {
+          "type": "string"
+        },
+        "Includes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Excludes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "IncludeInTestHarness": {
+          "type": "boolean",
+          "default": true
+        },
+        "IsTestFrameworkFile": {
+          "type": "boolean",
+          "default": false
+        },
+        "TemplateOptions": {
+          "$ref": "#/definitions/templateOptions"
+        }
+      }
+    },
+    "compilePathMap": {
+      "type": "object",
+      "required": ["SourcePath", "OutputPath", "OutputPathType"],
+      "properties": {
+        "SourcePath": {
+          "type": "string"
+        },
+        "OutputPath": {
+          "type": "string"
+        },
+        "OutputPathType": {
+          "type": "string",
+          "enum": ["File", "Folder"]
+        }
+      }
+    },
+    "testSettings": {
+      "type": "object",
+      "required": ["Path", "Includes", "Excludes"],
+      "properties": {
+        "Path": {
+          "type": "string"
+        },
+        "Includes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Excludes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "transformConfig": {
+      "type": "object",
+      "required": ["Name", "Path"],
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "Path": {
+          "type": "string"
+        }
+      }
+    },
+    "compileSettings": {
+      "type": "object",
+      "required": ["Extensions", "ExtensionsWithNoOutput", "Paths", "WorkingDirectory", "Executable", "Arguments", "Timeout", "SkipIfUnchanged", "Mode", "UseSourceMaps", "IgnoreMissingFiles"],
+      "properties": {
+        "Extensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ExtensionsWithNoOutput": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/compilePathMap"
+          }
+        },
+        "WorkingDirectory": {
+          "type": "string"
+        },
+        "Executable": {
+          "type": ["string", "null"]
+        },
+        "Arguments": {
+          "type": ["string", "null"]
+        },
+        "Timeout": {
+          "type": "integer"
+        },
+        "SkipIfUnchanged": {
+          "type": "boolean",
+          "default": true
+        },
+        "Mode": {
+          "type": "string",
+          "enum": ["Executable", "External"]
+        },
+        "UseSourceMaps": {
+          "type": "boolean",
+          "default": false
+        },
+        "IgnoreMissingFiles": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    }
+  },
+  "properties": {
+    "Framework": {
+      "type": "string",
+      "enum": ["qunit", "jasmine", "mocha"]
+    },
+    "FrameworkVersion": {
+      "type": "string"
+    },
+    "References": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/referenceSettings"
+      }
+    },
+    "Tests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/testSettings"
+      }
+    },
+    "Engine": {
+      "type": "string",
+      "enum": ["Phantom", "JSDom", "Chrome"]
+    },
+    "EngineOptions": {
+      "$ref": "#/definitions/engineOptions"
+    },
+    "Server": {
+      "$ref": "#/definitions/serverSettings"
+    },
+    "Transforms": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/transformConfig"
+      }
+    },
+    "Compile": {
+      "$ref": "#/definitions/compileSettings"
+    },
+    "TestFileTimeout": {
+      "type": "integer"
+    },
+    "TestHarnessLocationMode": {
+      "type": "string",
+      "enum": ["TestFileAdjacent", "SettingsFileAdjacent", "Custom"]
+    },
+    "TestHarnessReferenceMode": {
+      "enum": ["Normal", "AMD"]
+    },
+    "TestHarnessDirectory": {
+      "type": "string"
+    },
+    "RootReferencePathMode": {
+      "type": "string",
+      "enum": ["DriveRoot", "SettingsFileDirectory"]
+    },
+    "CodeCoverageTimeout": {
+      "type": "integer"
+    },
+    "CodeCoverageExecutionMode": {
+      "type": "string",
+      "enum": ["Manual", "Always", "Never"]
+    },
+    "CodeCoverageSuccessPercentage": {
+      "type": "number"
+    },
+    "CodeCoverageIncludes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "CodeCoverageExcludes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "CustomTestHarnessPath": {
+      "type": "string"
+    },
+    "MochaInterface": {
+      "type": "string",
+      "enum": ["bdd", "tdd", "qunit"]
+    },
+    "AMDBaseUrl": {
+      "type": "string"
+    },
+    "AMDAppDirectory": {
+      "type": "string"
+    },
+    "UserAgent": {
+      "type": "string"
+    },
+    "TestPattern": {
+      "type": "string"
+    },
+    "EnableTestFileBatching": {
+      "type": "boolean"
+    },
+    "InheritFromParent": {
+      "type": "boolean"
+    },
+    "IgnoreResourceLoadingErrors": {
+      "type": "boolean"
+    },
+    "EnableTracing": {
+      "type": "boolean"
+    },
+    "TraceFilePath": {
+      "type": "string"
+    },
+    "Parallelism": {
+      "type": "number"
+    },
+    "BrowserArguments": {
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "required": ["Framework", "FrameworkVersion", "References", "Tests", "Engine", "EngineOptions", "Server", "Transforms", "Compile", "TestFileTimeout", "TestHarnessReferenceMode", "TestHarnessDirectory", "RootReferencePathMode", "CodeCoverageTimeout", "CodeCoverageSuccessPercentage", "CodeCoverageIncludes", "CodeCoverageExcludes", "CustomTestHarnessPath", "MochaInterface", "AMDBaseUrl", "AMDAppDirectory", "UserAgent", "TestPattern", "EnableTestFileBatching", "InheritFromParent", "IgnoreResourceLoadingErrors", "EnableTracing", "TraceFilePath", "Parallelism", "BrowserArguments"]
+}
