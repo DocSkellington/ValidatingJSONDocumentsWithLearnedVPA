@@ -99,6 +99,7 @@ public class KeyGraph<L> {
 
     private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> reachabilityRelation) {
         final Set<L> binLocations = reachabilityRelation.identifyBinLocations(automaton);
+        // TODO: remove all pairs that contain (or go through) a bin state
 
         final ReachabilityRelation<L> valueReachabilityRelation = ReachabilityRelation
                 .computeValueReachabilityRelation(automaton, reachabilityRelation, false);

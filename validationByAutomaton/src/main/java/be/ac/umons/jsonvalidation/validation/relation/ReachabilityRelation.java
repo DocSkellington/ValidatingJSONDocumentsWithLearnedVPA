@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
@@ -211,20 +212,9 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
         };
     }
 
-    public static <L> ReachabilityRelation<L> computeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
-        final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
+    private static <L> ReachabilityRelation<L> computeReachabilityRelationLoop(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses, ReachabilityRelation<L> reachabilityRelation) {
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
         final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
-
-        final ReachabilityRelation<L> reachabilityRelation = getIdentityRelation(automaton, computeWitnesses);
-        for (L location : automaton.getLocations()) {
-            for (JSONSymbol internal : internalAlphabet) {
-                L successor = automaton.getInternalSuccessor(location, internal);
-                if (successor != null) {
-                    reachabilityRelation.add(location, successor, constructWitness(internal, computeWitnesses));
-                }
-            }
-        }
 
         boolean change = true;
         while (change) {
@@ -278,8 +268,123 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
 
             change = reachabilityRelation.addAll(newLocationsInRelation);
         }
-
         return reachabilityRelation;
+    }
+
+    private static <L1, L2> boolean isLocationUnmodified(final L1 locationInPrevious, final OneSEVPA<L1, JSONSymbol> previousHypothesis, final OneSEVPA<L2, JSONSymbol> currentHypothesis, final Map<L1, L2> previousToCurrentLocations) {
+        final Alphabet<JSONSymbol> internalAlphabet = currentHypothesis.getInputAlphabet().getInternalAlphabet();
+        final Alphabet<JSONSymbol> callAlphabet = currentHypothesis.getInputAlphabet().getCallAlphabet();
+        final Alphabet<JSONSymbol> returnAlphabet = currentHypothesis.getInputAlphabet().getReturnAlphabet();
+
+        final L2 locationInCurrent = previousToCurrentLocations.get(locationInPrevious);
+
+        // We check whether there is an internal transition that already existed in the previous hypothesis and that leads to a different location in the current hypothesis
+        for (final JSONSymbol internalSym : internalAlphabet) {
+            final L1 targetInPrevious = previousHypothesis.getInternalSuccessor(locationInPrevious, internalSym);
+            final L2 targetInCurrent = currentHypothesis.getInternalSuccessor(locationInCurrent, internalSym);
+            if (targetInCurrent != previousToCurrentLocations.get(targetInPrevious)) {
+                return false;
+            }
+        }
+
+        // We do the same for return transitions
+        for (final JSONSymbol callSymbol : callAlphabet) {
+            for (final JSONSymbol returnSymbol : returnAlphabet) {
+                for (final L1 locationBeforeCallInPrevious : previousHypothesis.getLocations()) {
+                    final L2 locationBeforeCallInCurrent = previousToCurrentLocations.get(locationBeforeCallInPrevious);
+
+                    final int stackSymInPrevious = previousHypothesis.encodeStackSym(locationBeforeCallInPrevious, callSymbol);
+                    final int stackSymInCurrent = currentHypothesis.encodeStackSym(locationBeforeCallInCurrent, callSymbol);
+
+                    final L1 targetInPrevious = previousHypothesis.getReturnSuccessor(locationInPrevious, returnSymbol, stackSymInPrevious);
+                    final L2 targetInCurrent = currentHypothesis.getReturnSuccessor(locationInCurrent, returnSymbol, stackSymInCurrent);
+
+                    if (targetInCurrent != previousToCurrentLocations.get(targetInPrevious)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        return true;
+    }
+
+    private static <L1, L2> Set<L1> findUnmodifiedLocations(OneSEVPA<L1, JSONSymbol> previousHypothesis, OneSEVPA<L2, JSONSymbol> currentHypothesis, Map<L1, L2> previousToCurrentLocations) {
+        final Set<L1> unmodifiedLocations = new LinkedHashSet<>();
+        for (final L1 locationInPrevious : previousHypothesis.getLocations()) {
+            if (isLocationUnmodified(locationInPrevious, previousHypothesis, currentHypothesis, previousToCurrentLocations)) {
+                unmodifiedLocations.add(locationInPrevious);
+            }
+        }
+
+        return unmodifiedLocations;
+    }
+
+    public static <L1, L2> ReachabilityRelation<L2> computeReachabilityRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis, boolean computeWitnesses) {
+        final Alphabet<JSONSymbol> internalAlphabet = currentHypothesis.getInputAlphabet().getInternalAlphabet();
+
+        // Using the previous hypothesis and reachability relation (from the last learning round), we want to avoid having to re-compute pairs (q, q') such that going from q to q' goes by paths that were not modified.
+        // If we can find such (q, q'), we know that it is still in the reachability relation for the current hypothesis.
+
+        // First, we want to know which location in the current hypothesis corresponds to a location in the previous hypothesis
+        final Map<L1, L2> previousToCurrentLocations = new LinkedHashMap<>();
+        for (final L1 locationInPrevious : previousHypothesis.getLocations()) {
+            for (final L2 locationInCurrent : currentHypothesis.getLocations()) {
+                if (previousHypothesis.getLocationId(locationInPrevious) == currentHypothesis.getLocationId(locationInCurrent)) {
+                    previousToCurrentLocations.put(locationInPrevious, locationInCurrent);
+                }
+            }
+        }
+
+        // Second, we seek the locations for which no existing transitions were modified.
+        // If a brand new return transition was added in the hypothesis, we do not consider it as a modification, as it strictly opens new paths in the VPA.
+        // The set contains locations in the previous hypothesis
+        final Set<L1> unmodifiedLocations = findUnmodifiedLocations(previousHypothesis, currentHypothesis, previousToCurrentLocations);
+        System.out.println("Number of unmodified locations " + unmodifiedLocations + "; " + unmodifiedLocations.size() + " out of " + previousHypothesis.size());
+
+        // Third, we initialize the reachability relation with the identity relation and the internal transitions
+        final ReachabilityRelation<L2> reachabilityRelation = getIdentityRelation(currentHypothesis, computeWitnesses);
+        for (final L2 location : currentHypothesis.getLocations()) {
+            for (final JSONSymbol internal : internalAlphabet) {
+                final L2 successor = currentHypothesis.getInternalSuccessor(location, internal);
+                if (successor != null) {
+                    reachabilityRelation.add(location, successor, constructWitness(internal, computeWitnesses));
+                }
+            }
+        }
+        // Finally, we add the pairs from the previous relation that are still valid
+        for (final InRelation<L1> inRelation : previousReachabilityRelation) {
+            final Set<L1> locationsOnPaths = inRelation.getLocationsSeenBetweenStartAndTarget();
+            // @formatter:off
+            final Optional<L1> modifiedLocationOnPath = locationsOnPaths.stream()
+                .filter(l -> !unmodifiedLocations.contains(l))
+                .findAny();
+            // @formatter:on
+            if (modifiedLocationOnPath.isEmpty()) {
+                final L2 inRelationStartInCurrent = previousToCurrentLocations.get(inRelation.getStart());
+                final L2 inRelationTargetInCurrent = previousToCurrentLocations.get(inRelation.getTarget());
+                final Word<JSONSymbol> witness = previousReachabilityRelation.getWitness(inRelation);
+                reachabilityRelation.add(inRelationStartInCurrent, inRelationTargetInCurrent, witness);
+            }
+        }
+
+        return computeReachabilityRelationLoop(currentHypothesis, computeWitnesses, reachabilityRelation);
+    }
+
+    public static <L> ReachabilityRelation<L> computeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
+        final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
+
+        final ReachabilityRelation<L> reachabilityRelation = getIdentityRelation(automaton, computeWitnesses);
+        for (L location : automaton.getLocations()) {
+            for (JSONSymbol internal : internalAlphabet) {
+                L successor = automaton.getInternalSuccessor(location, internal);
+                if (successor != null) {
+                    reachabilityRelation.add(location, successor, constructWitness(internal, computeWitnesses));
+                }
+            }
+        }
+
+        return computeReachabilityRelationLoop(automaton, computeWitnesses, reachabilityRelation);
     }
 
     public static <L> ReachabilityRelation<L> computeValueReachabilityRelation(final OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation, final boolean computeWitnesses) {
