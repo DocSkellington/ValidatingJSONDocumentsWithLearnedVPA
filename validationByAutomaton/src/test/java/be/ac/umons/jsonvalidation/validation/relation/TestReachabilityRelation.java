@@ -20,10 +20,10 @@ public class TestReachabilityRelation {
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
 
         Assert.assertEquals(reachabilityRelation.size(), 38);
-        for (InRelation<Location> inRelation : reachabilityRelation) {
+        for (InfoInRelation<Location> inRelation : reachabilityRelation) {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
-            Word<JSONSymbol> witness = reachabilityRelation.getWitness(inRelation);
+            Word<JSONSymbol> witness = inRelation.getWitness();
 
             if (start == automaton.getLocation(0)) {
                 if (target == automaton.getLocation(0)) {
@@ -155,6 +155,63 @@ public class TestReachabilityRelation {
                 Assert.fail(inRelation.toString());
             }
         }
+
+        Assert.assertEquals(reachabilityRelation.identifyBinLocations(automaton).size(), 0);
+    }
+
+    @Test
+    public void testSmallTwoBranchesAutomatonValueReachabilityRelation() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+        ReachabilityRelation<Location> valueReachabilityRelation = ReachabilityRelation.computeValueReachabilityRelation(automaton, reachabilityRelation, true);
+
+        Assert.assertEquals(valueReachabilityRelation.size(), 5);
+
+        for (InfoInRelation<Location> inRelation : valueReachabilityRelation) {
+            Location start = inRelation.getStart();
+            Location target = inRelation.getTarget();
+            Word<JSONSymbol> witness = inRelation.getWitness();
+            
+            if (start == automaton.getLocation(0)) {
+                if (target == automaton.getLocation(6)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.toSymbol("k1"), JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, JSONSymbol.toSymbol("k2"), JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                }
+                else {
+                    Assert.fail();
+                }
+            }
+            else if (start == automaton.getLocation(1)) {
+                if (target == automaton.getLocation(2)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol));
+                }
+                else if (target == automaton.getLocation(7)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol));
+                }
+                else {
+                    Assert.fail();
+                }
+            }
+            else if (start == automaton.getLocation(4)) {
+                if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.trueSymbol));
+                }
+                else {
+                    Assert.fail();
+                }
+            }
+            else if (start == automaton.getLocation(9)) {
+                if (target == automaton.getLocation(5)) {
+                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol));
+                }
+                else {
+                    Assert.fail();
+                }
+            }
+            else {
+                Assert.fail();
+            }
+        }
     }
 
     @Test
@@ -170,10 +227,10 @@ public class TestReachabilityRelation {
 
         Assert.assertEquals(reachabilityRelation.size(), 64);
 
-        for (InRelation<Location> inRelation : reachabilityRelation) {
+        for (InfoInRelation<Location> inRelation : reachabilityRelation) {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
-            Word<JSONSymbol> witness = reachabilityRelation.getWitness(inRelation);
+            Word<JSONSymbol> witness = inRelation.getWitness();
 
             if (start == automaton.getLocation(0)) {
                 if (target == automaton.getLocation(0)) {
@@ -424,5 +481,7 @@ public class TestReachabilityRelation {
                 Assert.fail(inRelation.toString());
             }
         }
+
+        Assert.assertEquals(reachabilityRelation.identifyBinLocations(automaton).size(), 0);
     }
 }

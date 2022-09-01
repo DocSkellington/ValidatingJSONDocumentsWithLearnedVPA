@@ -21,12 +21,17 @@ class ReachabilityMatrix<L> implements Iterable<InfoInRelation<L>> {
     }
 
     @Nullable
-    public Word<JSONSymbol> getWitness(final L start, final L target) {
+    public InfoInRelation<L> getInfoInRelation(final L start, final L target) {
         final Map<L, InfoInRelation<L>> row = matrix.get(start);
         if (row == null) {
             return null;
         }
-        final InfoInRelation<L> cell = row.get(target);
+        return row.get(target);
+    }
+
+    @Nullable
+    public Word<JSONSymbol> getWitness(final L start, final L target) {
+        final InfoInRelation<L> cell = getInfoInRelation(start, target);
         if (cell == null) {
             return null;
         }
@@ -69,12 +74,14 @@ class ReachabilityMatrix<L> implements Iterable<InfoInRelation<L>> {
         }
     }
 
+    private boolean add(final InfoInRelation<L> infoInRelation) {
+        return add(infoInRelation.getStart(), infoInRelation.getTarget(), infoInRelation);
+    }
+
     public boolean addAll(final ReachabilityMatrix<L> matrix) {
         boolean change = false;
-        for (final Map.Entry<L, Map<L, InfoInRelation<L>>> startToEntry : matrix.matrix.entrySet()) {
-            for (final Map.Entry<L, InfoInRelation<L>> targetToInfo : startToEntry.getValue().entrySet()) {
-                change = this.add(startToEntry.getKey(), targetToInfo.getKey(), targetToInfo.getValue()) || change;
-            }
+        for (InfoInRelation<L> inRelation : matrix) {
+            change = this.add(inRelation) || change;
         }
         return change;
     }
@@ -117,7 +124,7 @@ class ReachabilityMatrix<L> implements Iterable<InfoInRelation<L>> {
 
         @Override
         public boolean hasNext() {
-            if (cellIterator.hasNext()) {
+            if (cellIterator != null && cellIterator.hasNext()) {
                 return true;
             }
             if (rowIterator.hasNext()) {

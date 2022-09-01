@@ -126,12 +126,13 @@ public class KeyGraph<L> {
                 if (locationAfterKey == null || binLocations.contains(locationAfterKey)) {
                     continue;
                 }
-                for (final InRelation<L> inValueRelation : valueReachabilityRelation
-                        .getPairsWithStartLocation(locationAfterKey)) {
+                for (final InfoInRelation<L> inValueRelation : valueReachabilityRelation.getLocationsAndInfoInRelationWith(locationAfterKey)) {
                     // @formatter:off
-                    final boolean binStateOnPath = inValueRelation.getLocationsSeenBetweenStartAndTarget().stream()
+                    final boolean binStateOnPath = inValueRelation.getLocationsBetweenStartAndTarget().stream()
                         .filter(location -> binLocations.contains(location))
-                        .findAny().isPresent();
+                        .findAny()
+                        .isPresent()
+                    ;
                     // @formatter:on
                     if (binStateOnPath) {
                         continue;
@@ -221,7 +222,7 @@ public class KeyGraph<L> {
 
         final L start = path.get(0).getStartLocation();
         final L target = path.get(path.size() - 1).getTargetLocation();
-        assert witnessRelation.getWitnessToStart(start, target) != null;
+        assert witnessRelation.getWitnessToStart(start, target) != null : start + " " + target;
         assert witnessRelation.getWitnessFromTarget(start, target) != null;
 
         final WordBuilder<JSONSymbol> builder = new WordBuilder<>();
