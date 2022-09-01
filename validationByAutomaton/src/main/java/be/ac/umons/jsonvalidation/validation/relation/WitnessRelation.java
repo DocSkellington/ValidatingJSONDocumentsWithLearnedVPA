@@ -1,10 +1,5 @@
 package be.ac.umons.jsonvalidation.validation.relation;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
@@ -12,67 +7,7 @@ import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
-class WitnessRelation<L> implements Iterable<InfoInWitnessRelation<L>> {
-    private final Map<L, Map<L, InfoInWitnessRelation<L>>> relation = new LinkedHashMap<>();
-    
-    @Override
-    public String toString() {
-        return relation.toString();
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(relation);
-    }
-
-    private class IteratorOverReachabilityMatrix implements Iterator<InfoInWitnessRelation<L>> {
-        private Iterator<L> rowIterator;
-        private Iterator<InfoInWitnessRelation<L>> cellIterator;
-
-        public IteratorOverReachabilityMatrix() {
-            this.rowIterator = relation.keySet().iterator();
-            hasNext();
-        }
-
-        @Override
-        public boolean hasNext() {
-            if (cellIterator != null && cellIterator.hasNext()) {
-                return true;
-            }
-            if (rowIterator.hasNext()) {
-                L nextRow = rowIterator.next();
-                cellIterator = relation.get(nextRow).values().iterator();
-                return true;
-            }
-            return false;
-        }
-
-        @Override
-        public InfoInWitnessRelation<L> next() {
-            return cellIterator.next();
-        }
-    }
-
-    @Override
-    public Iterator<InfoInWitnessRelation<L>> iterator() {
-        return new IteratorOverReachabilityMatrix();
-    }
-
-    public int size() {
-        // @formatter:off
-        return relation.values().stream()
-            .mapToInt(map -> map.size())
-            .sum();
-        // @formatter:on
-    }
-
-    @Nullable
-    private InfoInWitnessRelation<L> getCell(L start, L target) {
-        if (!relation.containsKey(start)) {
-            return null;
-        }
-        return relation.get(start).get(target);
-    }
+class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>> {
 
     @Nullable
     public Word<JSONSymbol> getWitnessToStart(L start, L target) {
@@ -100,20 +35,13 @@ class WitnessRelation<L> implements Iterable<InfoInWitnessRelation<L>> {
     }
 
     private boolean add(L start, L target, InfoInWitnessRelation<L> infoInRelation) {
-        if (relation.containsKey(start)) {
-            if (relation.get(start).containsKey(target)) {
+        if (containsKey(start)) {
+            if (areInRelation(start, target)) {
                 return false;
             }
-            else {
-                relation.get(start).put(target, infoInRelation);
-                return true;
-            }
         }
-        else {
-            relation.put(start, new LinkedHashMap<>());
-            relation.get(start).put(target, infoInRelation);
-            return true;
-        }
+        set(start, target, infoInRelation);
+        return true;
     }
 
     private boolean add(InfoInWitnessRelation<L> infoInRelation) {

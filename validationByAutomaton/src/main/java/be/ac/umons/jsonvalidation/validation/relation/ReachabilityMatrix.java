@@ -3,39 +3,42 @@ package be.ac.umons.jsonvalidation.validation.relation;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import be.ac.umons.jsonvalidation.JSONSymbol;
-import net.automatalib.words.Word;
+class ReachabilityMatrix<L, C> implements Iterable<C> {
+    private final Map<L, Map<L, C>> matrix = new LinkedHashMap<>();
 
-class ReachabilityMatrix<L> implements Iterable<InfoInRelation<L>> {
-    private final Map<L, Map<L, InfoInRelation<L>>> matrix = new LinkedHashMap<>();
+    public boolean containsKey(final L start) {
+        return matrix.containsKey(start);
+    }
 
     public boolean areInRelation(final L start, final L target) {
-        return matrix.containsKey(start) && matrix.get(start).containsKey(target);
+        return getCell(start, target) != null;
+    }
+
+    private void createRowFor(final L start) {
+        if (!containsKey(start)) {
+            matrix.put(start, new LinkedHashMap<>());
+        }
+    }
+
+    protected void set(final L start, final L target, final C cell) {
+        if (!matrix.containsKey(start)) {
+            createRowFor(start);
+        }
+        matrix.get(start).put(target, cell);
     }
 
     @Nullable
-    public InfoInRelation<L> getInfoInRelation(final L start, final L target) {
-        final Map<L, InfoInRelation<L>> row = matrix.get(start);
+    public C getCell(final L start, final L target) {
+        final Map<L, C> row = matrix.get(start);
         if (row == null) {
             return null;
         }
         return row.get(target);
-    }
-
-    @Nullable
-    public Word<JSONSymbol> getWitness(final L start, final L target) {
-        final InfoInRelation<L> cell = getInfoInRelation(start, target);
-        if (cell == null) {
-            return null;
-        }
-        return cell.getWitness();
     }
 
     public int size() {
@@ -46,47 +49,7 @@ class ReachabilityMatrix<L> implements Iterable<InfoInRelation<L>> {
         // @formatter:on
     }
 
-    public boolean add(final L start, final L target, final Word<JSONSymbol> witness) {
-        final Set<L> locationsBetweenStartAndTarget = new LinkedHashSet<>();
-        locationsBetweenStartAndTarget.add(start);
-        locationsBetweenStartAndTarget.add(target);
-        return add(start, target, witness, locationsBetweenStartAndTarget);
-    }
-
-    public boolean add(final L start, final L target, final Word<JSONSymbol> witness, final Set<L> locationsBetweenStartAndTarget) {
-        return add(start, target, new InfoInRelation<>(start, target, witness, locationsBetweenStartAndTarget));
-    }
-
-    public boolean add(final L start, final L target, final InfoInRelation<L> infoInRelation) {
-        if (matrix.containsKey(start)) {
-            if (matrix.get(start).containsKey(target)) {
-                return matrix.get(start).get(target).addSeenLocations(infoInRelation.getLocationsBetweenStartAndTarget());
-            }
-            else {
-                matrix.get(start).put(target, infoInRelation);
-                return true;
-            }
-        }
-        else {
-            matrix.put(start, new LinkedHashMap<>());
-            matrix.get(start).put(target, infoInRelation);
-            return true;
-        }
-    }
-
-    private boolean add(final InfoInRelation<L> infoInRelation) {
-        return add(infoInRelation.getStart(), infoInRelation.getTarget(), infoInRelation);
-    }
-
-    public boolean addAll(final ReachabilityMatrix<L> matrix) {
-        boolean change = false;
-        for (InfoInRelation<L> inRelation : matrix) {
-            change = this.add(inRelation) || change;
-        }
-        return change;
-    }
-
-    public Collection<InfoInRelation<L>> getLocationsAndInfoInRelationWith(final L start) {
+    public Collection<C> getLocationsAndInfoInRelationWith(final L start) {
         return matrix.get(start).values();
     }
 
@@ -109,13 +72,13 @@ class ReachabilityMatrix<L> implements Iterable<InfoInRelation<L>> {
             return false;
         }
 
-        ReachabilityMatrix<?> other = (ReachabilityMatrix<?>)obj;
+        ReachabilityMatrix<?,?> other = (ReachabilityMatrix<?,?>)obj;
         return Objects.equals(other.matrix, this.matrix);
     }
 
-    private class IteratorOverReachabilityMatrix implements Iterator<InfoInRelation<L>> {
+    private class IteratorOverReachabilityMatrix implements Iterator<C> {
         private Iterator<L> rowIterator;
-        private Iterator<InfoInRelation<L>> cellIterator;
+        private Iterator<C> cellIterator;
 
         public IteratorOverReachabilityMatrix() {
             this.rowIterator = matrix.keySet().iterator();
@@ -136,13 +99,13 @@ class ReachabilityMatrix<L> implements Iterable<InfoInRelation<L>> {
         }
 
         @Override
-        public InfoInRelation<L> next() {
+        public C next() {
             return cellIterator.next();
         }
     }
 
     @Override
-    public Iterator<InfoInRelation<L>> iterator() {
+    public Iterator<C> iterator() {
         return new IteratorOverReachabilityMatrix();
     }
 }

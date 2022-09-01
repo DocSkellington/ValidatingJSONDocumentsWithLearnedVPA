@@ -1,7 +1,5 @@
 package be.ac.umons.jsonvalidation.validation.relation;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,22 +12,15 @@ import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 
-public class ReachabilityRelation<L> implements Iterable<InfoInRelation<L>> {
-    private final ReachabilityMatrix<L> reachabilityMatrix = new ReachabilityMatrix<>();
-
-    private ReachabilityRelation() {}
-
-    public int size() {
-        return reachabilityMatrix.size();
-    }
+public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelation<L>> {
     
     @Nullable
     public Word<JSONSymbol> getWitness(final L start, final L target) {
-        return reachabilityMatrix.getWitness(start, target);
-    }
-
-    public Collection<InfoInRelation<L>> getLocationsAndInfoInRelationWith(final L start) {
-        return reachabilityMatrix.getLocationsAndInfoInRelationWith(start);
+        final InfoInRelation<L> inRelation = getCell(start, target);
+        if (inRelation == null) {
+            return null;
+        }
+        return inRelation.getWitness();
     }
 
     private Set<L> allLocationsOnAcceptingPath(OneSEVPA<L, JSONSymbol> automaton) {
@@ -58,25 +49,35 @@ public class ReachabilityRelation<L> implements Iterable<InfoInRelation<L>> {
         return binLocations;
     }
 
-    ReachabilityMatrix<L> getMatrix() {
-        return reachabilityMatrix;
+    public boolean add(final L start, final L target, final Word<JSONSymbol> witness) {
+        final Set<L> locationsBetweenStartAndTarget = new LinkedHashSet<>();
+        locationsBetweenStartAndTarget.add(start);
+        locationsBetweenStartAndTarget.add(target);
+        return add(start, target, witness, locationsBetweenStartAndTarget);
     }
 
-    boolean add(L start, L target, Word<JSONSymbol> witness) {
-        return reachabilityMatrix.add(start, target, witness);
+    public boolean add(final L start, final L target, final Word<JSONSymbol> witness, final Set<L> locationsBetweenStartAndTarget) {
+        return add(new InfoInRelation<>(start, target, witness, locationsBetweenStartAndTarget));
     }
 
-    private boolean add(L start, L target, Word<JSONSymbol> witness, Set<L> statesBetweenStartAndTarget) {
-        return reachabilityMatrix.add(start, target, witness, statesBetweenStartAndTarget);
+    private boolean add(final InfoInRelation<L> infoInRelation) {
+        final L start = infoInRelation.getStart();
+        final L target = infoInRelation.getTarget();
+        if (containsKey(start)) {
+            if (areInRelation(start, target)) {
+                return getCell(start, target).addSeenLocations(infoInRelation.getLocationsBetweenStartAndTarget());
+            }
+        }
+        set(start, target, infoInRelation);
+        return true;
     }
 
-    private boolean addAll(final ReachabilityRelation<L> relation) {
-        return this.getMatrix().addAll(relation.getMatrix());
-    }
-
-    @Override
-    public Iterator<InfoInRelation<L>> iterator() {
-        return getMatrix().iterator();
+    public boolean addAll(final ReachabilityRelation<L> relation) {
+        boolean change = false;
+        for (final InfoInRelation<L> inRelation : relation) {
+            change = this.add(inRelation) || change;
+        }
+        return change;
     }
 
     static Word<JSONSymbol> constructWitness(Word<JSONSymbol> witnessFromStartToMid, Word<JSONSymbol> witnessFromMidToTarget, boolean computeWitnesses) {
@@ -144,7 +145,7 @@ public class ReachabilityRelation<L> implements Iterable<InfoInRelation<L>> {
                     final L locationAfterCall = automaton.getInitialLocation();
                     final int stackSym = automaton.encodeStackSym(locationBeforeCall, callSym);
 
-                    for (final InfoInRelation<L> inRelation : relation.reachabilityMatrix.getLocationsAndInfoInRelationWith(locationAfterCall)) {
+                    for (final InfoInRelation<L> inRelation : relation.getLocationsAndInfoInRelationWith(locationAfterCall)) {
                         final L locationBeforeReturn = inRelation.getTarget();
                         for (final JSONSymbol returnSym : returnAlphabet) {
                             final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSym, stackSym);
