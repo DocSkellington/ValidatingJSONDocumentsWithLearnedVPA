@@ -1,15 +1,12 @@
 package be.ac.umons.jsonlearning.oracles.exploration;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Random;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.json.JSONObject;
 
 import be.ac.umons.jsonlearning.oracles.IVPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
-import be.ac.umons.jsonschematools.generator.exploration.DefaultExplorationGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.OneSEVPA;
@@ -42,10 +39,4 @@ public class VPDAJSONEquivalenceOracle
         return query;
     }
 
-    @Override
-    public JSONObject getOneValidDocument() {
-        final Iterator<JSONObject> iterator = new DefaultExplorationGenerator(getMaxProperties(), getMaxItems()).createIterator(getSchema());
-        assert iterator.hasNext();
-        return iterator.next();
-    }
 }
