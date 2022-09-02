@@ -1,7 +1,6 @@
 package be.ac.umons.jsonlearning.oracles.random;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.Set;
 
@@ -10,7 +9,6 @@ import org.json.JSONObject;
 
 import be.ac.umons.jsonlearning.oracles.IVPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
-import be.ac.umons.jsonschematools.generator.random.DefaultRandomGenerator;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.query.DefaultQuery;
@@ -55,13 +53,6 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
         LOGGER.info("Creating graph");
         query = counterexampleFromKeyGraph(hypo);
         return query;
-    }
-
-    @Override
-    public JSONObject getOneValidDocument() {
-        final Iterator<JSONObject> iterator = new DefaultRandomGenerator(getMaxProperties(), getMaxItems()).createIterator(getSchema());
-        assert iterator.hasNext();
-        return iterator.next();
     }
 
 }
