@@ -352,6 +352,7 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
                 }
             }
         }
+        System.out.println("Number of elements in reach before adding unmodified: " + reachabilityRelation.size());
         // Finally, we add the pairs from the previous relation that are still valid
         for (final InRelation<L1> inRelation : previousReachabilityRelation) {
             final Set<L1> locationsOnPaths = inRelation.getLocationsSeenBetweenStartAndTarget();
@@ -367,6 +368,7 @@ public class ReachabilityRelation<L> implements Iterable<InRelation<L>> {
                 reachabilityRelation.add(inRelationStartInCurrent, inRelationTargetInCurrent, witness);
             }
         }
+        System.out.println("Number of elements in reach after adding unmodified: " + reachabilityRelation.size());
 
         return computeReachabilityRelationLoop(currentHypothesis, computeWitnesses, reachabilityRelation);
     }
