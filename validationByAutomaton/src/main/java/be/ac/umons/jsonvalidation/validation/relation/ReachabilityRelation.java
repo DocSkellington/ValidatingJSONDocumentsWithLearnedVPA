@@ -7,12 +7,15 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
+import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 
 public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelation<L>> {
+
+    private static final LearnLogger LOGGER = LearnLogger.getLogger(ReachabilityRelation.class);
     
     @Nullable
     public Word<JSONSymbol> getWitness(final L start, final L target) {
@@ -120,6 +123,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
     }
 
     public static <L> ReachabilityRelation<L> computeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
+        LOGGER.info("Reach: start");
         final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
         final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
@@ -134,10 +138,13 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
                 }
             }
         }
+        LOGGER.info("Reach: init warshall");
         Warshall.warshall(relation, locations, computeWitnesses);
+        LOGGER.info("Reach: init done");
 
         boolean change = true;
         while (change) {
+            LOGGER.info("Reach: increasing depth");
             final ReachabilityRelation<L> newLocationsInRelation = new ReachabilityRelation<>();
 
             for (final L locationBeforeCall : locations) {
@@ -165,7 +172,9 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
                 }
             }
             change = relation.addAll(newLocationsInRelation);
+            LOGGER.info("Reach: warshall loop");
             change = Warshall.warshall(relation, locations, computeWitnesses) || change;
+            LOGGER.info("Reach: loop done");
         }
 
         return relation;
@@ -180,6 +189,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
     }
 
     public static <L> ReachabilityRelation<L> computeValueReachabilityRelation(final OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation, final boolean computeWitnesses) {
+        LOGGER.info("Value reach: start");
         final Alphabet<JSONSymbol> primitiveValuesAlphabet = JSONSymbol.primitiveValuesAlphabet;
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
         final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
@@ -212,6 +222,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
             }
         }
 
+        LOGGER.info("Value reach: end");
         return valueReachabilityRelation;
     }
 }

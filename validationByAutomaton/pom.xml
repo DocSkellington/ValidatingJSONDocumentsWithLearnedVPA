@@ -79,6 +79,7 @@ limitations under the License.
 
         <!-- Dependency versions -->
         <automatalib.version>0.11.0-SNAPSHOT</automatalib.version>
+        <learnlib.version>0.17.0-SNAPSHOT</learnlib.version>
         <json.version>20210307</json.version>
         <jsonschema.version>2.0</jsonschema.version>
         <guava.version>31.1-jre</guava.version>
@@ -103,6 +104,12 @@ limitations under the License.
             <groupId>net.automatalib.distribution</groupId>
             <artifactId>automata-distribution</artifactId>
             <version>${automatalib.version}</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>de.learnlib.distribution</groupId>
+            <artifactId>learnlib-distribution</artifactId>
+            <version>${learnlib.version}</version>
             <type>pom</type>
         </dependency>
         

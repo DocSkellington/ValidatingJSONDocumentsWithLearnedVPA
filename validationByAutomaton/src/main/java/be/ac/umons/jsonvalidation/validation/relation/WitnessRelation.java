@@ -3,11 +3,14 @@ package be.ac.umons.jsonvalidation.validation.relation;
 import javax.annotation.Nullable;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
+import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
 class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>> {
+
+    private static final LearnLogger LOGGER = LearnLogger.getLogger(WitnessRelation.class);
 
     @Nullable
     public Word<JSONSymbol> getWitnessToStart(L start, L target) {
@@ -57,6 +60,7 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
     }
 
     public static <L> WitnessRelation<L> computeWitnessRelation(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation) {
+        LOGGER.info("Witness relation: start");
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
         final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
         final WitnessRelation<L> witnessRelation = new WitnessRelation<>();
@@ -66,6 +70,7 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
                 witnessRelation.add(automaton.getInitialLocation(), location, Word.epsilon(), Word.epsilon());
             }
         }
+        LOGGER.info("Witness relation: init done");
 
         while (true) {
             final WitnessRelation<L> newInRelation = new WitnessRelation<>();
@@ -104,8 +109,10 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
             if (!witnessRelation.addAll(newInRelation)) {
                 break;
             }
+            LOGGER.info("Witness relation: end loop");
         }
 
+        LOGGER.info("Witness relation: end");
         return witnessRelation;
     }
 

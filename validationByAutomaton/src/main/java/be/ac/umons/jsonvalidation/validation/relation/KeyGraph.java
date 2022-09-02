@@ -20,6 +20,7 @@ import com.google.common.graph.Traverser;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.validation.PairSourceToReached;
+import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
@@ -51,6 +52,8 @@ import net.automatalib.words.impl.Alphabets;
  * @author Gaëtan Staquet
  */
 public class KeyGraph<L> {
+    private static final LearnLogger LOGGER = LearnLogger.getLogger(KeyGraph.class);
+
     private final OneSEVPA<L, JSONSymbol> automaton;
     private final ImmutableGraph<NodeInGraph<L>> graph;
     private final Map<JSONSymbol, List<NodeInGraph<L>>> keyToNodes = new HashMap<>();
@@ -85,6 +88,7 @@ public class KeyGraph<L> {
             hasPathWithDuplicateKeys = false;
             witnessInvalid = null;
         }
+        LOGGER.info("Initialization of graph done");
     }
 
     private Alphabet<JSONSymbol> getKeyAlphabet() {
@@ -114,6 +118,7 @@ public class KeyGraph<L> {
         // @formatter:on
         final Alphabet<JSONSymbol> keyAlphabet = getKeyAlphabet();
 
+        LOGGER.info("Creating nodes");
         // We create the nodes
         final List<NodeInGraph<L>> nodes = new LinkedList<>();
         for (final L startLocation : automaton.getLocations()) {
@@ -162,6 +167,7 @@ public class KeyGraph<L> {
                 }
             }
         }
+        LOGGER.info("Nodes created");
 
         // We create the edges
         for (final NodeInGraph<L> startNode : nodes) {
@@ -174,6 +180,7 @@ public class KeyGraph<L> {
             }
         }
 
+        LOGGER.info("Graph created");
         return builder.build();
     }
 
