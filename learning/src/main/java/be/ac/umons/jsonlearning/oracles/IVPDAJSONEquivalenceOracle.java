@@ -26,9 +26,9 @@ public interface IVPDAJSONEquivalenceOracle extends EquivalenceOracle<OneSEVPA<?
         }
 
         final Word<JSONSymbol> loopingWord = Word.fromLetter(loopingSymbol);
+        final Word<JSONSymbol> acceptedWord = OneSEVPAUtil.findAcceptedWord(hypo, hypo.getInputAlphabet());
 
-        if (loopingWord != null) {
-            final Word<JSONSymbol> acceptedWord = OneSEVPAUtil.findAcceptedWord(hypo, hypo.getInputAlphabet());
+        if (acceptedWord != null) {
             final Word<JSONSymbol> totalWord = loopingWord.concat(acceptedWord);
             if (hypo.accepts(totalWord)) {
                 return new DefaultQuery<>(totalWord, false);
