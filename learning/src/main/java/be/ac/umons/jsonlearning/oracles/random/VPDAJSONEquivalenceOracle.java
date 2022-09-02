@@ -71,6 +71,11 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
         else {
             queryAndRelation = counterexampleAndRelationFromKeyGraph(previousHypothesis, previousReachabilityRelation, currentHypothesis);
         }
+
+        if (queryAndRelation == null) {
+            return null;
+        }
+
         this.previousReachabilityRelation = queryAndRelation.getSecond();
         this.previousHypothesis = currentHypothesis;
         return queryAndRelation.getFirst();
