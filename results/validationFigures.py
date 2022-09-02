@@ -22,9 +22,6 @@ document_description = [
     "Depth document",
 ]
 
-df["Automaton memory"] *= 1024
-df["Validator memory"] *= 1024
-
 numerical_columns = [
     "Automaton time (ms)",
     "Automaton memory",
