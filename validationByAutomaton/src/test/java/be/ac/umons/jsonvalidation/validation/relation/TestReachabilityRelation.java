@@ -10,12 +10,8 @@ import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.Word;
 
 public class TestReachabilityRelation {
-    @Test
-    public void testSmallTwoBranchesAutomatonReachabilityRelation() {
-        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
-                .computeReachabilityRelation(automaton, true);
-
+    private void checkElementsInRelationForSmallTwoBranchesAutomaton(final DefaultOneSEVPA<JSONSymbol> automaton,
+            final ReachabilityRelation<Location> reachabilityRelation) {
         final JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
 
@@ -160,11 +156,38 @@ public class TestReachabilityRelation {
     }
 
     @Test
+    public void testSmallTwoBranchesAutomatonReachabilityRelation() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+        checkElementsInRelationForSmallTwoBranchesAutomaton(automaton, reachabilityRelation);
+    }
+
+    @Test
+    public void testSmallTwoBranchesAutomatonReachabilityRelationReuse() {
+        JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
+        JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
+        ReachabilityRelation<Location> previousRelation = new ReachabilityRelation<>();
+        previousRelation.add(automaton.getLocation(2), automaton.getLocation(5),
+                Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol));
+        previousRelation.add(automaton.getLocation(0), automaton.getLocation(6),
+                Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol,
+                        JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol,
+                        JSONSymbol.closingCurlyBraceSymbol));
+
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, previousRelation, automaton, true);
+        checkElementsInRelationForSmallTwoBranchesAutomaton(automaton, reachabilityRelation);
+    }
+
+    @Test
     public void testSmallTwoBranchesAutomatonValueReachabilityRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
         ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
                 .computeReachabilityRelation(automaton, true);
-        ReachabilityRelation<Location> valueReachabilityRelation = ReachabilityRelation.computeValueReachabilityRelation(automaton, reachabilityRelation, true);
+        ReachabilityRelation<Location> valueReachabilityRelation = ReachabilityRelation
+                .computeValueReachabilityRelation(automaton, reachabilityRelation, true);
 
         Assert.assertEquals(valueReachabilityRelation.size(), 5);
 
@@ -172,43 +195,37 @@ public class TestReachabilityRelation {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
             Word<JSONSymbol> witness = inRelation.getWitness();
-            
+
             if (start == automaton.getLocation(0)) {
                 if (target == automaton.getLocation(6)) {
-                    Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.toSymbol("k1"), JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, JSONSymbol.toSymbol("k2"), JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
-                }
-                else {
+                    Assert.assertEquals(witness,
+                            Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, JSONSymbol.toSymbol("k1"),
+                                    JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, JSONSymbol.toSymbol("k2"),
+                                    JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
+                } else {
                     Assert.fail();
                 }
-            }
-            else if (start == automaton.getLocation(1)) {
+            } else if (start == automaton.getLocation(1)) {
                 if (target == automaton.getLocation(2)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.integerSymbol));
-                }
-                else if (target == automaton.getLocation(7)) {
+                } else if (target == automaton.getLocation(7)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol));
-                }
-                else {
+                } else {
                     Assert.fail();
                 }
-            }
-            else if (start == automaton.getLocation(4)) {
+            } else if (start == automaton.getLocation(4)) {
                 if (target == automaton.getLocation(5)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.trueSymbol));
-                }
-                else {
+                } else {
                     Assert.fail();
                 }
-            }
-            else if (start == automaton.getLocation(9)) {
+            } else if (start == automaton.getLocation(9)) {
                 if (target == automaton.getLocation(5)) {
                     Assert.assertEquals(witness, Word.fromSymbols(JSONSymbol.stringSymbol));
-                }
-                else {
+                } else {
                     Assert.fail();
                 }
-            }
-            else {
+            } else {
                 Assert.fail();
             }
         }

@@ -19,7 +19,7 @@ class Warshall {
 
                         Word<JSONSymbol> witness = relation.getWitness(start, target);
                         if (witness == null) {
-                            witness = ReachabilityRelation.constructWitness(startToPivot.getWitness(), pivotToTarget.getWitness(), computeWitnesses);
+                            witness = constructWitness(startToPivot.getWitness(), pivotToTarget.getWitness(), computeWitnesses);
                         }
 
                         final Set<L> seenLocations = new LinkedHashSet<>();
@@ -32,5 +32,14 @@ class Warshall {
             }
         }
         return relation.addAll(newRelation);
+    }
+
+    private static Word<JSONSymbol> constructWitness(Word<JSONSymbol> witnessFromStartToMid, Word<JSONSymbol> witnessFromMidToTarget, boolean computeWitnesses) {
+        if (computeWitnesses) {
+            return witnessFromStartToMid.concat(witnessFromMidToTarget);
+        }
+        else {
+            return null;
+        }
     }
 }
