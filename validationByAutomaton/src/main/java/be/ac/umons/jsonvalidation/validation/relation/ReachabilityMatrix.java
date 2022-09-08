@@ -11,16 +11,12 @@ import javax.annotation.Nullable;
 class ReachabilityMatrix<L, C> implements Iterable<C> {
     private final Map<L, Map<L, C>> matrix = new LinkedHashMap<>();
 
-    public boolean containsKey(final L start) {
-        return matrix.containsKey(start);
-    }
-
     public boolean areInRelation(final L start, final L target) {
         return getCell(start, target) != null;
     }
 
     private void createRowFor(final L start) {
-        if (!containsKey(start)) {
+        if (!matrix.containsKey(start)) {
             matrix.put(start, new LinkedHashMap<>());
         }
     }

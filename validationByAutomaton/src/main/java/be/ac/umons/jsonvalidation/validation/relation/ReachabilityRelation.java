@@ -56,10 +56,16 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
     }
 
     boolean add(final L start, final L target, final Word<JSONSymbol> witness) {
-        final Set<L> locationsBetweenStartAndTarget = new LinkedHashSet<>();
-        locationsBetweenStartAndTarget.add(start);
-        locationsBetweenStartAndTarget.add(target);
-        return add(start, target, witness, locationsBetweenStartAndTarget);
+        if (areInRelation(start, target)) {
+            // Nothing to do in this case, as we don't have any new seen locations to add
+            return false;
+        }
+        else {
+            final Set<L> locationsBetweenStartAndTarget = new LinkedHashSet<>();
+            locationsBetweenStartAndTarget.add(start);
+            locationsBetweenStartAndTarget.add(target);
+            return add(new InfoInRelation<L>(start, target, witness, locationsBetweenStartAndTarget));
+        }
     }
 
     boolean add(final L start, final L target, final Word<JSONSymbol> witness, final Set<L> locationsBetweenStartAndTarget) {
@@ -69,13 +75,15 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
     private boolean add(final InfoInRelation<L> infoInRelation) {
         final L start = infoInRelation.getStart();
         final L target = infoInRelation.getTarget();
-        if (containsKey(start)) {
-            if (areInRelation(start, target)) {
-                return getCell(start, target).addSeenLocations(infoInRelation.getLocationsBetweenStartAndTarget());
-            }
+        if (areInRelation(start, target)) {
+            // If start and target are already in relation, we simply add the intermediate locations
+            // We keep the previous witness as, by construction, the previous witness is smaller than the new
+            return getCell(start, target).addSeenLocations(infoInRelation.getLocationsBetweenStartAndTarget());
         }
-        set(start, target, infoInRelation);
-        return true;
+        else {
+            set(start, target, infoInRelation);
+            return true;
+        }
     }
 
     boolean addAll(final ReachabilityRelation<L> relation) {

@@ -34,21 +34,18 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
     }
 
     private boolean add(L start, L target, Word<JSONSymbol> witnessToStart, Word<JSONSymbol> witnessFromTarget) {
-        return add(start, target, new InfoInWitnessRelation<>(start, target, witnessToStart, witnessFromTarget));
-    }
-
-    private boolean add(L start, L target, InfoInWitnessRelation<L> infoInRelation) {
-        if (containsKey(start)) {
-            if (areInRelation(start, target)) {
-                return false;
-            }
-        }
-        set(start, target, infoInRelation);
-        return true;
+        return add(new InfoInWitnessRelation<>(start, target, witnessToStart, witnessFromTarget));
     }
 
     private boolean add(InfoInWitnessRelation<L> infoInRelation) {
-        return add(infoInRelation.getStart(), infoInRelation.getTarget(), infoInRelation);
+        if (areInRelation(infoInRelation.getStart(), infoInRelation.getTarget())) {
+            // If start and target are already in relation, we have nothing to do, as we already have witnesses.
+            return false;
+        }
+        else {
+            set(infoInRelation.getStart(), infoInRelation.getTarget(), infoInRelation);
+            return true;
+        }
     }
 
     private boolean addAll(WitnessRelation<L> relation) {
