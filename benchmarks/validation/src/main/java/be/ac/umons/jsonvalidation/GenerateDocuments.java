@@ -3,8 +3,12 @@ package be.ac.umons.jsonvalidation;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.json.JSONException;
@@ -45,13 +49,22 @@ public class GenerateDocuments {
     }
 
     public void generate() throws IOException, JSONException, JSONSchemaException, GeneratorException {
+        final Map<Integer, Integer> sizeToNumber = new HashMap<>();
         for (boolean valid : List.of(true, false)) {
             final Iterator<JSONObject> iterator = createIterator(valid);
 
             for (int i = 0 ; i < nDocuments && iterator.hasNext() ; i++) {
                 final JSONObject document = iterator.next();
+                final int length = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random()).length();
+                sizeToNumber.put(length, sizeToNumber.getOrDefault(length, 0) + 1);
                 writeDocument(document, pathToDocuments, schemaName, i, valid);
             }
+        }
+
+        final List<Integer> sizes = new ArrayList<>(sizeToNumber.keySet());
+        Collections.sort(sizes);
+        for (final int size : sizes) {
+            System.out.println("Documents of length " + size + ": " + sizeToNumber.get(size));
         }
     }
 
