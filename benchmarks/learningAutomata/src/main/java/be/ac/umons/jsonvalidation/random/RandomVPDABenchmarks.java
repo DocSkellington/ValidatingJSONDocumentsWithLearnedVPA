@@ -22,7 +22,7 @@ import java.util.Set;
 
 import org.json.JSONObject;
 
-import be.ac.umons.jsonlearning.oracles.random.VPDAJSONEquivalenceOracle;
+import be.ac.umons.jsonlearning.random.VPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.VPDABenchmarks;

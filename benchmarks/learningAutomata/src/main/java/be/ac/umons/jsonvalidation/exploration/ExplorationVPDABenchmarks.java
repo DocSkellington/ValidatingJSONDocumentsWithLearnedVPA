@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Random;
 
-import be.ac.umons.jsonlearning.oracles.exploration.VPDAJSONEquivalenceOracle;
+import be.ac.umons.jsonlearning.exploration.VPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.VPDABenchmarks;

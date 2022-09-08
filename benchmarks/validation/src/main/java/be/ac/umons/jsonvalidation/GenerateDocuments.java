@@ -54,6 +54,7 @@ public class GenerateDocuments {
             final Iterator<JSONObject> iterator = createIterator(valid);
 
             for (int i = 0 ; i < nDocuments && iterator.hasNext() ; i++) {
+                System.out.println(valid + " " + (i+1) + " / " + nDocuments);
                 final JSONObject document = iterator.next();
                 final int length = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random()).length();
                 sizeToNumber.put(length, sizeToNumber.getOrDefault(length, 0) + 1);

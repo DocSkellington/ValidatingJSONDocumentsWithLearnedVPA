@@ -5,8 +5,8 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Random;
 
-import be.ac.umons.jsonlearning.oracles.exploration.JSONPartialEquivalenceOracle;
-import be.ac.umons.jsonlearning.oracles.exploration.VCAJSONEquivalenceOracle;
+import be.ac.umons.jsonlearning.exploration.JSONPartialEquivalenceOracle;
+import be.ac.umons.jsonlearning.exploration.VCAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.VCABenchmarks;

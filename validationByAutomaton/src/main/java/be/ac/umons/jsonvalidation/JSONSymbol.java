@@ -25,9 +25,7 @@ import net.automatalib.words.abstractimpl.AbstractSymbol;
 import net.automatalib.words.impl.Alphabets;
 
 /**
- * Special symbol used for the JSON benchmarks.
- * 
- * It simply holds a String as its underlying information.
+ * A symbol for JSON documents.
  * 
  * @author Gaëtan Staquet
  */

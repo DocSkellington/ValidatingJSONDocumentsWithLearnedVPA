@@ -13,10 +13,10 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import be.ac.umons.jsonlearning.oracles.JSONMembershipOracle;
+import be.ac.umons.jsonlearning.JSONMembershipOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonvalidation.validation.relation.ReachabilityRelation;
+import be.ac.umons.jsonvalidation.relation.ReachabilityRelation;
 import de.learnlib.acex.analyzers.AcexAnalyzers;
 import de.learnlib.algorithms.ttt.vpda.TTTLearnerVPDA;
 import de.learnlib.api.logging.LearnLogger;

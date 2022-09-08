@@ -7,8 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-import be.ac.umons.jsonlearning.oracles.JSONCounterValueOracle;
-import be.ac.umons.jsonlearning.oracles.JSONMembershipOracle;
+import be.ac.umons.jsonlearning.JSONCounterValueOracle;
+import be.ac.umons.jsonlearning.JSONMembershipOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import de.learnlib.algorithms.lstar.roca.LStarROCA;
