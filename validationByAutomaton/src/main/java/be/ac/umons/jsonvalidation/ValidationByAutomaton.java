@@ -5,8 +5,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import be.ac.umons.jsonvalidation.relation.KeyGraph;
-import be.ac.umons.jsonvalidation.relation.NodeInGraph;
+import be.ac.umons.jsonvalidation.graph.KeyGraph;
+import be.ac.umons.jsonvalidation.graph.NodeInGraph;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.VPDAlphabet;
 import net.automatalib.words.Word;
@@ -206,6 +206,7 @@ public class ValidationByAutomaton<L> {
             final JSONSymbol currentKey = currentStack.peekCurrentKey();
             markNodesToReject(currentStack, sourceToReachedLocations, currentKey);
 
+            // TODO: time to compute this set
             final Set<L> acceptingLocations = graph.getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
                     currentStack.peekSeenKeys(), currentStack.peekReachedLocationsBeforeCall(),
                     currentStack.peekRejectedNodes());

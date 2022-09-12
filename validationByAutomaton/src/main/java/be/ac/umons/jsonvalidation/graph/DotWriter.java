@@ -1,4 +1,4 @@
-package be.ac.umons.jsonvalidation.relation;
+package be.ac.umons.jsonvalidation.graph;
 
 import java.io.IOException;
 import java.util.Set;

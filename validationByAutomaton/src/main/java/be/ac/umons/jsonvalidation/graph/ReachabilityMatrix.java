@@ -1,4 +1,4 @@
-package be.ac.umons.jsonvalidation.relation;
+package be.ac.umons.jsonvalidation.graph;
 
 import java.util.Collection;
 import java.util.Iterator;

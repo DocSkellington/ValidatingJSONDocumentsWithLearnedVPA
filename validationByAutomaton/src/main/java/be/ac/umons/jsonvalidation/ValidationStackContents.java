@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import be.ac.umons.jsonvalidation.relation.NodeInGraph;
+import be.ac.umons.jsonvalidation.graph.NodeInGraph;
 
 /**
  * The stack used in a {@link ValidationState}.

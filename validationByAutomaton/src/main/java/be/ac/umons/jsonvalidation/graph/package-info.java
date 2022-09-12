@@ -3,4 +3,4 @@
  * 
  * @author Gaëtan Staquet
  */
-package be.ac.umons.jsonvalidation.relation;
+package be.ac.umons.jsonvalidation.graph;

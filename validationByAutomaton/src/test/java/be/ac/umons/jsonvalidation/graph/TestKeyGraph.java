@@ -1,4 +1,4 @@
-package be.ac.umons.jsonvalidation.relation;
+package be.ac.umons.jsonvalidation.graph;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -12,6 +12,8 @@ import com.google.common.graph.ImmutableGraph;
 
 import be.ac.umons.jsonvalidation.Automata;
 import be.ac.umons.jsonvalidation.JSONSymbol;
+import be.ac.umons.jsonvalidation.graph.KeyGraph;
+import be.ac.umons.jsonvalidation.graph.NodeInGraph;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.serialization.InputModelDeserializer;

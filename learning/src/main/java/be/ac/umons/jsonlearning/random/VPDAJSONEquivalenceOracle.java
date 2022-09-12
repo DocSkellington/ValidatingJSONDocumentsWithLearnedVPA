@@ -12,7 +12,7 @@ import org.json.JSONObject;
 import be.ac.umons.jsonlearning.IVPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.relation.ReachabilityRelation;
+import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;

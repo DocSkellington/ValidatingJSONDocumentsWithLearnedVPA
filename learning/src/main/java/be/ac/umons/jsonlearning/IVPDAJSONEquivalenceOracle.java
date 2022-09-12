@@ -3,8 +3,8 @@ package be.ac.umons.jsonlearning;
 import java.util.Random;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.relation.KeyGraph;
-import be.ac.umons.jsonvalidation.relation.ReachabilityRelation;
+import be.ac.umons.jsonvalidation.graph.KeyGraph;
+import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.OneSEVPA;
