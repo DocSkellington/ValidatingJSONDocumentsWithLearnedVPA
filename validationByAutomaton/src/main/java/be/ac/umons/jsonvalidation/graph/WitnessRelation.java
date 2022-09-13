@@ -1,5 +1,11 @@
 package be.ac.umons.jsonvalidation.graph;
 
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.annotation.Nullable;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
@@ -8,7 +14,7 @@ import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
-class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>> {
+public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>> {
 
     private static final LearnLogger LOGGER = LearnLogger.getLogger(WitnessRelation.class);
 
@@ -33,8 +39,8 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
         }
     }
 
-    private boolean add(L start, L target, Word<JSONSymbol> witnessToStart, Word<JSONSymbol> witnessFromTarget) {
-        return add(new InfoInWitnessRelation<>(start, target, witnessToStart, witnessFromTarget));
+    private boolean add(L start, L target, Word<JSONSymbol> witnessToStart, Word<JSONSymbol> witnessFromTarget, Set<L> seenLocationsToStart, Set<L> seenLocationsFromTarget) {
+        return add(new InfoInWitnessRelation<>(start, target, witnessToStart, witnessFromTarget, seenLocationsToStart, seenLocationsFromTarget));
     }
 
     private boolean add(InfoInWitnessRelation<L> infoInRelation) {
@@ -56,15 +62,69 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
         return change;
     }
 
+    public static <L1, L2> WitnessRelation<L2> computeWitnessRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, WitnessRelation<L1> previousWitnessRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis, ReachabilityRelation<L2> reachabilityRelation) {
+        LOGGER.info("Witness relation: start");
+        final WitnessRelation<L2> witnessRelation = new WitnessRelation<>();
+
+        final Map<L1, L2> previousToCurrentLocations = UnmodifiedLocations.createMapLocationsOfPreviousToCurrent(previousHypothesis, currentHypothesis);
+        final Set<L1> unmodifiedLocations = UnmodifiedLocations.findUnmodifiedLocations(previousHypothesis, currentHypothesis, previousToCurrentLocations);
+
+        for (final InfoInWitnessRelation<L1> inWitnessRelation : previousWitnessRelation) {
+            // @formatter:off
+            final Optional<L1> modifiedLocationsToStart = inWitnessRelation.getSeenLocationsToStart().stream()
+                .filter(l -> !unmodifiedLocations.contains(l))
+                .findAny();
+            // @formatter:on
+
+            if (modifiedLocationsToStart.isEmpty()) {
+                continue;
+            }
+
+            // @formatter:off
+            final Optional<L1> modifiedLocationsFromTarget = inWitnessRelation.getSeenLocationsFromTarget().stream()
+                .filter(l -> !unmodifiedLocations.contains(l))
+                .findAny();
+            // @formatter:on
+
+            if (modifiedLocationsFromTarget.isEmpty()) {
+                final L2 startInCurrent = previousToCurrentLocations.get(inWitnessRelation.getStart());
+                final L2 targetInCurrent = previousToCurrentLocations.get(inWitnessRelation.getTarget());
+                final Word<JSONSymbol> witnessToStart = inWitnessRelation.getWitnessToStart();
+                final Word<JSONSymbol> witnessFromTarget = inWitnessRelation.getWitnessFromTarget();
+                final Set<L2> seenLocationsToStart = inWitnessRelation.getSeenLocationsToStart().stream().map(l -> previousToCurrentLocations.get(l)).collect(Collectors.toSet());
+                final Set<L2> seenLocationsFromTarget = inWitnessRelation.getSeenLocationsFromTarget().stream().map(l -> previousToCurrentLocations.get(l)).collect(Collectors.toSet());
+
+                witnessRelation.add(startInCurrent, targetInCurrent, witnessToStart, witnessFromTarget, seenLocationsToStart, seenLocationsFromTarget);
+            }
+        }
+
+        computeWitnessRelationLoop(currentHypothesis, reachabilityRelation, witnessRelation);
+
+        LOGGER.info("Witness relation: end");
+        return witnessRelation;
+    }
+
     public static <L> WitnessRelation<L> computeWitnessRelation(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation) {
         LOGGER.info("Witness relation: start");
-        final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
-        final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
         final WitnessRelation<L> witnessRelation = new WitnessRelation<>();
 
-        for (L location : automaton.getLocations()) {
+        computeWitnessRelationLoop(automaton, reachabilityRelation, witnessRelation);
+
+        LOGGER.info("Witness relation: end");
+        return witnessRelation;
+    }
+
+    private static <L> WitnessRelation<L> computeWitnessRelationLoop(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation, WitnessRelation<L> witnessRelation) {
+        final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
+        final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
+
+        for (final L location : automaton.getLocations()) {
             if (automaton.isAcceptingLocation(location)) {
-                witnessRelation.add(automaton.getInitialLocation(), location, Word.epsilon(), Word.epsilon());
+                final Set<L> seenLocationsToStart = new LinkedHashSet<>();
+                seenLocationsToStart.add(automaton.getInitialLocation());
+                final Set<L> seenLocationsFromTarget = new LinkedHashSet<>();
+                seenLocationsFromTarget.add(location);
+                witnessRelation.add(automaton.getInitialLocation(), location, Word.epsilon(), Word.epsilon(), seenLocationsToStart, seenLocationsFromTarget);
             }
         }
         LOGGER.info("Witness relation: init done");
@@ -73,15 +133,35 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
             final WitnessRelation<L> newInRelation = new WitnessRelation<>();
             for (final InfoInWitnessRelation<L> inWitnessRelation : witnessRelation) {
                 for (final InfoInRelation<L> inReachabilityRelation : reachabilityRelation) {
-                    if (inReachabilityRelation.getStart() == inWitnessRelation.getStart()) {
+                    if (inReachabilityRelation.getStart() == inWitnessRelation.getStart() && !witnessRelation.areInRelation(inReachabilityRelation.getTarget(), inWitnessRelation.getTarget())) {
                         final Word<JSONSymbol> witnessToStart = inWitnessRelation.getWitnessToStart().concat(inReachabilityRelation.getWitness());
                         final Word<JSONSymbol> witnessFromTarget = inWitnessRelation.getWitnessFromTarget();
-                        newInRelation.add(inReachabilityRelation.getTarget(), inWitnessRelation.getTarget(), witnessToStart, witnessFromTarget);
+
+                        final Set<L> seenLocationsToStart = new LinkedHashSet<>();
+                        final Set<L> seenLocationsFromTarget = new LinkedHashSet<>();
+                        if (!witnessRelation.areInRelation(inReachabilityRelation.getTarget(), inWitnessRelation.getTarget())) {
+                            seenLocationsToStart.addAll(inWitnessRelation.getSeenLocationsToStart());
+                            seenLocationsToStart.addAll(inReachabilityRelation.getAllLocationsBetweenStartAndTarget());
+
+                            seenLocationsFromTarget.addAll(inWitnessRelation.getSeenLocationsFromTarget());
+                        }
+
+                        newInRelation.add(inReachabilityRelation.getTarget(), inWitnessRelation.getTarget(), witnessToStart, witnessFromTarget, seenLocationsToStart, seenLocationsFromTarget);
                     }
-                    if (inReachabilityRelation.getTarget() == inWitnessRelation.getTarget()) {
+                    if (inReachabilityRelation.getTarget() == inWitnessRelation.getTarget() && !witnessRelation.areInRelation(inWitnessRelation.getStart(), inReachabilityRelation.getStart())) {
                         final Word<JSONSymbol> witnessToStart = inWitnessRelation.getWitnessToStart();
                         final Word<JSONSymbol> witnessFromTarget = inReachabilityRelation.getWitness().concat(inWitnessRelation.getWitnessFromTarget());
-                        newInRelation.add(inWitnessRelation.getStart(), inReachabilityRelation.getStart(), witnessToStart, witnessFromTarget);
+
+                        final Set<L> seenLocationsToStart = new LinkedHashSet<>();
+                        final Set<L> seenLocationsFromTarget = new LinkedHashSet<>();
+                        if (!witnessRelation.areInRelation(inWitnessRelation.getStart(), inReachabilityRelation.getStart())) {
+                            seenLocationsToStart.addAll(inWitnessRelation.getSeenLocationsToStart());
+
+                            seenLocationsFromTarget.addAll(inWitnessRelation.getSeenLocationsFromTarget());
+                            seenLocationsFromTarget.addAll(inReachabilityRelation.getAllLocationsBetweenStartAndTarget());
+                        }
+
+                        newInRelation.add(inWitnessRelation.getStart(), inReachabilityRelation.getStart(), witnessToStart, witnessFromTarget, seenLocationsToStart, seenLocationsFromTarget);
                     }
                 }
 
@@ -96,7 +176,19 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
                             final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSymbol, stackSym);
                             if (locationAfterReturn == inWitnessRelation.getTarget()) {
                                 final Word<JSONSymbol> witnessFromTarget = inWitnessRelation.getWitnessFromTarget().prepend(returnSymbol);
-                                newInRelation.add(locationAfterCall, locationBeforeReturn, witnessToStart, witnessFromTarget);
+
+                                final Set<L> seenLocationsToStart = new LinkedHashSet<>();
+                                final Set<L> seenLocationsFromTarget = new LinkedHashSet<>();
+
+                                if (!witnessRelation.areInRelation(locationAfterCall, locationBeforeReturn)) {
+                                    seenLocationsToStart.addAll(inWitnessRelation.getSeenLocationsToStart());
+                                    seenLocationsToStart.add(locationAfterCall);
+
+                                    seenLocationsFromTarget.addAll(inWitnessRelation.getSeenLocationsFromTarget());
+                                    seenLocationsFromTarget.add(locationBeforeReturn);
+                                }
+
+                                newInRelation.add(locationAfterCall, locationBeforeReturn, witnessToStart, witnessFromTarget, seenLocationsToStart, seenLocationsFromTarget);
                             }
                         }
                     }
@@ -109,7 +201,7 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
             LOGGER.info("Witness relation: end loop");
         }
 
-        LOGGER.info("Witness relation: end");
+        LOGGER.info("Size: " + witnessRelation.size());
         return witnessRelation;
     }
 

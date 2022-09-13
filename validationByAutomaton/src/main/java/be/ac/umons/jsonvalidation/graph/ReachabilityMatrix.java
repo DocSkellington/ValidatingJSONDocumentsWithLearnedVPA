@@ -45,7 +45,7 @@ class ReachabilityMatrix<L, C> implements Iterable<C> {
         // @formatter:on
     }
 
-    public Collection<C> getLocationsAndInfoInRelationWith(final L start) {
+    public Collection<C> getLocationsAndInfoInRelationWithStart(final L start) {
         return matrix.get(start).values();
     }
 

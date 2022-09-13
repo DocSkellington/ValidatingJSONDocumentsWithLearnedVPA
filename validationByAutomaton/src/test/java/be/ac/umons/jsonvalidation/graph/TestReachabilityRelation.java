@@ -5,8 +5,6 @@ import org.testng.annotations.Test;
 
 import be.ac.umons.jsonvalidation.Automata;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.graph.InfoInRelation;
-import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.Word;

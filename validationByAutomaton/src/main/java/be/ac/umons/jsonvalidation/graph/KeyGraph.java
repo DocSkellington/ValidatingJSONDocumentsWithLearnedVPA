@@ -62,28 +62,27 @@ public class KeyGraph<L> {
     private final boolean hasPathWithDuplicateKeys;
     private final Word<JSONSymbol> witnessInvalid;
 
-    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses,
-            boolean checkGraph) {
+    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
         final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton,
                 computeWitnesses);
         if (reachabilityRelation.size() == 0) {
             return null;
         }
 
-        return new KeyGraph<>(automaton, reachabilityRelation, checkGraph);
+        return new KeyGraph<>(automaton, reachabilityRelation, null);
     }
 
     public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation,
-            boolean checkGraph) {
+            final WitnessRelation<L> witnessRelation) {
         this.automaton = automaton;
 
         this.graph = constructGraph(reachabilityRelation);
         propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
 
-        if (checkGraph) {
+        if (witnessRelation != null) {
             final List<NodeInGraph<L>> pathWithDuplicateKeys = hasPathWithDuplicateKeys();
             this.hasPathWithDuplicateKeys = !pathWithDuplicateKeys.isEmpty();
-            witnessInvalid = constructWitnessDuplicate(pathWithDuplicateKeys, reachabilityRelation);
+            witnessInvalid = constructWitnessDuplicate(pathWithDuplicateKeys, reachabilityRelation, witnessRelation);
         } else {
             hasPathWithDuplicateKeys = false;
             witnessInvalid = null;
@@ -103,7 +102,6 @@ public class KeyGraph<L> {
 
     private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> reachabilityRelation) {
         final Set<L> binLocations = reachabilityRelation.identifyBinLocations(automaton);
-        // TODO: remove all pairs that contain (or go through) a bin state
 
         final ReachabilityRelation<L> valueReachabilityRelation = ReachabilityRelation
                 .computeValueReachabilityRelation(automaton, reachabilityRelation, false);
@@ -132,9 +130,9 @@ public class KeyGraph<L> {
                 if (locationAfterKey == null || binLocations.contains(locationAfterKey)) {
                     continue;
                 }
-                for (final InfoInRelation<L> inValueRelation : valueReachabilityRelation.getLocationsAndInfoInRelationWith(locationAfterKey)) {
+                for (final InfoInRelation<L> inValueRelation : valueReachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterKey)) {
                     // @formatter:off
-                    final boolean binStateOnPath = inValueRelation.getLocationsBetweenStartAndTarget().stream()
+                    final boolean binStateOnPath = inValueRelation.getAllLocationsBetweenStartAndTarget().stream()
                         .filter(location -> binLocations.contains(location))
                         .findAny()
                         .isPresent()
@@ -220,13 +218,10 @@ public class KeyGraph<L> {
     }
 
     private Word<JSONSymbol> constructWitnessDuplicate(final List<NodeInGraph<L>> path,
-            final ReachabilityRelation<L> reachabilityRelation) {
+            final ReachabilityRelation<L> reachabilityRelation, final WitnessRelation<L> witnessRelation) {
         if (isValid()) {
             return null;
         }
-
-        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton,
-                reachabilityRelation);
 
         final L start = path.get(0).getStartLocation();
         final L target = path.get(path.size() - 1).getTargetLocation();

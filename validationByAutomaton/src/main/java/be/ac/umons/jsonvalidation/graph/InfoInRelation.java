@@ -10,12 +10,14 @@ class InfoInRelation<L> {
     private final L start, target;
     private final Word<JSONSymbol> witness;
     private final Set<L> locationsBetweenStartAndTarget;
+    private final Set<L> locationsOnAPathBetweenStartAndTarget;
 
-    public InfoInRelation(final L start, final L target, final Word<JSONSymbol> witness, final Set<L> locationsBetweenStartAndTarget) {
+    public InfoInRelation(final L start, final L target, final Word<JSONSymbol> witness, final Set<L> locationsBetweenStartAndTarget, final Set<L> locationsOnAPathBetweenStartAndTarget) {
         this.start = start;
         this.target = target;
         this.witness = witness;
         this.locationsBetweenStartAndTarget = locationsBetweenStartAndTarget;
+        this.locationsOnAPathBetweenStartAndTarget = locationsOnAPathBetweenStartAndTarget;
         assert this.locationsBetweenStartAndTarget.contains(start);
         assert this.locationsBetweenStartAndTarget.contains(target);
     }
@@ -32,8 +34,12 @@ class InfoInRelation<L> {
         return witness;
     }
 
-    public Set<L> getLocationsBetweenStartAndTarget() {
+    public Set<L> getAllLocationsBetweenStartAndTarget() {
         return locationsBetweenStartAndTarget;
+    }
+
+    public Set<L> getLocationsOnAPathBetweenStartAndTarget() {
+        return locationsOnAPathBetweenStartAndTarget;
     }
 
     public boolean addSeenLocations(final Set<L> locations) {

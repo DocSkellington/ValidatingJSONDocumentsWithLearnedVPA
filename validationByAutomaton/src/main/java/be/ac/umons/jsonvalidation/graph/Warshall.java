@@ -1,6 +1,7 @@
 package be.ac.umons.jsonvalidation.graph;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -23,10 +24,10 @@ class Warshall {
                         }
 
                         final Set<L> seenLocations = new LinkedHashSet<>();
-                        seenLocations.addAll(startToPivot.getLocationsBetweenStartAndTarget());
-                        seenLocations.addAll(pivotToTarget.getLocationsBetweenStartAndTarget());
+                        seenLocations.addAll(startToPivot.getAllLocationsBetweenStartAndTarget());
+                        seenLocations.addAll(pivotToTarget.getAllLocationsBetweenStartAndTarget());
 
-                        newRelation.add(start, target, witness, seenLocations);
+                        newRelation.add(start, target, witness, seenLocations, Collections.emptySet());
                     }
                 }
             }
