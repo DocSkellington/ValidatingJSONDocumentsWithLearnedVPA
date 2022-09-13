@@ -6,19 +6,14 @@ import be.ac.umons.jsonvalidation.JSONSymbol;
 import net.automatalib.words.Word;
 
 class InfoInWitnessRelation<L> {
-    private final L start, target;
+    private final L target;
     private final Word<JSONSymbol> witnessToStart;
     private final Word<JSONSymbol> witnessFromTarget;
 
-    public InfoInWitnessRelation(final L start, final L target, final Word<JSONSymbol> witnessToStart, final Word<JSONSymbol> witnessFromTarget) {
-        this.start = start;
+    public InfoInWitnessRelation(final L target, final Word<JSONSymbol> witnessToStart, final Word<JSONSymbol> witnessFromTarget) {
         this.target = target;
         this.witnessToStart = witnessToStart;
         this.witnessFromTarget = witnessFromTarget;
-    }
-
-    public L getStart() {
-        return start;
     }
 
     public L getTarget() {
