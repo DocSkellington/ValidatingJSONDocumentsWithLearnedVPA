@@ -8,7 +8,7 @@ import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
-class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>> {
+public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>> {
 
     private static final LearnLogger LOGGER = LearnLogger.getLogger(WitnessRelation.class);
 
@@ -31,6 +31,15 @@ class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelation<L>>
         else {
             return cell.getWitnessFromTarget();
         }
+    }
+
+    public L identifyBinLocation(final OneSEVPA<L, JSONSymbol> automaton) {
+        for (final L location : automaton.getLocations()) {
+            if (!areInRelation(automaton.getInitialLocation(), location)) {
+                return location;
+            }
+        }
+        return null;
     }
 
     private boolean add(L start, L target, Word<JSONSymbol> witnessToStart, Word<JSONSymbol> witnessFromTarget) {

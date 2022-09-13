@@ -1,12 +1,6 @@
 package be.ac.umons.jsonvalidation.graph;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -30,56 +24,16 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         return inRelation.getWitness();
     }
 
-    /**
-     * Based on this relation, identifies all the bin locations in the automaton.
-     * 
-     * Using this relation, we can find all locations that are on a path from the
-     * initial location to an accepting locations. If one location of the automaton
-     * is not among these locations, it is a bin location.
-     * 
-     * @param automaton The VPA
-     * @return A set with the bin locations
-     */
-    public Set<L> identifyBinLocations(OneSEVPA<L, JSONSymbol> automaton) {
-        final Set<L> binLocations = new LinkedHashSet<>(automaton.getLocations());
-        binLocations.removeAll(allLocationsOnAcceptingPath(automaton));
-        return binLocations;
-    }
-
-    private Set<L> allLocationsOnAcceptingPath(OneSEVPA<L, JSONSymbol> automaton) {
-        final Set<L> locations = new LinkedHashSet<>();
-        // @formatter:off
-        getLocationsAndInfoInRelationWith(automaton.getInitialLocation()).stream()
-            .filter(info -> automaton.isAcceptingLocation(info.getTarget()))
-            .forEach(info -> locations.addAll(info.getLocationsBetweenStartAndTarget()));
-        // @formatter:on
-        return locations;
-    }
-
     boolean add(final L start, final L target, final Word<JSONSymbol> witness) {
-        if (areInRelation(start, target)) {
-            // Nothing to do in this case, as we don't have any new seen locations to add
-            return false;
-        }
-        else {
-            final Set<L> locationsBetweenStartAndTarget = new LinkedHashSet<>();
-            locationsBetweenStartAndTarget.add(start);
-            locationsBetweenStartAndTarget.add(target);
-            return add(new InfoInRelation<L>(start, target, witness, locationsBetweenStartAndTarget));
-        }
-    }
-
-    boolean add(final L start, final L target, final Word<JSONSymbol> witness, final Set<L> locationsBetweenStartAndTarget) {
-        return add(new InfoInRelation<>(start, target, witness, locationsBetweenStartAndTarget));
+        return add(new InfoInRelation<>(start, target, witness));
     }
 
     private boolean add(final InfoInRelation<L> infoInRelation) {
         final L start = infoInRelation.getStart();
         final L target = infoInRelation.getTarget();
         if (areInRelation(start, target)) {
-            // If start and target are already in relation, we simply add the intermediate locations
-            // We keep the previous witness as, by construction, the previous witness is smaller than the new
-            return getCell(start, target).addSeenLocations(infoInRelation.getLocationsBetweenStartAndTarget());
+            // Nothing to do in this case, as we don't have any new seen locations to add
+            return false;
         }
         else {
             set(start, target, infoInRelation);
@@ -95,25 +49,29 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         return change;
     }
 
-    public static <L> ReachabilityRelation<L> computeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
+    public static <L> ReachabilityRelation<L> computeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton) {
         LOGGER.info("Reach: start");
         final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
         final List<L> locations = automaton.getLocations();
 
-        final ReachabilityRelation<L> reachabilityRelation = getIdentityRelation(automaton, computeWitnesses);
+        final ReachabilityRelation<L> reachabilityRelation = getIdentityRelation(automaton);
         for (final L start : locations) {
             for (final JSONSymbol internalSym : internalAlphabet) {
                 final L target = automaton.getInternalSuccessor(start, internalSym);
                 if (target != null) {
-                    reachabilityRelation.add(start, target, constructWitness(internalSym, computeWitnesses));
+                    reachabilityRelation.add(start, target, constructWitness(internalSym, true));
                 }
             }
         }
 
-        return computeReachabilityRelationLoop(automaton, computeWitnesses, reachabilityRelation);
+        return computeReachabilityRelationLoop(automaton, reachabilityRelation);
     }
 
-    public static <L1, L2> ReachabilityRelation<L2> computeReachabilityRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis, boolean computeWitnesses) {
+    public static <L1, L2> ReachabilityRelation<L2> computeReachabilityRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis) {
+        // TODO: reuse information
+        // For all (q, q') in Reach of the previous hypothesis with w the witness, check that we still reach q' by reading w from q in the new hypothesis
+        return computeReachabilityRelation(currentHypothesis);
+        /*
         LOGGER.info("Reach: start");
         final Alphabet<JSONSymbol> internalAlphabet = currentHypothesis.getInputAlphabet().getInternalAlphabet();
 
@@ -166,9 +124,11 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         System.out.println("Number of elements in reach after adding unmodified: " + reachabilityRelation.size());
 
         return computeReachabilityRelationLoop(currentHypothesis, computeWitnesses, reachabilityRelation);
+        */
     }
 
-    public static <L> ReachabilityRelation<L> computeValueReachabilityRelation(final OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation, final boolean computeWitnesses) {
+    @Deprecated
+    public static <L> ReachabilityRelation<L> computeValueReachabilityRelation(final OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation) {
         LOGGER.info("Value reach: start");
         final Alphabet<JSONSymbol> primitiveValuesAlphabet = JSONSymbol.primitiveValuesAlphabet;
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
@@ -180,7 +140,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
             for (final JSONSymbol primitiveValue : primitiveValuesAlphabet) {
                 final L successor = automaton.getInternalSuccessor(startLocation, primitiveValue);
                 if (successor != null) {
-                    final Word<JSONSymbol> witness = constructWitness(primitiveValue, computeWitnesses);
+                    final Word<JSONSymbol> witness = constructWitness(primitiveValue, true);
                     valueReachabilityRelation.add(startLocation, successor, witness);
                 }
             }
@@ -194,7 +154,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
                     for (final JSONSymbol returnSymbol : returnAlphabet) {
                         final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSymbol, stackSymbol);
                         if (locationAfterReturn != null) {
-                            final Word<JSONSymbol> witness = constructWitness(callSymbol, inRelation.getWitness(), returnSymbol, computeWitnesses);
+                            final Word<JSONSymbol> witness = constructWitness(callSymbol, inRelation.getWitness(), returnSymbol, true);
                             valueReachabilityRelation.add(startLocation, locationAfterReturn, witness);
                         }
                     }
@@ -236,21 +196,20 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         }
     }
 
-    private static <L> ReachabilityRelation<L> getIdentityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
+    private static <L> ReachabilityRelation<L> getIdentityRelation(OneSEVPA<L, JSONSymbol> automaton) {
         final ReachabilityRelation<L> relation = new ReachabilityRelation<>();
         for (final L loc : automaton.getLocations()) {
-            relation.add(loc, loc, constructWitness(computeWitnesses));
+            relation.add(loc, loc, constructWitness(true));
         }
         return relation;
     }
 
-    private static <L> ReachabilityRelation<L> computeReachabilityRelationLoop(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses, ReachabilityRelation<L> reachabilityRelation) {
+    private static <L> ReachabilityRelation<L> computeReachabilityRelationLoop(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation) {
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
-        final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
         final List<L> locations = automaton.getLocations();
 
         LOGGER.info("Reach: init warshall");
-        Warshall.warshall(reachabilityRelation, locations, computeWitnesses);
+        Warshall.warshall(reachabilityRelation, locations);
         LOGGER.info("Reach: init done");
 
         boolean change = true;
@@ -260,6 +219,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
                 Thread.currentThread().interrupt();
                 return new ReachabilityRelation<>();
             }
+
             final ReachabilityRelation<L> newLocationsInRelation = new ReachabilityRelation<>();
 
             for (final L locationBeforeCall : locations) {
@@ -267,80 +227,36 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
                     final L locationAfterCall = automaton.getInitialLocation();
                     final int stackSym = automaton.encodeStackSym(locationBeforeCall, callSym);
 
+                    final JSONSymbol returnSym = callSym.callToReturn();
+
                     for (final InfoInRelation<L> inRelation : reachabilityRelation.getLocationsAndInfoInRelationWith(locationAfterCall)) {
                         final L locationBeforeReturn = inRelation.getTarget();
-                        for (final JSONSymbol returnSym : returnAlphabet) {
-                            final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSym, stackSym);
-                            if (locationAfterReturn != null) {
-                                final Word<JSONSymbol> witnessAfterToBefore = inRelation.getWitness();
-                                final Word<JSONSymbol> witnessStartToTarget = constructWitness(callSym, witnessAfterToBefore, returnSym, computeWitnesses);
-
-                                final Set<L> seenStates = new LinkedHashSet<>();
-                                seenStates.addAll(inRelation.getLocationsBetweenStartAndTarget());
-                                seenStates.add(locationBeforeCall);
-                                seenStates.add(locationAfterReturn);
-
-                                newLocationsInRelation.add(locationBeforeCall, locationAfterReturn, witnessStartToTarget, seenStates);
+                        final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSym, stackSym);
+                        if (locationAfterReturn != null) {
+                            final Word<JSONSymbol> witnessAfterToBefore = inRelation.getWitness();
+                            final Word<JSONSymbol> witnessStartToTarget;
+                            
+                            if (reachabilityRelation.areInRelation(locationBeforeCall, locationAfterReturn)) {
+                                witnessStartToTarget = reachabilityRelation.getWitness(locationBeforeCall, locationAfterReturn);
                             }
+                            else if (newLocationsInRelation.areInRelation(locationBeforeCall, locationAfterReturn)) {
+                                witnessStartToTarget = newLocationsInRelation.getWitness(locationBeforeCall, locationAfterReturn);
+                            }
+                            else {
+                                witnessStartToTarget = constructWitness(callSym, witnessAfterToBefore, returnSym, true);
+                            }
+
+                            newLocationsInRelation.add(locationBeforeCall, locationAfterReturn, witnessStartToTarget);
                         }
                     }
                 }
             }
             change = reachabilityRelation.addAll(newLocationsInRelation);
             LOGGER.info("Reach: warshall loop");
-            change = Warshall.warshall(reachabilityRelation, locations, computeWitnesses) || change;
+            change = Warshall.warshall(reachabilityRelation, locations) || change;
             LOGGER.info("Reach: loop done");
         }
 
         return reachabilityRelation;
-    }
-
-    private static <L1, L2> boolean isLocationUnmodified(final L1 locationInPrevious, final OneSEVPA<L1, JSONSymbol> previousHypothesis, final OneSEVPA<L2, JSONSymbol> currentHypothesis, final Map<L1, L2> previousToCurrentLocations) {
-        final Alphabet<JSONSymbol> internalAlphabet = currentHypothesis.getInputAlphabet().getInternalAlphabet();
-        final Alphabet<JSONSymbol> callAlphabet = currentHypothesis.getInputAlphabet().getCallAlphabet();
-        final Alphabet<JSONSymbol> returnAlphabet = currentHypothesis.getInputAlphabet().getReturnAlphabet();
-
-        final L2 locationInCurrent = previousToCurrentLocations.get(locationInPrevious);
-
-        // We check whether there is an internal transition that already existed in the previous hypothesis and that leads to a different location in the current hypothesis
-        for (final JSONSymbol internalSym : internalAlphabet) {
-            final L1 targetInPrevious = previousHypothesis.getInternalSuccessor(locationInPrevious, internalSym);
-            final L2 targetInCurrent = currentHypothesis.getInternalSuccessor(locationInCurrent, internalSym);
-            if (targetInCurrent != previousToCurrentLocations.get(targetInPrevious)) {
-                return false;
-            }
-        }
-
-        // We do the same for return transitions
-        for (final JSONSymbol callSymbol : callAlphabet) {
-            for (final JSONSymbol returnSymbol : returnAlphabet) {
-                for (final L1 locationBeforeCallInPrevious : previousHypothesis.getLocations()) {
-                    final L2 locationBeforeCallInCurrent = previousToCurrentLocations.get(locationBeforeCallInPrevious);
-
-                    final int stackSymInPrevious = previousHypothesis.encodeStackSym(locationBeforeCallInPrevious, callSymbol);
-                    final int stackSymInCurrent = currentHypothesis.encodeStackSym(locationBeforeCallInCurrent, callSymbol);
-
-                    final L1 targetInPrevious = previousHypothesis.getReturnSuccessor(locationInPrevious, returnSymbol, stackSymInPrevious);
-                    final L2 targetInCurrent = currentHypothesis.getReturnSuccessor(locationInCurrent, returnSymbol, stackSymInCurrent);
-
-                    if (targetInCurrent != previousToCurrentLocations.get(targetInPrevious)) {
-                        return false;
-                    }
-                }
-            }
-        }
-        
-        return true;
-    }
-
-    private static <L1, L2> Set<L1> findUnmodifiedLocations(OneSEVPA<L1, JSONSymbol> previousHypothesis, OneSEVPA<L2, JSONSymbol> currentHypothesis, Map<L1, L2> previousToCurrentLocations) {
-        final Set<L1> unmodifiedLocations = new LinkedHashSet<>();
-        for (final L1 locationInPrevious : previousHypothesis.getLocations()) {
-            if (isLocationUnmodified(locationInPrevious, previousHypothesis, currentHypothesis, previousToCurrentLocations)) {
-                unmodifiedLocations.add(locationInPrevious);
-            }
-        }
-
-        return unmodifiedLocations;
     }
 }

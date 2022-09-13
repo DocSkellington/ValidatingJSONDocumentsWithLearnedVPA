@@ -7,11 +7,11 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 
-import com.google.common.base.Objects;
 import com.google.common.graph.ElementOrder;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.GraphBuilder;
@@ -62,22 +62,20 @@ public class KeyGraph<L> {
     private final boolean hasPathWithDuplicateKeys;
     private final Word<JSONSymbol> witnessInvalid;
 
-    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses,
-            boolean checkGraph) {
-        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton,
-                computeWitnesses);
+    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean checkGraph) {
+        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton);
+        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, reachabilityRelation);
         if (reachabilityRelation.size() == 0) {
             return null;
         }
 
-        return new KeyGraph<>(automaton, reachabilityRelation, checkGraph);
+        return new KeyGraph<>(automaton, reachabilityRelation, witnessRelation, checkGraph);
     }
 
-    public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation,
-            boolean checkGraph) {
+    public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation, final WitnessRelation<L> witnessRelation, boolean checkGraph) {
         this.automaton = automaton;
 
-        this.graph = constructGraph(reachabilityRelation);
+        this.graph = constructGraph(reachabilityRelation, witnessRelation);
         propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
 
         if (checkGraph) {
@@ -101,12 +99,11 @@ public class KeyGraph<L> {
         // @formatter:on
     }
 
-    private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> reachabilityRelation) {
-        final Set<L> binLocations = reachabilityRelation.identifyBinLocations(automaton);
-        // TODO: remove all pairs that contain (or go through) a bin state
+    private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> reachabilityRelation, WitnessRelation<L> witnessRelation) {
+        final L binLocation = witnessRelation.identifyBinLocation(automaton);
 
         final ReachabilityRelation<L> valueReachabilityRelation = ReachabilityRelation
-                .computeValueReachabilityRelation(automaton, reachabilityRelation, false);
+                .computeValueReachabilityRelation(automaton, reachabilityRelation);
 
         // @formatter:off
         final ImmutableGraph.Builder<NodeInGraph<L>> builder = GraphBuilder
@@ -123,30 +120,22 @@ public class KeyGraph<L> {
         // We create the nodes
         final List<NodeInGraph<L>> nodes = new LinkedList<>();
         for (final L startLocation : automaton.getLocations()) {
-            if (binLocations.contains(startLocation)) {
+            if (Objects.equals(startLocation, binLocation)) {
                 continue;
             }
 
             for (final JSONSymbol key : keyAlphabet) {
                 final L locationAfterKey = automaton.getInternalSuccessor(startLocation, key);
-                if (locationAfterKey == null || binLocations.contains(locationAfterKey)) {
+                if (locationAfterKey == null || Objects.equals(locationAfterKey, binLocation)) {
                     continue;
                 }
                 for (final InfoInRelation<L> inValueRelation : valueReachabilityRelation.getLocationsAndInfoInRelationWith(locationAfterKey)) {
-                    // @formatter:off
-                    final boolean binStateOnPath = inValueRelation.getLocationsBetweenStartAndTarget().stream()
-                        .filter(location -> binLocations.contains(location))
-                        .findAny()
-                        .isPresent()
-                    ;
-                    // @formatter:on
-                    if (binStateOnPath) {
+                    if (Objects.equals(inValueRelation.getTarget(), binLocation)) {
                         continue;
                     }
 
                     final L locationAfterValue = inValueRelation.getTarget();
-                    final NodeInGraph<L> node = new NodeInGraph<>(startLocation, locationAfterValue, key, automaton,
-                            binLocations);
+                    final NodeInGraph<L> node = new NodeInGraph<>(startLocation, locationAfterValue, key, automaton, binLocation);
                     builder.addNode(node);
                     nodes.add(node);
 
@@ -297,7 +286,7 @@ public class KeyGraph<L> {
     @Nullable
     NodeInGraph<L> getNode(PairSourceToReached<L> pairSourceToReached, JSONSymbol key) {
         for (NodeInGraph<L> node : nodes()) {
-            if (Objects.equal(node.getSymbol(), key) && Objects.equal(node.getPairLocations(), pairSourceToReached)) {
+            if (Objects.equals(node.getSymbol(), key) && Objects.equals(node.getPairLocations(), pairSourceToReached)) {
                 return node;
             }
         }

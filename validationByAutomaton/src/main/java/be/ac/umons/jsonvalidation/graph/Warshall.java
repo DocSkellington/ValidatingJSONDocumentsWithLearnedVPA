@@ -1,14 +1,12 @@
 package be.ac.umons.jsonvalidation.graph;
 
 import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import net.automatalib.words.Word;
 
 class Warshall {
-    public static <L> boolean warshall(final ReachabilityRelation<L> relation, final Collection<L> locations, final boolean computeWitnesses) {
+    public static <L> boolean warshall(final ReachabilityRelation<L> relation, final Collection<L> locations) {
         final ReachabilityRelation<L> newRelation = new ReachabilityRelation<>();
         for (final L pivot : locations) {
             for (final L start : locations) {
@@ -19,27 +17,14 @@ class Warshall {
 
                         Word<JSONSymbol> witness = relation.getWitness(start, target);
                         if (witness == null) {
-                            witness = constructWitness(startToPivot.getWitness(), pivotToTarget.getWitness(), computeWitnesses);
+                            witness = startToPivot.getWitness().concat(pivotToTarget.getWitness());
                         }
 
-                        final Set<L> seenLocations = new LinkedHashSet<>();
-                        seenLocations.addAll(startToPivot.getLocationsBetweenStartAndTarget());
-                        seenLocations.addAll(pivotToTarget.getLocationsBetweenStartAndTarget());
-
-                        newRelation.add(start, target, witness, seenLocations);
+                        newRelation.add(start, target, witness);
                     }
                 }
             }
         }
         return relation.addAll(newRelation);
-    }
-
-    private static Word<JSONSymbol> constructWitness(Word<JSONSymbol> witnessFromStartToMid, Word<JSONSymbol> witnessFromMidToTarget, boolean computeWitnesses) {
-        if (computeWitnesses) {
-            return witnessFromStartToMid.concat(witnessFromMidToTarget);
-        }
-        else {
-            return null;
-        }
     }
 }

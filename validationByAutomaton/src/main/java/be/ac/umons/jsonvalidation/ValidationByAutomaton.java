@@ -36,7 +36,7 @@ public class ValidationByAutomaton<L> {
     private final VPDAlphabet<JSONSymbol> alphabet;
 
     public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton) {
-        this(automaton, KeyGraph.graphFor(automaton, false, false));
+        this(automaton, KeyGraph.graphFor(automaton, false));
     }
 
     public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton, KeyGraph<L> graph) {

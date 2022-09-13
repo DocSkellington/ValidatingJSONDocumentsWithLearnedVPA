@@ -5,9 +5,6 @@ import org.testng.annotations.Test;
 
 import be.ac.umons.jsonvalidation.Automata;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.graph.InfoInWitnessRelation;
-import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
-import be.ac.umons.jsonvalidation.graph.WitnessRelation;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.Word;
@@ -17,7 +14,7 @@ public class TestWitnessRelation {
     public void testWitnessRelationSmallTwoBranchesAutomaton() {
         final DefaultOneSEVPA<JSONSymbol> vpa = Automata.constructSmallTwoBranchesAutomaton();
 
-        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, true);
+        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa);
 
         final WitnessRelation<Location> witnessRelation = WitnessRelation.computeWitnessRelation(vpa, reachabilityRelation);
 
@@ -144,5 +141,7 @@ public class TestWitnessRelation {
                 Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.closingCurlyBraceSymbol));
             }
         }
+
+        Assert.assertNull(witnessRelation.identifyBinLocation(vpa));
     }
 }

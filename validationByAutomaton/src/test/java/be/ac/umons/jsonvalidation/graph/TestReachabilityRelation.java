@@ -5,8 +5,6 @@ import org.testng.annotations.Test;
 
 import be.ac.umons.jsonvalidation.Automata;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.graph.InfoInRelation;
-import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.Word;
@@ -153,15 +151,12 @@ public class TestReachabilityRelation {
                 Assert.fail(inRelation.toString());
             }
         }
-
-        Assert.assertEquals(reachabilityRelation.identifyBinLocations(automaton).size(), 0);
     }
 
     @Test
     public void testSmallTwoBranchesAutomatonReachabilityRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
-                .computeReachabilityRelation(automaton, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton);
         checkElementsInRelationForSmallTwoBranchesAutomaton(automaton, reachabilityRelation);
     }
 
@@ -179,17 +174,16 @@ public class TestReachabilityRelation {
                         JSONSymbol.closingCurlyBraceSymbol));
 
         ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
-                .computeReachabilityRelation(automaton, previousRelation, automaton, true);
+                .computeReachabilityRelation(automaton, previousRelation, automaton);
         checkElementsInRelationForSmallTwoBranchesAutomaton(automaton, reachabilityRelation);
     }
 
     @Test
     public void testSmallTwoBranchesAutomatonValueReachabilityRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
-                .computeReachabilityRelation(automaton, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton);
         ReachabilityRelation<Location> valueReachabilityRelation = ReachabilityRelation
-                .computeValueReachabilityRelation(automaton, reachabilityRelation, true);
+                .computeValueReachabilityRelation(automaton, reachabilityRelation);
 
         Assert.assertEquals(valueReachabilityRelation.size(), 5);
 
@@ -237,7 +231,7 @@ public class TestReachabilityRelation {
     public void testAutomatonWithOptionalKeysReachabilityRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
         ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
-                .computeReachabilityRelation(automaton, true);
+                .computeReachabilityRelation(automaton);
 
         final JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
@@ -500,7 +494,5 @@ public class TestReachabilityRelation {
                 Assert.fail(inRelation.toString());
             }
         }
-
-        Assert.assertEquals(reachabilityRelation.identifyBinLocations(automaton).size(), 0);
     }
 }

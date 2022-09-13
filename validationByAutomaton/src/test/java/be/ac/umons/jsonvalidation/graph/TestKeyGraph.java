@@ -1,7 +1,6 @@
 package be.ac.umons.jsonvalidation.graph;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.testng.Assert;
@@ -12,8 +11,6 @@ import com.google.common.graph.ImmutableGraph;
 
 import be.ac.umons.jsonvalidation.Automata;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.graph.KeyGraph;
-import be.ac.umons.jsonvalidation.graph.NodeInGraph;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.serialization.InputModelDeserializer;
@@ -23,7 +20,7 @@ public class TestKeyGraph {
     @Test
     public void testStraightforwardAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
         Assert.assertTrue(graph.isValid());
         Set<NodeInGraph<Location>> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
@@ -36,8 +33,8 @@ public class TestKeyGraph {
         Location q3 = automaton.getLocation(3);
         Location q5 = automaton.getLocation(5);
 
-        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0, q2, k1Sym, automaton, new HashSet<>());
-        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3, q5, k2Sym, automaton, new HashSet<>());
+        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0, q2, k1Sym, automaton, null);
+        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3, q5, k2Sym, automaton, null);
 
         Assert.assertEquals(nodes.size(), 2);
         Assert.assertTrue(nodes.contains(q0Toq2));
@@ -62,7 +59,7 @@ public class TestKeyGraph {
     @Test
     public void testSmallTwoBranchesAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
         Assert.assertTrue(graph.isValid());
         Set<NodeInGraph<Location>> nodes = graph.nodes();
         Set<EndpointPair<NodeInGraph<Location>>> edges = graph.edges();
@@ -78,10 +75,10 @@ public class TestKeyGraph {
         Location q7 = automaton.getLocation(7);
         Location q8 = automaton.getLocation(8);
 
-        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0, q2, k1Sym, automaton, new HashSet<>());
-        NodeInGraph<Location> q0Toq7 = new NodeInGraph<>(q0, q7, k1Sym, automaton, new HashSet<>());
-        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3, q5, k2Sym, automaton, new HashSet<>());
-        NodeInGraph<Location> q8Toq5 = new NodeInGraph<>(q8, q5, k2Sym, automaton, new HashSet<>());
+        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0, q2, k1Sym, automaton, null);
+        NodeInGraph<Location> q0Toq7 = new NodeInGraph<>(q0, q7, k1Sym, automaton, null);
+        NodeInGraph<Location> q3Toq5 = new NodeInGraph<>(q3, q5, k2Sym, automaton, null);
+        NodeInGraph<Location> q8Toq5 = new NodeInGraph<>(q8, q5, k2Sym, automaton, null);
 
         Assert.assertEquals(nodes.size(), 4);
         Assert.assertTrue(nodes.contains(q0Toq2));
@@ -129,10 +126,10 @@ public class TestKeyGraph {
         Location q8 = automaton.getLocation(8);
         Location q10 = automaton.getLocation(10);
 
-        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0, q2, k1Sym, automaton, new HashSet<>());
-        NodeInGraph<Location> q0Toq6 = new NodeInGraph<>(q0, q6, k2Sym, automaton, new HashSet<>());
-        NodeInGraph<Location> q3Toq7 = new NodeInGraph<>(q3, q7, o1Sym, automaton, new HashSet<>());
-        NodeInGraph<Location> q8Toq10 = new NodeInGraph<>(q8, q10, o2Sym, automaton, new HashSet<>());
+        NodeInGraph<Location> q0Toq2 = new NodeInGraph<>(q0, q2, k1Sym, automaton, null);
+        NodeInGraph<Location> q0Toq6 = new NodeInGraph<>(q0, q6, k2Sym, automaton, null);
+        NodeInGraph<Location> q3Toq7 = new NodeInGraph<>(q3, q7, o1Sym, automaton, null);
+        NodeInGraph<Location> q8Toq10 = new NodeInGraph<>(q8, q10, o2Sym, automaton, null);
 
         Assert.assertEquals(nodes.size(), 4);
         Assert.assertTrue(nodes.contains(q0Toq2));
@@ -170,21 +167,21 @@ public class TestKeyGraph {
     @Test
     public void testAutomatonWithOptionalKeysGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
 
     @Test
     public void testAutomatonWithOptionalKeysAndExplicitBinStateGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
 
     @Test
     public void testAutomatonWithDuplicateKeys() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithDuplicateKeys();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
         Assert.assertFalse(graph.isValid());
         Assert.assertNotNull(graph.getWitnessCycle());
     }
@@ -192,7 +189,7 @@ public class TestKeyGraph {
     @Test
     public void testAutomatonWithCycle() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithCycleReadingAKey();
-        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(automaton, true);
         Assert.assertFalse(graph.isValid());
         Assert.assertNotNull(graph.getWitnessCycle());
     }
@@ -201,7 +198,7 @@ public class TestKeyGraph {
     public void testWitnessCycleInGraph() throws IOException {
         final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers.oneSEVPA(JSONSymbol::toSymbol);
         final DefaultOneSEVPA<JSONSymbol> vpa = parser.readModel(getClass().getResource("/automaton.dot")).model;
-        KeyGraph<Location> graph = KeyGraph.graphFor(vpa, true, true);
+        KeyGraph<Location> graph = KeyGraph.graphFor(vpa, true);
         Assert.assertNotNull(graph.getWitnessCycle());
         Assert.assertTrue(vpa.accepts(graph.getWitnessCycle()));
     }

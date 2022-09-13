@@ -83,6 +83,18 @@ public class JSONSymbol extends AbstractSymbol<JSONSymbol> {
         return actualSymbols.compareTo(other.actualSymbols);
     }
 
+    public JSONSymbol callToReturn() {
+        if (Objects.equals(this, openingCurlyBraceSymbol)) {
+            return closingCurlyBraceSymbol;
+        }
+        else if (Objects.equals(this, openingBracketSymbol)) {
+            return closingBracketSymbol;
+        }
+        else {
+            return null;
+        }
+    }
+
     public static JSONSymbol toSymbol(String string) {
         return new JSONSymbol(string);
     }

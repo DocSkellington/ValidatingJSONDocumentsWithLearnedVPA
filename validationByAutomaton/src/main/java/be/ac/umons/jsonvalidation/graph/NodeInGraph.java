@@ -2,7 +2,6 @@ package be.ac.umons.jsonvalidation.graph;
 
 import java.util.BitSet;
 import java.util.Objects;
-import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.PairSourceToReached;
@@ -25,7 +24,7 @@ public class NodeInGraph<L> {
     private final BitSet acceptingForLocation;
     private final BitSet onPathToAcceptingForLocation;
 
-    public NodeInGraph(L startLocation, L targetLocation, JSONSymbol symbol, OneSEVPA<L, JSONSymbol> automaton, Set<L> binLocations) {
+    public NodeInGraph(L startLocation, L targetLocation, JSONSymbol symbol, OneSEVPA<L, JSONSymbol> automaton, L binLocation) {
         this.pairLocations = PairSourceToReached.of(startLocation, targetLocation);
         this.symbol = symbol;
         this.acceptingForLocation = new BitSet(automaton.size());
@@ -38,13 +37,13 @@ public class NodeInGraph<L> {
             // If the location before the call or the location after the return are the bin
             // locations, we ignore them as we do not want the bin state in the graph
             final L locationBeforeCall = automaton.getLocation(i);
-            if (binLocations.contains(locationBeforeCall)) {
+            if (Objects.equals(locationBeforeCall, binLocation)) {
                 continue;
             }
 
             final int stackSym = automaton.encodeStackSym(locationBeforeCall, callSymbol);
             final L locationAfterReturn = automaton.getReturnSuccessor(targetLocation, returnSymbol, stackSym);
-            if (locationAfterReturn != null && !binLocations.contains(locationAfterReturn)) {
+            if (locationAfterReturn != null && !(Objects.equals(locationAfterReturn, binLocation))) {
                 acceptingForLocation.set(i);
                 onPathToAcceptingForLocation.set(i);
             }

@@ -1,7 +1,6 @@
 package be.ac.umons.jsonvalidation.graph;
 
 import java.util.Objects;
-import java.util.Set;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import net.automatalib.words.Word;
@@ -9,15 +8,11 @@ import net.automatalib.words.Word;
 class InfoInRelation<L> {
     private final L start, target;
     private final Word<JSONSymbol> witness;
-    private final Set<L> locationsBetweenStartAndTarget;
 
-    public InfoInRelation(final L start, final L target, final Word<JSONSymbol> witness, final Set<L> locationsBetweenStartAndTarget) {
+    public InfoInRelation(final L start, final L target, final Word<JSONSymbol> witness) {
         this.start = start;
         this.target = target;
         this.witness = witness;
-        this.locationsBetweenStartAndTarget = locationsBetweenStartAndTarget;
-        assert this.locationsBetweenStartAndTarget.contains(start);
-        assert this.locationsBetweenStartAndTarget.contains(target);
     }
 
     public L getStart() {
@@ -32,26 +27,14 @@ class InfoInRelation<L> {
         return witness;
     }
 
-    public Set<L> getLocationsBetweenStartAndTarget() {
-        return locationsBetweenStartAndTarget;
-    }
-
-    public boolean addSeenLocations(final Set<L> locations) {
-        return locationsBetweenStartAndTarget.addAll(locations);
-    }
-    
-    public boolean addSeenLocation(final L location) {
-        return locationsBetweenStartAndTarget.add(location);
-    }
-
     @Override
     public String toString() {
-        return "(" +  witness + ", " + locationsBetweenStartAndTarget + ")";
+        return "(" +  witness + ")";
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(witness, locationsBetweenStartAndTarget);
+        return Objects.hash(start, target, witness);
     }
 
     @Override
@@ -64,6 +47,6 @@ class InfoInRelation<L> {
         }
 
         InfoInRelation<?> other = (InfoInRelation<?>)obj;
-        return Objects.equals(other.witness, this.witness) && Objects.equals(other.locationsBetweenStartAndTarget, this.locationsBetweenStartAndTarget);
+        return Objects.equals(other.witness, this.witness) && Objects.equals(other.start, this.start) && Objects.equals(other.target, this.target);
     }
 }
