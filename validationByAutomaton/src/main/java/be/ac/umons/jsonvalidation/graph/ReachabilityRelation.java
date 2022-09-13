@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -158,7 +159,8 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
                 final L2 inRelationStartInCurrent = previousToCurrentLocations.get(inRelation.getStart());
                 final L2 inRelationTargetInCurrent = previousToCurrentLocations.get(inRelation.getTarget());
                 final Word<JSONSymbol> witness = inRelation.getWitness();
-                reachabilityRelation.add(inRelationStartInCurrent, inRelationTargetInCurrent, witness);
+                final Set<L2> seenLocationsOnPaths = locationsOnPaths.stream().map(l -> previousToCurrentLocations.get(l)).collect(Collectors.toSet());
+                reachabilityRelation.add(inRelationStartInCurrent, inRelationTargetInCurrent, witness, seenLocationsOnPaths);
             }
         }
         System.out.println("Number of elements in reach after adding unmodified: " + reachabilityRelation.size());
