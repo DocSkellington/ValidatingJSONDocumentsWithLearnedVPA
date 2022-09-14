@@ -98,7 +98,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
                 final L locationAfterCall = automaton.getInitialLocation();
                 final int stackSymbol = automaton.encodeStackSym(startLocation, callSymbol);
 
-                for (final InfoInRelation<L> inRelation : reachabilityRelation.getLocationsAndInfoInRelationWith(locationAfterCall)) {
+                for (final InfoInRelation<L> inRelation : reachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterCall)) {
                     final L locationBeforeReturn = inRelation.getTarget();
                     for (final JSONSymbol returnSymbol : returnAlphabet) {
                         final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSymbol, stackSymbol);
@@ -195,7 +195,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
 
                     final JSONSymbol returnSym = callSym.callToReturn();
 
-                    for (final InfoInRelation<L> inRelation : reachabilityRelation.getLocationsAndInfoInRelationWith(locationAfterCall)) {
+                    for (final InfoInRelation<L> inRelation : reachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterCall)) {
                         final L locationBeforeReturn = inRelation.getTarget();
                         final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSym, stackSym);
                         if (locationAfterReturn != null) {
@@ -223,6 +223,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
             LOGGER.info("Reach: loop done");
         }
 
+        LOGGER.info("Size " + reachabilityRelation.size());
         return reachabilityRelation;
     }
 }

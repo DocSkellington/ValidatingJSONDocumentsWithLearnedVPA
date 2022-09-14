@@ -67,6 +67,11 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
         return change;
     }
 
+    public static <L1, L2> WitnessRelation<L2> computeWitnessRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, WitnessRelation<L1> previousWitnessRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis, ReachabilityRelation<L2> reachabilityRelation, boolean computeWitnesses) {
+        // TODO: reuse information
+        return computeWitnessRelation(currentHypothesis, reachabilityRelation, computeWitnesses);
+    }
+
     public static <L> WitnessRelation<L> computeWitnessRelation(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation, boolean computeWitnesses) {
         LOGGER.info("Witness relation: start");
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
@@ -106,7 +111,7 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
                     }
                 }
 
-                for (final InfoInRelation<L> inRelationWithInitial : reachabilityRelation.getLocationsAndInfoInRelationWith(initialLocation)) {
+                for (final InfoInRelation<L> inRelationWithInitial : reachabilityRelation.getLocationsAndInfoInRelationWithStart(initialLocation)) {
                     final L locationBeforeCall = inRelationWithInitial.getTarget();
                     for (final JSONSymbol callSymbol : callAlphabet) {
                         final int stackSym = automaton.encodeStackSym(locationBeforeCall, callSymbol);
@@ -146,7 +151,7 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
             LOGGER.info("Witness relation: end loop");
         }
 
-        LOGGER.info("Witness relation: end");
+        LOGGER.info("Size: " + witnessRelation.size());
         return witnessRelation;
     }
 

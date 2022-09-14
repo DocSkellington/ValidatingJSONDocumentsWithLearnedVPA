@@ -13,12 +13,12 @@ import be.ac.umons.jsonlearning.IVPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
+import be.ac.umons.jsonvalidation.graph.WitnessRelation;
 import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.automata.vpda.OneSEVPA;
-import net.automatalib.commons.util.Pair;
 import net.automatalib.words.Alphabet;
 
 public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<OneSEVPA<?, JSONSymbol>>
@@ -29,6 +29,7 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
     private final Set<JSONObject> documentsToTest;
     private DefaultOneSEVPA<JSONSymbol> previousHypothesis = null;
     private ReachabilityRelation<Location> previousReachabilityRelation = null;
+    private WitnessRelation<Location> previousWitnessRelation = null;
 
     public VPDAJSONEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
             int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
@@ -64,21 +65,22 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
 
     private DefaultQuery<JSONSymbol, Boolean> findCounterExampleFromKeyGraph(DefaultOneSEVPA<JSONSymbol> currentHypothesis) {
         LOGGER.info("Creating graph");
-        final Pair<DefaultQuery<JSONSymbol, Boolean>, ReachabilityRelation<Location>> queryAndRelation;
+        final CounterexampleWithRelations<Location> queryAndRelations;
         if (previousHypothesis == null) {
-            queryAndRelation = counterexampleAndRelationFromKeyGraph(currentHypothesis);
+            queryAndRelations = counterexampleAndRelationFromKeyGraph(currentHypothesis);
         }
         else {
-            queryAndRelation = counterexampleAndRelationFromKeyGraph(previousHypothesis, previousReachabilityRelation, currentHypothesis);
+            queryAndRelations = counterexampleAndRelationFromKeyGraph(previousHypothesis, previousReachabilityRelation, previousWitnessRelation, currentHypothesis);
         }
 
-        if (queryAndRelation == null) {
+        if (queryAndRelations == null) {
             return null;
         }
 
-        this.previousReachabilityRelation = queryAndRelation.getSecond();
+        this.previousReachabilityRelation = queryAndRelations.reachabilityRelation;
+        this.previousWitnessRelation = queryAndRelations.witnessRelation;
         this.previousHypothesis = currentHypothesis;
-        return queryAndRelation.getFirst();
+        return queryAndRelations.counterexample;
     }
 
     private <L> DefaultOneSEVPA<JSONSymbol> convertHypothesis(OneSEVPA<L, JSONSymbol> original) {

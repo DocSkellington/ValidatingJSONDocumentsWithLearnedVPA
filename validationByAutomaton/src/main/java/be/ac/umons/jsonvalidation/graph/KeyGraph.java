@@ -129,7 +129,7 @@ public class KeyGraph<L> {
                 if (locationAfterKey == null || Objects.equals(locationAfterKey, binLocation)) {
                     continue;
                 }
-                for (final InfoInRelation<L> inValueRelation : valueReachabilityRelation.getLocationsAndInfoInRelationWith(locationAfterKey)) {
+                for (final InfoInRelation<L> inValueRelation : valueReachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterKey)) {
                     if (Objects.equals(inValueRelation.getTarget(), binLocation)) {
                         continue;
                     }
