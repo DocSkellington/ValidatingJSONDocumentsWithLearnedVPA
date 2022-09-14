@@ -61,7 +61,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         LOGGER.info("Reach: start");
         final ReachabilityRelation<L2> reachabilityRelation = initializeReachabilityRelation(currentHypothesis, computeWitnesses);
 
-        System.out.println("Number of elements in reach before adding unmodified: " + reachabilityRelation.size());
+        System.out.println("Number of elements in reach before adding still valid: " + reachabilityRelation.size());
         final Map<L1, L2> locationsPreviousToCurrent = UnmodifiedLocations.createMapLocationsOfPreviousToCurrent(previousHypothesis, currentHypothesis);
 
         for (final InfoInRelation<L1> inPreviousRelation : previousReachabilityRelation) {
@@ -71,7 +71,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
             final State<L2> targetState = currentHypothesis.getSuccessor(startState, inPreviousRelation.getWitness());
             reachabilityRelation.add(startLocation, targetState.getLocation(), inPreviousRelation.getWitness());
         }
-        System.out.println("Number of elements in reach after adding unmodified: " + reachabilityRelation.size());
+        System.out.println("Number of elements in reach after adding still valid: " + reachabilityRelation.size());
 
         return computeReachabilityRelation(currentHypothesis, computeWitnesses);
     }

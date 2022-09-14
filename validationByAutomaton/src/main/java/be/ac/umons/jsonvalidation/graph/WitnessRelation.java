@@ -1,5 +1,6 @@
 package be.ac.umons.jsonvalidation.graph;
 
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -7,6 +8,7 @@ import javax.annotation.Nullable;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.OneSEVPA;
+import net.automatalib.automata.vpda.State;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
@@ -68,15 +70,37 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
     }
 
     public static <L1, L2> WitnessRelation<L2> computeWitnessRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, WitnessRelation<L1> previousWitnessRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis, ReachabilityRelation<L2> reachabilityRelation, boolean computeWitnesses) {
-        // TODO: reuse information
-        return computeWitnessRelation(currentHypothesis, reachabilityRelation, computeWitnesses);
+        LOGGER.info("Witness relation: start");
+        final WitnessRelation<L2> witnessRelation = initializeWitnessRelation(currentHypothesis, reachabilityRelation, computeWitnesses);
+        final Map<L1, L2> locationsPreviousToCurrent = UnmodifiedLocations.createMapLocationsOfPreviousToCurrent(previousHypothesis, currentHypothesis);
+
+        System.out.println("Number of elements in Rel before adding still valid: " + reachabilityRelation.size());
+        for (final InfoInWitnessRelation<L1> inPreviousRelation : previousWitnessRelation) {
+            final L2 targetLocation = locationsPreviousToCurrent.get(inPreviousRelation.getTarget());
+
+            final State<L2> toStartState = currentHypothesis.getSuccessor(new State<>(currentHypothesis.getInitialLocation(), null), inPreviousRelation.getWitnessToStart());
+            if (toStartState == null) {
+                continue;
+            }
+            
+            final State<L2> fromTargetState = currentHypothesis.getSuccessor(new State<L2>(targetLocation, toStartState.getStackContents()), inPreviousRelation.getWitnessFromTarget());
+            if (fromTargetState != null && currentHypothesis.isAccepting(fromTargetState)) {
+                witnessRelation.add(currentHypothesis.getInitialLocation(), targetLocation, inPreviousRelation.getWitnessToStart(), inPreviousRelation.getWitnessFromTarget());
+            }
+        }
+        System.out.println("Number of elements in Rel after adding still valid: " + reachabilityRelation.size());
+
+        return computeWitnessRelationLoop(currentHypothesis, reachabilityRelation, witnessRelation, computeWitnesses);
     }
 
     public static <L> WitnessRelation<L> computeWitnessRelation(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation, boolean computeWitnesses) {
         LOGGER.info("Witness relation: start");
-        final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
-        final WitnessRelation<L> witnessRelation = new WitnessRelation<>();
+        final WitnessRelation<L> witnessRelation = initializeWitnessRelation(automaton, reachabilityRelation, computeWitnesses);
+        return computeWitnessRelationLoop(automaton, reachabilityRelation, witnessRelation, computeWitnesses);
+    }
 
+    private static <L> WitnessRelation<L> initializeWitnessRelation(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation, boolean computeWitnesses) {
+        final WitnessRelation<L> witnessRelation = new WitnessRelation<>();
         final L initialLocation = automaton.getInitialLocation();
         for (final L location : automaton.getLocations()) {
             if (automaton.isAcceptingLocation(location)) {
@@ -91,6 +115,12 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
             }
         }
         LOGGER.info("Witness relation: init done");
+        return witnessRelation;
+    }
+
+    private static <L> WitnessRelation<L> computeWitnessRelationLoop(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation, WitnessRelation<L> witnessRelation, boolean computeWitnesses) {
+        final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
+        final L initialLocation = automaton.getInitialLocation();
 
         while (true) {
             final WitnessRelation<L> newInRelation = new WitnessRelation<>();
@@ -154,5 +184,4 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
         LOGGER.info("Size: " + witnessRelation.size());
         return witnessRelation;
     }
-
 }
