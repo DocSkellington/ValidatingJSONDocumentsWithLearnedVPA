@@ -1,12 +1,14 @@
 package be.ac.umons.jsonvalidation.graph;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.OneSEVPA;
+import net.automatalib.automata.vpda.State;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
@@ -51,80 +53,27 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
 
     public static <L> ReachabilityRelation<L> computeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
         LOGGER.info("Reach: start");
-        final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
-        final List<L> locations = automaton.getLocations();
 
-        final ReachabilityRelation<L> reachabilityRelation = getIdentityRelation(automaton, computeWitnesses);
-        for (final L start : locations) {
-            for (final JSONSymbol internalSym : internalAlphabet) {
-                final L target = automaton.getInternalSuccessor(start, internalSym);
-                if (target != null) {
-                    reachabilityRelation.add(start, target, constructWitness(internalSym, computeWitnesses));
-                }
-            }
-        }
-
-        return computeReachabilityRelationLoop(automaton, reachabilityRelation, computeWitnesses);
+        return computeReachabilityRelationLoop(automaton, initializeReachabilityRelation(automaton, computeWitnesses), computeWitnesses);
     }
 
     public static <L1, L2> ReachabilityRelation<L2> computeReachabilityRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis, boolean computeWitnesses) {
-        // TODO: reuse information
-        // For all (q, q') in Reach of the previous hypothesis with w the witness, check that we still reach q' by reading w from q in the new hypothesis
-        return computeReachabilityRelation(currentHypothesis, computeWitnesses);
-        /*
         LOGGER.info("Reach: start");
-        final Alphabet<JSONSymbol> internalAlphabet = currentHypothesis.getInputAlphabet().getInternalAlphabet();
+        final ReachabilityRelation<L2> reachabilityRelation = initializeReachabilityRelation(currentHypothesis, computeWitnesses);
 
-        // Using the previous hypothesis and reachability relation (from the last learning round), we want to avoid having to re-compute pairs (q, q') such that going from q to q' goes by paths that were not modified.
-        // If we can find such (q, q'), we know that it is still in the reachability relation for the current hypothesis.
-
-        // First, we want to know which location in the current hypothesis corresponds to a location in the previous hypothesis
-        final Map<L1, L2> previousToCurrentLocations = new LinkedHashMap<>();
-        for (final L1 locationInPrevious : previousHypothesis.getLocations()) {
-            for (final L2 locationInCurrent : currentHypothesis.getLocations()) {
-                if (previousHypothesis.getLocationId(locationInPrevious) == currentHypothesis.getLocationId(locationInCurrent)) {
-                    previousToCurrentLocations.put(locationInPrevious, locationInCurrent);
-                }
-            }
-        }
-
-        // Second, we seek the locations for which no existing transitions were modified.
-        // If a brand new return transition was added in the hypothesis, we do not consider it as a modification, as it strictly opens new paths in the VPA.
-        // The set contains locations in the previous hypothesis
-        final Set<L1> unmodifiedLocations = findUnmodifiedLocations(previousHypothesis, currentHypothesis, previousToCurrentLocations);
-        System.out.println("Number of unmodified locations " + unmodifiedLocations + "; " + unmodifiedLocations.size() + " out of " + previousHypothesis.size());
-
-        // Third, we initialize the reachability relation with the identity relation and the internal transitions
-        final ReachabilityRelation<L2> reachabilityRelation = getIdentityRelation(currentHypothesis, computeWitnesses);
-        for (final L2 location : currentHypothesis.getLocations()) {
-            for (final JSONSymbol internal : internalAlphabet) {
-                final L2 successor = currentHypothesis.getInternalSuccessor(location, internal);
-                if (successor != null) {
-                    reachabilityRelation.add(location, successor, constructWitness(internal, computeWitnesses));
-                }
-            }
-        }
         System.out.println("Number of elements in reach before adding unmodified: " + reachabilityRelation.size());
-        // Finally, we add the pairs from the previous relation that are still valid
-        for (final InfoInRelation<L1> inRelation : previousReachabilityRelation) {
-            final Set<L1> locationsOnPaths = inRelation.getLocationsBetweenStartAndTarget();
-            // @formatter:off
-            final Optional<L1> modifiedLocationOnPath = locationsOnPaths.stream()
-                .filter(l -> !unmodifiedLocations.contains(l))
-                .findAny();
-            // @formatter:on
-            if (modifiedLocationOnPath.isEmpty()) {
-                final L2 inRelationStartInCurrent = previousToCurrentLocations.get(inRelation.getStart());
-                final L2 inRelationTargetInCurrent = previousToCurrentLocations.get(inRelation.getTarget());
-                final Word<JSONSymbol> witness = inRelation.getWitness();
-                final Set<L2> seenLocationsOnPaths = locationsOnPaths.stream().map(l -> previousToCurrentLocations.get(l)).collect(Collectors.toSet());
-                reachabilityRelation.add(inRelationStartInCurrent, inRelationTargetInCurrent, witness, seenLocationsOnPaths);
-            }
+        final Map<L1, L2> locationsPreviousToCurrent = UnmodifiedLocations.createMapLocationsOfPreviousToCurrent(previousHypothesis, currentHypothesis);
+
+        for (final InfoInRelation<L1> inPreviousRelation : previousReachabilityRelation) {
+            final L2 startLocation = locationsPreviousToCurrent.get(inPreviousRelation.getStart());
+
+            final State<L2> startState = new State<L2>(startLocation, null);
+            final State<L2> targetState = currentHypothesis.getSuccessor(startState, inPreviousRelation.getWitness());
+            reachabilityRelation.add(startLocation, targetState.getLocation(), inPreviousRelation.getWitness());
         }
         System.out.println("Number of elements in reach after adding unmodified: " + reachabilityRelation.size());
 
-        return computeReachabilityRelationLoop(currentHypothesis, computeWitnesses, reachabilityRelation);
-        */
+        return computeReachabilityRelation(currentHypothesis, computeWitnesses);
     }
 
     @Deprecated
@@ -202,6 +151,23 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
             relation.add(loc, loc, constructWitness(computeWitnesses));
         }
         return relation;
+    }
+
+    private static <L> ReachabilityRelation<L> initializeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
+        final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
+        final List<L> locations = automaton.getLocations();
+
+        final ReachabilityRelation<L> reachabilityRelation = getIdentityRelation(automaton, computeWitnesses);
+        for (final L start : locations) {
+            for (final JSONSymbol internalSym : internalAlphabet) {
+                final L target = automaton.getInternalSuccessor(start, internalSym);
+                if (target != null) {
+                    reachabilityRelation.add(start, target, constructWitness(internalSym, computeWitnesses));
+                }
+            }
+        }
+
+        return reachabilityRelation;
     }
 
     private static <L> ReachabilityRelation<L> computeReachabilityRelationLoop(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation, boolean computeWitnesses) {
