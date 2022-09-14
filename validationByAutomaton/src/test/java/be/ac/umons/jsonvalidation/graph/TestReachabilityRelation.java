@@ -1,7 +1,6 @@
 package be.ac.umons.jsonvalidation.graph;
 
 import org.testng.Assert;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import be.ac.umons.jsonvalidation.Automata;
@@ -17,7 +16,7 @@ public class TestReachabilityRelation {
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
 
         Assert.assertEquals(reachabilityRelation.size(), 38);
-        for (InfoInRelation<Location> inRelation : reachabilityRelation) {
+        for (InReachabilityRelation<Location> inRelation : reachabilityRelation) {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
             Word<JSONSymbol> witness = inRelation.getWitness();
@@ -179,16 +178,15 @@ public class TestReachabilityRelation {
         checkElementsInRelationForSmallTwoBranchesAutomaton(automaton, reachabilityRelation);
     }
 
-    @Ignore
+    @Test
     public void testSmallTwoBranchesAutomatonValueReachabilityRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
         ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, true);
-        ReachabilityRelation<Location> valueReachabilityRelation = ReachabilityRelation
-                .computeValueReachabilityRelation(automaton, reachabilityRelation);
+        ReachabilityRelation<Location> valueReachabilityRelation = reachabilityRelation.computePotentialValueReachabilityRelation(automaton, true);
 
         Assert.assertEquals(valueReachabilityRelation.size(), 5);
 
-        for (InfoInRelation<Location> inRelation : valueReachabilityRelation) {
+        for (InReachabilityRelation<Location> inRelation : valueReachabilityRelation) {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
             Word<JSONSymbol> witness = inRelation.getWitness();
@@ -241,7 +239,7 @@ public class TestReachabilityRelation {
 
         Assert.assertEquals(reachabilityRelation.size(), 64);
 
-        for (InfoInRelation<Location> inRelation : reachabilityRelation) {
+        for (InReachabilityRelation<Location> inRelation : reachabilityRelation) {
             Location start = inRelation.getStart();
             Location target = inRelation.getTarget();
             Word<JSONSymbol> witness = inRelation.getWitness();

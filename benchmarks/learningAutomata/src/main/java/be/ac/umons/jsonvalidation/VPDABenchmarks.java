@@ -17,7 +17,7 @@ import be.ac.umons.jsonlearning.JSONMembershipOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
-import be.ac.umons.jsonvalidation.graph.WitnessRelation;
+import be.ac.umons.jsonvalidation.graph.OnAcceptingPathRelation;
 import de.learnlib.acex.analyzers.AcexAnalyzers;
 import de.learnlib.algorithms.ttt.vpda.TTTLearnerVPDA;
 import de.learnlib.api.logging.LearnLogger;
@@ -183,7 +183,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
     private <L> DefaultOneSEVPA<JSONSymbol> removeBinState(OneSEVPA<L, JSONSymbol> learned) {
         final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(learned, false);
         LOGGER.info("Reachability relation computed");
-        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(learned, reachabilityRelation, false);
+        final OnAcceptingPathRelation<L> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(learned, reachabilityRelation, false);
         LOGGER.info("Witness relation computed");
 
         final L binLocation = witnessRelation.identifyBinLocation(learned);

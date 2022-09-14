@@ -16,18 +16,18 @@ public class TestWitnessRelation {
 
         final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, true);
 
-        final WitnessRelation<Location> witnessRelation = WitnessRelation.computeWitnessRelation(vpa, reachabilityRelation, true);
+        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(vpa, reachabilityRelation, true);
 
         final JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
 
         Assert.assertEquals(witnessRelation.size(), vpa.size());
 
-        for (InfoInWitnessRelation<Location> inRelation : witnessRelation) {
+        for (OnAcceptingPath<Location> inRelation : witnessRelation) {
             Location start = vpa.getInitialLocation();
-            Location target = inRelation.getTarget();
-            Word<JSONSymbol> witnessToStart = inRelation.getWitnessToStart();
-            Word<JSONSymbol> witnessFromTarget = inRelation.getWitnessFromTarget();
+            Location target = inRelation.getIntermediate();
+            Word<JSONSymbol> witnessToStart = inRelation.getWitnessToIntermediate();
+            Word<JSONSymbol> witnessFromTarget = inRelation.getWitnessFromIntermediate();
 
             if (start.equals(vpa.getLocation(0))) {
                 if (target.equals(vpa.getLocation(0)) || target.equals(vpa.getLocation(6))) {

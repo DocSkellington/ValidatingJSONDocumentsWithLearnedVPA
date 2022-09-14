@@ -5,11 +5,11 @@ import java.util.Objects;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import net.automatalib.words.Word;
 
-class InfoInRelation<L> {
+class InReachabilityRelation<L> {
     private final L start, target;
     private final Word<JSONSymbol> witness;
 
-    public InfoInRelation(final L start, final L target, final Word<JSONSymbol> witness) {
+    public InReachabilityRelation(final L start, final L target, final Word<JSONSymbol> witness) {
         this.start = start;
         this.target = target;
         this.witness = witness;
@@ -42,11 +42,11 @@ class InfoInRelation<L> {
         if (obj == this) {
             return true;
         }
-        if (obj == null || !(obj instanceof InfoInRelation)) {
+        if (obj == null || !(obj instanceof InReachabilityRelation)) {
             return false;
         }
 
-        InfoInRelation<?> other = (InfoInRelation<?>)obj;
+        InReachabilityRelation<?> other = (InReachabilityRelation<?>)obj;
         return Objects.equals(other.witness, this.witness) && Objects.equals(other.start, this.start) && Objects.equals(other.target, this.target);
     }
 }

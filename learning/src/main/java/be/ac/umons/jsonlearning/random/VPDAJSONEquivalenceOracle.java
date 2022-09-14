@@ -13,7 +13,7 @@ import be.ac.umons.jsonlearning.IVPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
-import be.ac.umons.jsonvalidation.graph.WitnessRelation;
+import be.ac.umons.jsonvalidation.graph.OnAcceptingPathRelation;
 import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
@@ -29,7 +29,7 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
     private final Set<JSONObject> documentsToTest;
     private DefaultOneSEVPA<JSONSymbol> previousHypothesis = null;
     private ReachabilityRelation<Location> previousReachabilityRelation = null;
-    private WitnessRelation<Location> previousWitnessRelation = null;
+    private OnAcceptingPathRelation<Location> previousWitnessRelation = null;
 
     public VPDAJSONEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
             int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,

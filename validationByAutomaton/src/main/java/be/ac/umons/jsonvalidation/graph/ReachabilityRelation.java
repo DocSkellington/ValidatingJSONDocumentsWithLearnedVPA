@@ -13,13 +13,13 @@ import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 
-public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelation<L>> {
+public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InReachabilityRelation<L>> {
 
     private static final LearnLogger LOGGER = LearnLogger.getLogger(ReachabilityRelation.class);
     
     @Nullable
     public Word<JSONSymbol> getWitness(final L start, final L target) {
-        final InfoInRelation<L> inRelation = getCell(start, target);
+        final InReachabilityRelation<L> inRelation = getCell(start, target);
         if (inRelation == null) {
             return null;
         }
@@ -27,10 +27,10 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
     }
 
     boolean add(final L start, final L target, final Word<JSONSymbol> witness) {
-        return add(new InfoInRelation<>(start, target, witness));
+        return add(new InReachabilityRelation<>(start, target, witness));
     }
 
-    private boolean add(final InfoInRelation<L> infoInRelation) {
+    private boolean add(final InReachabilityRelation<L> infoInRelation) {
         final L start = infoInRelation.getStart();
         final L target = infoInRelation.getTarget();
         if (areInRelation(start, target)) {
@@ -45,10 +45,48 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
 
     boolean addAll(final ReachabilityRelation<L> relation) {
         boolean change = false;
-        for (final InfoInRelation<L> inRelation : relation) {
+        for (final InReachabilityRelation<L> inRelation : relation) {
             change = this.add(inRelation) || change;
         }
         return change;
+    }
+
+    public ReachabilityRelation<L> computePotentialValueReachabilityRelation(final OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
+        LOGGER.info("Value reach: start");
+        final Alphabet<JSONSymbol> primitiveValuesAlphabet = JSONSymbol.primitiveValuesAlphabet;
+        final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
+        final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
+
+        final ReachabilityRelation<L> valueReachabilityRelation = new ReachabilityRelation<>();
+        
+        for (final L startLocation : automaton.getLocations()) {
+            for (final JSONSymbol primitiveValue : primitiveValuesAlphabet) {
+                final L successor = automaton.getInternalSuccessor(startLocation, primitiveValue);
+                if (successor != null) {
+                    final Word<JSONSymbol> witness = constructWitness(primitiveValue, computeWitnesses);
+                    valueReachabilityRelation.add(startLocation, successor, witness);
+                }
+            }
+
+            for (final JSONSymbol callSymbol : callAlphabet) {
+                final L locationAfterCall = automaton.getInitialLocation();
+                final int stackSymbol = automaton.encodeStackSym(startLocation, callSymbol);
+
+                for (final InReachabilityRelation<L> inRelation : getLocationsAndInfoInRelationWithStart(locationAfterCall)) {
+                    final L locationBeforeReturn = inRelation.getTarget();
+                    for (final JSONSymbol returnSymbol : returnAlphabet) {
+                        final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSymbol, stackSymbol);
+                        if (locationAfterReturn != null) {
+                            final Word<JSONSymbol> witness = constructWitness(callSymbol, inRelation.getWitness(), returnSymbol, computeWitnesses);
+                            valueReachabilityRelation.add(startLocation, locationAfterReturn, witness);
+                        }
+                    }
+                }
+            }
+        }
+
+        LOGGER.info("Value reach: end");
+        return valueReachabilityRelation;
     }
 
     public static <L> ReachabilityRelation<L> computeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
@@ -62,9 +100,9 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         final ReachabilityRelation<L2> reachabilityRelation = initializeReachabilityRelation(currentHypothesis, computeWitnesses);
 
         System.out.println("Number of elements in reach before adding still valid: " + reachabilityRelation.size());
-        final Map<L1, L2> locationsPreviousToCurrent = UnmodifiedLocations.createMapLocationsOfPreviousToCurrent(previousHypothesis, currentHypothesis);
+        final Map<L1, L2> locationsPreviousToCurrent = Utils.createMapLocationsOfPreviousToCurrent(previousHypothesis, currentHypothesis);
 
-        for (final InfoInRelation<L1> inPreviousRelation : previousReachabilityRelation) {
+        for (final InReachabilityRelation<L1> inPreviousRelation : previousReachabilityRelation) {
             final L2 startLocation = locationsPreviousToCurrent.get(inPreviousRelation.getStart());
 
             final State<L2> startState = new State<L2>(startLocation, null);
@@ -74,45 +112,6 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         System.out.println("Number of elements in reach after adding still valid: " + reachabilityRelation.size());
 
         return computeReachabilityRelation(currentHypothesis, computeWitnesses);
-    }
-
-    @Deprecated
-    public static <L> ReachabilityRelation<L> computeValueReachabilityRelation(final OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation) {
-        LOGGER.info("Value reach: start");
-        final Alphabet<JSONSymbol> primitiveValuesAlphabet = JSONSymbol.primitiveValuesAlphabet;
-        final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
-        final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
-
-        final ReachabilityRelation<L> valueReachabilityRelation = new ReachabilityRelation<>();
-        
-        for (final L startLocation : automaton.getLocations()) {
-            for (final JSONSymbol primitiveValue : primitiveValuesAlphabet) {
-                final L successor = automaton.getInternalSuccessor(startLocation, primitiveValue);
-                if (successor != null) {
-                    final Word<JSONSymbol> witness = constructWitness(primitiveValue, false);
-                    valueReachabilityRelation.add(startLocation, successor, witness);
-                }
-            }
-
-            for (final JSONSymbol callSymbol : callAlphabet) {
-                final L locationAfterCall = automaton.getInitialLocation();
-                final int stackSymbol = automaton.encodeStackSym(startLocation, callSymbol);
-
-                for (final InfoInRelation<L> inRelation : reachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterCall)) {
-                    final L locationBeforeReturn = inRelation.getTarget();
-                    for (final JSONSymbol returnSymbol : returnAlphabet) {
-                        final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSymbol, stackSymbol);
-                        if (locationAfterReturn != null) {
-                            final Word<JSONSymbol> witness = constructWitness(callSymbol, inRelation.getWitness(), returnSymbol, false);
-                            valueReachabilityRelation.add(startLocation, locationAfterReturn, witness);
-                        }
-                    }
-                }
-            }
-        }
-
-        LOGGER.info("Value reach: end");
-        return valueReachabilityRelation;
     }
 
     private static Word<JSONSymbol> constructWitness(boolean computeWitnesses) {
@@ -175,7 +174,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         final List<L> locations = automaton.getLocations();
 
         LOGGER.info("Reach: init warshall");
-        Warshall.warshall(reachabilityRelation, locations, computeWitnesses);
+        Utils.warshall(reachabilityRelation, locations, computeWitnesses);
         LOGGER.info("Reach: init done");
 
         boolean change = true;
@@ -195,7 +194,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
 
                     final JSONSymbol returnSym = callSym.callToReturn();
 
-                    for (final InfoInRelation<L> inRelation : reachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterCall)) {
+                    for (final InReachabilityRelation<L> inRelation : reachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterCall)) {
                         final L locationBeforeReturn = inRelation.getTarget();
                         final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSym, stackSym);
                         if (locationAfterReturn != null) {
@@ -219,7 +218,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
             }
             change = reachabilityRelation.addAll(newLocationsInRelation);
             LOGGER.info("Reach: warshall loop");
-            change = Warshall.warshall(reachabilityRelation, locations, computeWitnesses) || change;
+            change = Utils.warshall(reachabilityRelation, locations, computeWitnesses) || change;
             LOGGER.info("Reach: loop done");
         }
 

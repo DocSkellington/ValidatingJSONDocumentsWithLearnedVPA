@@ -25,7 +25,7 @@ import be.ac.umons.jsonschematools.validator.Validator;
 import be.ac.umons.jsonvalidation.graph.DotWriter;
 import be.ac.umons.jsonvalidation.graph.KeyGraph;
 import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
-import be.ac.umons.jsonvalidation.graph.WitnessRelation;
+import be.ac.umons.jsonvalidation.graph.OnAcceptingPathRelation;
 import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
@@ -130,7 +130,7 @@ public class ValidationBenchmarks {
         final long memoryForReachability = getMemoryUse() - memoryAtStart;
 
         watch.reset().start();
-        final WitnessRelation<Location> witnessRelation = WitnessRelation.computeWitnessRelation(vpa, reachabilityRelation, false);
+        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(vpa, reachabilityRelation, false);
 
         final long timeWitness = watch.stop().elapsed().toMillis();
         final long memoryForWitness = getMemoryUse() - memoryAtStart;

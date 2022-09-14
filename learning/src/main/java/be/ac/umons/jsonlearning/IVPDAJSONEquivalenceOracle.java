@@ -5,7 +5,7 @@ import java.util.Random;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.graph.KeyGraph;
 import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
-import be.ac.umons.jsonvalidation.graph.WitnessRelation;
+import be.ac.umons.jsonvalidation.graph.OnAcceptingPathRelation;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.OneSEVPA;
@@ -51,7 +51,7 @@ public interface IVPDAJSONEquivalenceOracle extends EquivalenceOracle<OneSEVPA<?
 
     default <L> CounterexampleWithRelations<L> counterexampleAndRelationFromKeyGraph(OneSEVPA<L, JSONSymbol> hypo) {
         final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(hypo, true);
-        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(hypo, reachabilityRelation, true);
+        final OnAcceptingPathRelation<L> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(hypo, reachabilityRelation, true);
 
         final KeyGraph<L> keyGraph = new KeyGraph<>(hypo, reachabilityRelation, witnessRelation, true);
         if (keyGraph == null || keyGraph.isValid()) {
@@ -62,9 +62,9 @@ public interface IVPDAJSONEquivalenceOracle extends EquivalenceOracle<OneSEVPA<?
         return new CounterexampleWithRelations<>(new DefaultQuery<>(keyGraph.getWitnessCycle(), false), reachabilityRelation, witnessRelation);
     }
 
-    default <L1, L2> CounterexampleWithRelations<L2> counterexampleAndRelationFromKeyGraph(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, WitnessRelation<L1> previousWitnessRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis) {
+    default <L1, L2> CounterexampleWithRelations<L2> counterexampleAndRelationFromKeyGraph(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, OnAcceptingPathRelation<L1> previousWitnessRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis) {
         final ReachabilityRelation<L2> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(previousHypothesis, previousReachabilityRelation, currentHypothesis, true);
-        final WitnessRelation<L2> witnessRelation = WitnessRelation.computeWitnessRelation(previousHypothesis, previousWitnessRelation, currentHypothesis, reachabilityRelation, true);
+        final OnAcceptingPathRelation<L2> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(previousHypothesis, previousWitnessRelation, currentHypothesis, reachabilityRelation, true);
 
         final KeyGraph<L2> keyGraph = new KeyGraph<>(currentHypothesis, reachabilityRelation, witnessRelation, true);
         if (keyGraph == null || keyGraph.isValid()) {
@@ -78,9 +78,9 @@ public interface IVPDAJSONEquivalenceOracle extends EquivalenceOracle<OneSEVPA<?
     class CounterexampleWithRelations<L> {
         public final DefaultQuery<JSONSymbol, Boolean> counterexample;
         public final ReachabilityRelation<L> reachabilityRelation;
-        public final WitnessRelation<L> witnessRelation;
+        public final OnAcceptingPathRelation<L> witnessRelation;
 
-        public CounterexampleWithRelations(DefaultQuery<JSONSymbol, Boolean> counterexample, ReachabilityRelation<L> reachabilityRelation, WitnessRelation<L> witnessRelation) {
+        public CounterexampleWithRelations(DefaultQuery<JSONSymbol, Boolean> counterexample, ReachabilityRelation<L> reachabilityRelation, OnAcceptingPathRelation<L> witnessRelation) {
             this.counterexample = counterexample;
             this.reachabilityRelation = reachabilityRelation;
             this.witnessRelation = witnessRelation;

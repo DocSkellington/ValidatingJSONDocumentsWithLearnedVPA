@@ -64,7 +64,7 @@ public class KeyGraph<L> {
 
     public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean checkGraph, boolean computeWitnesses) {
         final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, computeWitnesses);
-        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, reachabilityRelation, computeWitnesses);
+        final OnAcceptingPathRelation<L> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(automaton, reachabilityRelation, computeWitnesses);
         if (reachabilityRelation.size() == 0) {
             return null;
         }
@@ -72,7 +72,7 @@ public class KeyGraph<L> {
         return new KeyGraph<>(automaton, reachabilityRelation, witnessRelation, checkGraph);
     }
 
-    public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation, final WitnessRelation<L> witnessRelation, boolean checkGraph) {
+    public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation, final OnAcceptingPathRelation<L> witnessRelation, boolean checkGraph) {
         this.automaton = automaton;
 
         this.graph = constructGraph(reachabilityRelation, witnessRelation);
@@ -99,11 +99,10 @@ public class KeyGraph<L> {
         // @formatter:on
     }
 
-    private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> reachabilityRelation, WitnessRelation<L> witnessRelation) {
+    private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> reachabilityRelation, OnAcceptingPathRelation<L> witnessRelation) {
         final L binLocation = witnessRelation.identifyBinLocation(automaton);
 
-        final ReachabilityRelation<L> valueReachabilityRelation = ReachabilityRelation
-                .computeValueReachabilityRelation(automaton, reachabilityRelation);
+        final ReachabilityRelation<L> valueReachabilityRelation = reachabilityRelation.computePotentialValueReachabilityRelation(automaton, false);
 
         // @formatter:off
         final ImmutableGraph.Builder<NodeInGraph<L>> builder = GraphBuilder
@@ -129,7 +128,7 @@ public class KeyGraph<L> {
                 if (locationAfterKey == null || Objects.equals(locationAfterKey, binLocation)) {
                     continue;
                 }
-                for (final InfoInRelation<L> inValueRelation : valueReachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterKey)) {
+                for (final InReachabilityRelation<L> inValueRelation : valueReachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterKey)) {
                     if (Objects.equals(inValueRelation.getTarget(), binLocation)) {
                         continue;
                     }
@@ -209,18 +208,18 @@ public class KeyGraph<L> {
     }
 
     private Word<JSONSymbol> constructWitnessDuplicate(final List<NodeInGraph<L>> path,
-            final ReachabilityRelation<L> reachabilityRelation, final WitnessRelation<L> witnessRelation) {
+            final ReachabilityRelation<L> reachabilityRelation, final OnAcceptingPathRelation<L> witnessRelation) {
         if (isValid()) {
             return null;
         }
 
         final L start = path.get(0).getStartLocation();
         final L target = path.get(path.size() - 1).getTargetLocation();
-        assert witnessRelation.getWitnessToStart(start, target) != null : start + " " + target;
-        assert witnessRelation.getWitnessFromTarget(start, target) != null;
+        assert witnessRelation.getWitnessToIntermediate(start, target) != null : start + " " + target;
+        assert witnessRelation.getWitnessFromIntermediate(start, target) != null;
 
         final WordBuilder<JSONSymbol> builder = new WordBuilder<>();
-        builder.append(witnessRelation.getWitnessToStart(start, target));
+        builder.append(witnessRelation.getWitnessToIntermediate(start, target));
         int i = 0;
         for (final NodeInGraph<L> node : path) {
             builder.append(node.getSymbol());
@@ -230,7 +229,7 @@ public class KeyGraph<L> {
                 builder.append(JSONSymbol.commaSymbol);
             }
         }
-        builder.append(witnessRelation.getWitnessFromTarget(start, target));
+        builder.append(witnessRelation.getWitnessFromIntermediate(start, target));
 
         return builder.toWord();
     }
