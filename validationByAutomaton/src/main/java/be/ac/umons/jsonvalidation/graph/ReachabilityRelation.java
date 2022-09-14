@@ -49,28 +49,28 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         return change;
     }
 
-    public static <L> ReachabilityRelation<L> computeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton) {
+    public static <L> ReachabilityRelation<L> computeReachabilityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
         LOGGER.info("Reach: start");
         final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
         final List<L> locations = automaton.getLocations();
 
-        final ReachabilityRelation<L> reachabilityRelation = getIdentityRelation(automaton);
+        final ReachabilityRelation<L> reachabilityRelation = getIdentityRelation(automaton, computeWitnesses);
         for (final L start : locations) {
             for (final JSONSymbol internalSym : internalAlphabet) {
                 final L target = automaton.getInternalSuccessor(start, internalSym);
                 if (target != null) {
-                    reachabilityRelation.add(start, target, constructWitness(internalSym, true));
+                    reachabilityRelation.add(start, target, constructWitness(internalSym, computeWitnesses));
                 }
             }
         }
 
-        return computeReachabilityRelationLoop(automaton, reachabilityRelation);
+        return computeReachabilityRelationLoop(automaton, reachabilityRelation, computeWitnesses);
     }
 
-    public static <L1, L2> ReachabilityRelation<L2> computeReachabilityRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis) {
+    public static <L1, L2> ReachabilityRelation<L2> computeReachabilityRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis, boolean computeWitnesses) {
         // TODO: reuse information
         // For all (q, q') in Reach of the previous hypothesis with w the witness, check that we still reach q' by reading w from q in the new hypothesis
-        return computeReachabilityRelation(currentHypothesis);
+        return computeReachabilityRelation(currentHypothesis, computeWitnesses);
         /*
         LOGGER.info("Reach: start");
         final Alphabet<JSONSymbol> internalAlphabet = currentHypothesis.getInputAlphabet().getInternalAlphabet();
@@ -140,7 +140,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
             for (final JSONSymbol primitiveValue : primitiveValuesAlphabet) {
                 final L successor = automaton.getInternalSuccessor(startLocation, primitiveValue);
                 if (successor != null) {
-                    final Word<JSONSymbol> witness = constructWitness(primitiveValue, true);
+                    final Word<JSONSymbol> witness = constructWitness(primitiveValue, false);
                     valueReachabilityRelation.add(startLocation, successor, witness);
                 }
             }
@@ -154,7 +154,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
                     for (final JSONSymbol returnSymbol : returnAlphabet) {
                         final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSymbol, stackSymbol);
                         if (locationAfterReturn != null) {
-                            final Word<JSONSymbol> witness = constructWitness(callSymbol, inRelation.getWitness(), returnSymbol, true);
+                            final Word<JSONSymbol> witness = constructWitness(callSymbol, inRelation.getWitness(), returnSymbol, false);
                             valueReachabilityRelation.add(startLocation, locationAfterReturn, witness);
                         }
                     }
@@ -196,20 +196,20 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
         }
     }
 
-    private static <L> ReachabilityRelation<L> getIdentityRelation(OneSEVPA<L, JSONSymbol> automaton) {
+    private static <L> ReachabilityRelation<L> getIdentityRelation(OneSEVPA<L, JSONSymbol> automaton, boolean computeWitnesses) {
         final ReachabilityRelation<L> relation = new ReachabilityRelation<>();
         for (final L loc : automaton.getLocations()) {
-            relation.add(loc, loc, constructWitness(true));
+            relation.add(loc, loc, constructWitness(computeWitnesses));
         }
         return relation;
     }
 
-    private static <L> ReachabilityRelation<L> computeReachabilityRelationLoop(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation) {
+    private static <L> ReachabilityRelation<L> computeReachabilityRelationLoop(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation, boolean computeWitnesses) {
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
         final List<L> locations = automaton.getLocations();
 
         LOGGER.info("Reach: init warshall");
-        Warshall.warshall(reachabilityRelation, locations);
+        Warshall.warshall(reachabilityRelation, locations, computeWitnesses);
         LOGGER.info("Reach: init done");
 
         boolean change = true;
@@ -243,7 +243,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
                                 witnessStartToTarget = newLocationsInRelation.getWitness(locationBeforeCall, locationAfterReturn);
                             }
                             else {
-                                witnessStartToTarget = constructWitness(callSym, witnessAfterToBefore, returnSym, true);
+                                witnessStartToTarget = constructWitness(callSym, witnessAfterToBefore, returnSym, computeWitnesses);
                             }
 
                             newLocationsInRelation.add(locationBeforeCall, locationAfterReturn, witnessStartToTarget);
@@ -253,7 +253,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InfoInRelatio
             }
             change = reachabilityRelation.addAll(newLocationsInRelation);
             LOGGER.info("Reach: warshall loop");
-            change = Warshall.warshall(reachabilityRelation, locations) || change;
+            change = Warshall.warshall(reachabilityRelation, locations, computeWitnesses) || change;
             LOGGER.info("Reach: loop done");
         }
 

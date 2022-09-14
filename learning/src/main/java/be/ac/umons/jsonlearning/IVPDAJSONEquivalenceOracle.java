@@ -5,6 +5,7 @@ import java.util.Random;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import be.ac.umons.jsonvalidation.graph.KeyGraph;
 import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
+import be.ac.umons.jsonvalidation.graph.WitnessRelation;
 import de.learnlib.api.oracle.EquivalenceOracle;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.OneSEVPA;
@@ -50,25 +51,28 @@ public interface IVPDAJSONEquivalenceOracle extends EquivalenceOracle<OneSEVPA<?
     }
 
     default <L> Pair<DefaultQuery<JSONSymbol, Boolean>, ReachabilityRelation<L>> counterexampleAndRelationFromKeyGraph(OneSEVPA<L, JSONSymbol> hypo) {
-        final ReachabilityRelation<L> relation = ReachabilityRelation.computeReachabilityRelation(hypo, true);
-        final KeyGraph<L> keyGraph = new KeyGraph<>(hypo, relation, true);
+        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(hypo, true);
+        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(hypo, reachabilityRelation, true);
+
+        final KeyGraph<L> keyGraph = new KeyGraph<>(hypo, reachabilityRelation, witnessRelation, true);
         if (keyGraph == null || keyGraph.isValid()) {
             return null;
         }
         assert keyGraph.getWitnessCycle() != null;
         assert hypo.accepts(keyGraph.getWitnessCycle());
-        return Pair.of(new DefaultQuery<>(keyGraph.getWitnessCycle(), false), relation);
+        return Pair.of(new DefaultQuery<>(keyGraph.getWitnessCycle(), false), reachabilityRelation);
     }
 
     default <L1, L2> Pair<DefaultQuery<JSONSymbol, Boolean>, ReachabilityRelation<L2>> counterexampleAndRelationFromKeyGraph(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis) {
-        final ReachabilityRelation<L2> relation = ReachabilityRelation.computeReachabilityRelation(previousHypothesis, previousReachabilityRelation, currentHypothesis, true);
-        final KeyGraph<L2> keyGraph = new KeyGraph<>(currentHypothesis, relation, true);
+        final ReachabilityRelation<L2> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(previousHypothesis, previousReachabilityRelation, currentHypothesis, true);
+        final WitnessRelation<L2> witnessRelation = WitnessRelation.computeWitnessRelation(currentHypothesis, reachabilityRelation, true);
+        final KeyGraph<L2> keyGraph = new KeyGraph<>(currentHypothesis, reachabilityRelation, witnessRelation, true);
         if (keyGraph == null || keyGraph.isValid()) {
             return null;
         }
         assert keyGraph.getWitnessCycle() != null;
         assert currentHypothesis.accepts(keyGraph.getWitnessCycle());
-        return Pair.of(new DefaultQuery<>(keyGraph.getWitnessCycle(), false), relation);
+        return Pair.of(new DefaultQuery<>(keyGraph.getWitnessCycle(), false), reachabilityRelation);
     }
 
 }

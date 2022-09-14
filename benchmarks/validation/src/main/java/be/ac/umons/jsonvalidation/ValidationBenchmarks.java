@@ -25,6 +25,7 @@ import be.ac.umons.jsonschematools.validator.Validator;
 import be.ac.umons.jsonvalidation.graph.DotWriter;
 import be.ac.umons.jsonvalidation.graph.KeyGraph;
 import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
+import be.ac.umons.jsonvalidation.graph.WitnessRelation;
 import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
@@ -66,8 +67,10 @@ public class ValidationBenchmarks {
         // @formatter:off
         return List.of(
             "Success",
-            "Relation time",
-            "Relation memory",
+            "Reachability time",
+            "Reachability memory",
+            "Witness time",
+            "Witness memory",
             "Graph time",
             "Graph memory",
             "Automaton time",
@@ -123,14 +126,20 @@ public class ValidationBenchmarks {
 
         final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, false);
 
-        final long timeRelations = watch.stop().elapsed().toMillis();
-        final long memoryForRelations = getMemoryUse() - memoryAtStart;
+        final long timeReachability = watch.stop().elapsed().toMillis();
+        final long memoryForReachability = getMemoryUse() - memoryAtStart;
 
         watch.reset().start();
-        final KeyGraph<Location> graph = new KeyGraph<>(vpa, reachabilityRelation, false);
+        final WitnessRelation<Location> witnessRelation = WitnessRelation.computeWitnessRelation(vpa, reachabilityRelation, false);
+
+        final long timeWitness = watch.stop().elapsed().toMillis();
+        final long memoryForWitness = getMemoryUse() - memoryAtStart;
+
+        watch.reset().start();
+        final KeyGraph<Location> graph = new KeyGraph<>(vpa, reachabilityRelation, witnessRelation, false);
 
         final long timeGraph = watch.stop().elapsed().toMillis();
-        final long memoryForGraph = getMemoryUse() - memoryForRelations;
+        final long memoryForGraph = getMemoryUse() - memoryForReachability;
 
         watch.reset().start();
         final ValidationByAutomaton<Location> automaton = new ValidationByAutomaton<>(vpa, graph);
@@ -151,8 +160,10 @@ public class ValidationBenchmarks {
         else {
             statistics.add(true);
         }
-        statistics.add(timeRelations);
-        statistics.add(memoryForRelations);
+        statistics.add(timeReachability);
+        statistics.add(memoryForReachability);
+        statistics.add(timeWitness);
+        statistics.add(memoryForWitness);
         statistics.add(timeGraph);
         statistics.add(memoryForGraph);
         statistics.add(timeAutomaton);

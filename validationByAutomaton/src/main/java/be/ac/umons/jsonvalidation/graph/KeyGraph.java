@@ -62,9 +62,9 @@ public class KeyGraph<L> {
     private final boolean hasPathWithDuplicateKeys;
     private final Word<JSONSymbol> witnessInvalid;
 
-    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean checkGraph) {
-        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton);
-        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, reachabilityRelation);
+    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean checkGraph, boolean computeWitnesses) {
+        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, computeWitnesses);
+        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton, reachabilityRelation, computeWitnesses);
         if (reachabilityRelation.size() == 0) {
             return null;
         }
@@ -81,7 +81,7 @@ public class KeyGraph<L> {
         if (checkGraph) {
             final List<NodeInGraph<L>> pathWithDuplicateKeys = hasPathWithDuplicateKeys();
             this.hasPathWithDuplicateKeys = !pathWithDuplicateKeys.isEmpty();
-            witnessInvalid = constructWitnessDuplicate(pathWithDuplicateKeys, reachabilityRelation);
+            witnessInvalid = constructWitnessDuplicate(pathWithDuplicateKeys, reachabilityRelation, witnessRelation);
         } else {
             hasPathWithDuplicateKeys = false;
             witnessInvalid = null;
@@ -209,13 +209,10 @@ public class KeyGraph<L> {
     }
 
     private Word<JSONSymbol> constructWitnessDuplicate(final List<NodeInGraph<L>> path,
-            final ReachabilityRelation<L> reachabilityRelation) {
+            final ReachabilityRelation<L> reachabilityRelation, final WitnessRelation<L> witnessRelation) {
         if (isValid()) {
             return null;
         }
-
-        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(automaton,
-                reachabilityRelation);
 
         final L start = path.get(0).getStartLocation();
         final L target = path.get(path.size() - 1).getTargetLocation();

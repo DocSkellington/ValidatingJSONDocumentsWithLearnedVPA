@@ -10,13 +10,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
-import java.util.Set;
 
 import be.ac.umons.jsonlearning.JSONMembershipOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
+import be.ac.umons.jsonvalidation.graph.WitnessRelation;
 import de.learnlib.acex.analyzers.AcexAnalyzers;
 import de.learnlib.algorithms.ttt.vpda.TTTLearnerVPDA;
 import de.learnlib.api.logging.LearnLogger;
@@ -182,15 +183,17 @@ public abstract class VPDABenchmarks extends ABenchmarks {
     private <L> DefaultOneSEVPA<JSONSymbol> removeBinState(OneSEVPA<L, JSONSymbol> learned) {
         final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(learned, false);
         LOGGER.info("Reachability relation computed");
+        final WitnessRelation<L> witnessRelation = WitnessRelation.computeWitnessRelation(learned, reachabilityRelation, false);
+        LOGGER.info("Witness relation computed");
 
-        final Set<L> binLocations = reachabilityRelation.identifyBinLocations(learned);
-        LOGGER.info("Bin locations " + binLocations);
+        final L binLocation = witnessRelation.identifyBinLocation(learned);
+        LOGGER.info("Bin location " + binLocation);
 
         final VPDAlphabet<JSONSymbol> alphabet = learned.getInputAlphabet();
         final DefaultOneSEVPA<JSONSymbol> withoutBin = new DefaultOneSEVPA<>(alphabet);
         final Map<L, Location> oldToNewLocations = new HashMap<>();
         for (final L location : learned.getLocations()) {
-            if (!binLocations.contains(location)) {
+            if (!Objects.equals(location, binLocation)) {
                 final Location newLocation;
                 final boolean accepting = learned.isAcceptingLocation(location);
                 if (learned.getInitialLocation() == location) {
@@ -204,14 +207,14 @@ public abstract class VPDABenchmarks extends ABenchmarks {
         }
 
         for (final L source : learned.getLocations()) {
-            if (binLocations.contains(source)) {
+            if (Objects.equals(source, binLocation)) {
                 continue;
             }
 
             for (final JSONSymbol internalSymbol : alphabet.getInternalAlphabet()) {
                 final L target = learned.getInternalSuccessor(source, internalSymbol);
                 assert target != null;
-                if (!binLocations.contains(target)) {
+                if (!Objects.equals(target, binLocation)) {
                     withoutBin.setInternalSuccessor(oldToNewLocations.get(source), internalSymbol, oldToNewLocations.get(target));
                 }
             }
@@ -222,7 +225,8 @@ public abstract class VPDABenchmarks extends ABenchmarks {
                         final int stackSymLearned = learned.encodeStackSym(locationBeforeCall, callSymbol);
                         final L target = learned.getReturnSuccessor(source, returnSymbol, stackSymLearned);
                         assert target != null;
-                        if (!binLocations.contains(target)) {
+
+                        if (!Objects.equals(target, binLocation)) {
                             final int stackSymNew = withoutBin.encodeStackSym(oldToNewLocations.get(locationBeforeCall), callSymbol);
                             withoutBin.setReturnSuccessor(oldToNewLocations.get(source), returnSymbol, stackSymNew, oldToNewLocations.get(target));
                         }

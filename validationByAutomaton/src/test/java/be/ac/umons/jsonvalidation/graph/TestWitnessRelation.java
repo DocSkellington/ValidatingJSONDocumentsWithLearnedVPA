@@ -14,14 +14,13 @@ public class TestWitnessRelation {
     public void testWitnessRelationSmallTwoBranchesAutomaton() {
         final DefaultOneSEVPA<JSONSymbol> vpa = Automata.constructSmallTwoBranchesAutomaton();
 
-        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa);
+        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, true);
 
-        final WitnessRelation<Location> witnessRelation = WitnessRelation.computeWitnessRelation(vpa, reachabilityRelation);
+        final WitnessRelation<Location> witnessRelation = WitnessRelation.computeWitnessRelation(vpa, reachabilityRelation, true);
 
         final JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
 
-        System.out.println(witnessRelation);
         Assert.assertEquals(witnessRelation.size(), vpa.size());
 
         for (InfoInWitnessRelation<Location> inRelation : witnessRelation) {

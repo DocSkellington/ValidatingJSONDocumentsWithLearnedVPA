@@ -6,7 +6,7 @@ import be.ac.umons.jsonvalidation.JSONSymbol;
 import net.automatalib.words.Word;
 
 class Warshall {
-    public static <L> boolean warshall(final ReachabilityRelation<L> relation, final Collection<L> locations) {
+    public static <L> boolean warshall(final ReachabilityRelation<L> relation, final Collection<L> locations, boolean computeWitnesses) {
         final ReachabilityRelation<L> newRelation = new ReachabilityRelation<>();
         for (final L pivot : locations) {
             for (final L start : locations) {
@@ -15,9 +15,17 @@ class Warshall {
                         final InfoInRelation<L> startToPivot = relation.getCell(start, pivot);
                         final InfoInRelation<L> pivotToTarget = relation.getCell(pivot, target);
 
-                        Word<JSONSymbol> witness = relation.getWitness(start, target);
-                        if (witness == null) {
-                            witness = startToPivot.getWitness().concat(pivotToTarget.getWitness());
+                        final Word<JSONSymbol> witness;
+                        if (computeWitnesses) {
+                            if (relation.getWitness(start, target) == null) {
+                                witness = startToPivot.getWitness().concat(pivotToTarget.getWitness());
+                            }
+                            else {
+                                witness = relation.getWitness(start, target);
+                            }
+                        }
+                        else {
+                            witness = null;
                         }
 
                         newRelation.add(start, target, witness);

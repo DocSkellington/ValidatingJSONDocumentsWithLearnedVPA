@@ -67,7 +67,7 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
         return change;
     }
 
-    public static <L> WitnessRelation<L> computeWitnessRelation(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation) {
+    public static <L> WitnessRelation<L> computeWitnessRelation(OneSEVPA<L, JSONSymbol> automaton, ReachabilityRelation<L> reachabilityRelation, boolean computeWitnesses) {
         LOGGER.info("Witness relation: start");
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
         final WitnessRelation<L> witnessRelation = new WitnessRelation<>();
@@ -75,7 +75,14 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
         final L initialLocation = automaton.getInitialLocation();
         for (final L location : automaton.getLocations()) {
             if (automaton.isAcceptingLocation(location)) {
-                witnessRelation.add(initialLocation, location, Word.epsilon(), Word.epsilon());
+                final Word<JSONSymbol> witness;
+                if (computeWitnesses) {
+                    witness = Word.epsilon();
+                }
+                else {
+                    witness = null;
+                }
+                witnessRelation.add(initialLocation, location, witness, witness);
             }
         }
         LOGGER.info("Witness relation: init done");
@@ -85,8 +92,16 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
             for (final InfoInWitnessRelation<L> inWitnessRelation : witnessRelation) {
                 for (final InfoInRelation<L> inReachabilityRelation : reachabilityRelation) {
                     if (inReachabilityRelation.getTarget() == inWitnessRelation.getTarget()) {
-                        final Word<JSONSymbol> witnessToStart = inWitnessRelation.getWitnessToStart();
-                        final Word<JSONSymbol> witnessFromTarget = inReachabilityRelation.getWitness().concat(inWitnessRelation.getWitnessFromTarget());
+                        final Word<JSONSymbol> witnessToStart, witnessFromTarget;
+                        
+                        if (computeWitnesses) {
+                            witnessToStart = inWitnessRelation.getWitnessToStart();
+                            witnessFromTarget = inReachabilityRelation.getWitness().concat(inWitnessRelation.getWitnessFromTarget());
+                        }
+                        else {
+                            witnessToStart = witnessFromTarget = null;
+                        }
+
                         newInRelation.add(initialLocation, inReachabilityRelation.getStart(), witnessToStart, witnessFromTarget);
                     }
                 }
@@ -98,12 +113,26 @@ public class WitnessRelation<L> extends ReachabilityMatrix<L, InfoInWitnessRelat
 
                         final JSONSymbol returnSymbol = callSymbol.callToReturn();
 
-                        final Word<JSONSymbol> witnessToStart = inWitnessRelation.getWitnessToStart().concat(inRelationWithInitial.getWitness()).append(callSymbol);
+                        final Word<JSONSymbol> witnessToStart;
+                        if (computeWitnesses) {
+                            witnessToStart = inWitnessRelation.getWitnessToStart().concat(inRelationWithInitial.getWitness()).append(callSymbol);
+                        } 
+                        else {
+                            witnessToStart = null;
+                        }
+
                         // TODO: create a map beforehand to retrieve the correct locationBeforeReturn?
                         for (final L locationBeforeReturn : automaton.getLocations()) {
                             final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn, returnSymbol, stackSym);
                             if (Objects.equals(locationAfterReturn, inWitnessRelation.getTarget())) {
-                                final Word<JSONSymbol> witnessFromTarget = inWitnessRelation.getWitnessFromTarget().prepend(returnSymbol);
+                                final Word<JSONSymbol> witnessFromTarget;
+                                if (computeWitnesses) {
+                                    witnessFromTarget = inWitnessRelation.getWitnessFromTarget().prepend(returnSymbol);
+                                }
+                                else {
+                                    witnessFromTarget = null;
+                                }
+
                                 newInRelation.add(initialLocation, locationBeforeReturn, witnessToStart, witnessFromTarget);
                             }
                         }
