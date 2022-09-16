@@ -1,6 +1,6 @@
 #!/bin/bash
 
-schema="winget.json"
+schema="winget-pkgs-singleton-1.0.0.json"
 
 # Validation
 documents=Documents/${schema}/Random
