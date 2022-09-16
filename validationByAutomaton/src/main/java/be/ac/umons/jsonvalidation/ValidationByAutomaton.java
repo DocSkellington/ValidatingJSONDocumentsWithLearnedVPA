@@ -5,6 +5,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.Stopwatch;
+
 import be.ac.umons.jsonvalidation.graph.KeyGraph;
 import be.ac.umons.jsonvalidation.graph.NodeInGraph;
 import net.automatalib.automata.vpda.OneSEVPA;
@@ -34,6 +36,9 @@ public class ValidationByAutomaton<L> {
     private final KeyGraph<L> graph;
     private final OneSEVPA<L, JSONSymbol> automaton;
     private final VPDAlphabet<JSONSymbol> alphabet;
+    private long maxTimePathsKeyGraph = 0;
+    private long totalTimePathsKeyGraph = 0;
+    private long numberPathsKeyGraph = 0;
 
     public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton) {
         this(automaton, KeyGraph.graphFor(automaton, false, false));
@@ -65,6 +70,18 @@ public class ValidationByAutomaton<L> {
             .filter(location -> automaton.isAcceptingLocation(location))
             .findAny().isPresent();
         // @formatter:on
+    }
+
+    public long getMaximalTimePathsKeyGraph() {
+        return maxTimePathsKeyGraph;
+    }
+
+    public long getNumberOfTimesPathsKeyGraphComputed() {
+        return numberPathsKeyGraph;
+    }
+
+    public long getMeanTimePathsKeyGraph() {
+        return totalTimePathsKeyGraph / numberPathsKeyGraph;
     }
 
     public boolean accepts(List<JSONSymbol> input) {
@@ -206,10 +223,14 @@ public class ValidationByAutomaton<L> {
             final JSONSymbol currentKey = currentStack.peekCurrentKey();
             markNodesToReject(currentStack, sourceToReachedLocations, currentKey);
 
-            // TODO: time to compute this set
+            final Stopwatch watch = Stopwatch.createStarted();
             final Set<L> acceptingLocations = graph.getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
                     currentStack.peekSeenKeys(), currentStack.peekReachedLocationsBeforeCall(),
                     currentStack.peekRejectedNodes());
+            long time = watch.stop().elapsed().toMillis();
+            maxTimePathsKeyGraph = Math.max(time, maxTimePathsKeyGraph);
+            totalTimePathsKeyGraph += time;
+            numberPathsKeyGraph++;
 
             for (final PairSourceToReached<L> sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
                 final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),

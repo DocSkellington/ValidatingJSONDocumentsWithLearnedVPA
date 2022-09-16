@@ -69,14 +69,13 @@ public class ValidationBenchmarks {
             "Success",
             "Reachability time",
             "Reachability memory",
+            "Reachability size",
             "Witness time",
             "Witness memory",
+            "Witness size",
             "Graph time",
             "Graph memory",
-            "Automaton time",
-            "Automaton memory",
-            "Size relation",
-            "Size graph"
+            "Graph size"
         );
         // @formatter:on
     }
@@ -90,6 +89,9 @@ public class ValidationBenchmarks {
             "Automaton time (ms)",
             "Automaton memory",
             "Automaton output",
+            "Paths max time",
+            "Paths mean time",
+            "Paths number",
             "Validator time (ms)",
             "Validator memory",
             "Validator output"
@@ -141,12 +143,6 @@ public class ValidationBenchmarks {
         final long timeGraph = watch.stop().elapsed().toMillis();
         final long memoryForGraph = getMemoryUse() - memoryForReachability;
 
-        watch.reset().start();
-        final ValidationByAutomaton<Location> automaton = new ValidationByAutomaton<>(vpa, graph);
-
-        final long timeAutomaton = watch.stop().elapsed().toMillis();
-        final long memoryForAutomaton = getMemoryUse() - memoryForGraph;
-
         final StringBuilder builder = new StringBuilder();
         DotWriter.write(graph, builder);
         LOGGER.logModel(builder);
@@ -162,20 +158,21 @@ public class ValidationBenchmarks {
         }
         statistics.add(timeReachability);
         statistics.add(memoryForReachability);
+        statistics.add(reachabilityRelation.size());
+
         statistics.add(timeWitness);
         statistics.add(memoryForWitness);
+        statistics.add(witnessRelation.size());
+
         statistics.add(timeGraph);
         statistics.add(memoryForGraph);
-        statistics.add(timeAutomaton);
-        statistics.add(memoryForAutomaton);
-        statistics.add(reachabilityRelation.size());
         statistics.add(graph.size());
         
         preprocessingCSVPrinter.printRecord(statistics);
         preprocessingCSVPrinter.flush();
 
         if (graph.isValid()) {
-            return automaton;
+            return new ValidationByAutomaton<>(vpa, graph);
         }
         else {
             return null;
@@ -217,6 +214,10 @@ public class ValidationBenchmarks {
         statistics.add(automatonTime);
         statistics.add(automatonMemory);
         statistics.add(automatonOutput);
+
+        statistics.add(automaton.getMaximalTimePathsKeyGraph());
+        statistics.add(automaton.getMeanTimePathsKeyGraph());
+        statistics.add(automaton.getNumberOfTimesPathsKeyGraphComputed());
 
         if (validatorError) {
             statistics.add(validatorTime);
