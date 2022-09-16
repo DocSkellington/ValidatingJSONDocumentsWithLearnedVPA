@@ -43,6 +43,7 @@ descriptions = df_grouped[document_description].min()
 values = df_grouped.agg(numerical_agg)
 outputs = df_grouped.agg(boolean_agg)
 number_different_outputs=(outputs["Automaton output", "sum"] - outputs["Validator output", "sum"]).abs()
+print(number_different_outputs[number_different_outputs != 0])
 
 whole_df = pandas.concat([descriptions, values, outputs, number_different_outputs], axis=1)
 whole_df.rename({0: "DifferenceOutputs"}, axis="columns", inplace=True)
