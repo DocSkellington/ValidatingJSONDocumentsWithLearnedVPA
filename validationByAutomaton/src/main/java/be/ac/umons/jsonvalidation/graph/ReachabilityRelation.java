@@ -201,18 +201,12 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InReachabilit
                         if (locationAfterReturn != null) {
                             final Word<JSONSymbol> witnessAfterToBefore = inRelation.getWitness();
                             final Word<JSONSymbol> witnessStartToTarget;
-                            
-                            if (reachabilityRelation.areInRelation(locationBeforeCall, locationAfterReturn)) {
-                                witnessStartToTarget = reachabilityRelation.getWitness(locationBeforeCall, locationAfterReturn);
-                            }
-                            else if (newLocationsInRelation.areInRelation(locationBeforeCall, locationAfterReturn)) {
-                                witnessStartToTarget = newLocationsInRelation.getWitness(locationBeforeCall, locationAfterReturn);
-                            }
-                            else {
+
+                            if (!reachabilityRelation.areInRelation(locationBeforeCall, locationAfterReturn) && !newLocationsInRelation.areInRelation(locationBeforeCall, locationAfterReturn)) {
                                 witnessStartToTarget = constructWitness(callSym, witnessAfterToBefore, returnSym, computeWitnesses);
+                                newLocationsInRelation.add(locationBeforeCall, locationAfterReturn, witnessStartToTarget);
                             }
 
-                            newLocationsInRelation.add(locationBeforeCall, locationAfterReturn, witnessStartToTarget);
                         }
                     }
                 }

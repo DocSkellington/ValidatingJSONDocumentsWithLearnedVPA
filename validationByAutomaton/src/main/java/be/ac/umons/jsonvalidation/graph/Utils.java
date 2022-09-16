@@ -19,6 +19,10 @@ class Utils {
                         final InReachabilityRelation<L> startToPivot = relation.getCell(start, pivot);
                         final InReachabilityRelation<L> pivotToTarget = relation.getCell(pivot, target);
 
+                        if (relation.areInRelation(start, target) || newRelation.areInRelation(start, target)) {
+                            continue;
+                        }
+
                         final Word<JSONSymbol> witness;
                         if (computeWitnesses) {
                             if (relation.getWitness(start, target) == null) {
