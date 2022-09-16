@@ -97,9 +97,10 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InReachabilit
 
     public static <L1, L2> ReachabilityRelation<L2> computeReachabilityRelation(OneSEVPA<L1, JSONSymbol> previousHypothesis, ReachabilityRelation<L1> previousReachabilityRelation, OneSEVPA<L2, JSONSymbol> currentHypothesis, boolean computeWitnesses) {
         LOGGER.info("Reach: start");
+        LOGGER.info("Size of hypothesis " + currentHypothesis.size());
         final ReachabilityRelation<L2> reachabilityRelation = initializeReachabilityRelation(currentHypothesis, computeWitnesses);
 
-        System.out.println("Number of elements in reach before adding still valid: " + reachabilityRelation.size());
+        LOGGER.info("Number of elements in reach before adding still valid: " + reachabilityRelation.size());
         final Map<L1, L2> locationsPreviousToCurrent = Utils.createMapLocationsOfPreviousToCurrent(previousHypothesis, currentHypothesis);
 
         for (final InReachabilityRelation<L1> inPreviousRelation : previousReachabilityRelation) {
@@ -109,7 +110,7 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InReachabilit
             final State<L2> targetState = currentHypothesis.getSuccessor(startState, inPreviousRelation.getWitness());
             reachabilityRelation.add(startLocation, targetState.getLocation(), inPreviousRelation.getWitness());
         }
-        System.out.println("Number of elements in reach after adding still valid: " + reachabilityRelation.size());
+        LOGGER.info("Number of elements in reach after adding still valid: " + reachabilityRelation.size());
 
         return computeReachabilityRelation(currentHypothesis, computeWitnesses);
     }

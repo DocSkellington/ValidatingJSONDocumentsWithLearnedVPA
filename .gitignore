@@ -41,3 +41,11 @@ docs/.bundle
 docs/_site
 docs/vendor
 docs/Gemfile.lock
+
+*OldResults/
+
+documents/
+
+temp/
+
+debug/

@@ -74,7 +74,7 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
         final OnAcceptingPathRelation<L2> witnessRelation = initializeWitnessRelation(currentHypothesis, reachabilityRelation, computeWitnesses);
         final Map<L1, L2> locationsPreviousToCurrent = Utils.createMapLocationsOfPreviousToCurrent(previousHypothesis, currentHypothesis);
 
-        System.out.println("Number of elements in Rel before adding still valid: " + witnessRelation.size());
+        LOGGER.info("Number of elements in Rel before adding still valid: " + witnessRelation.size());
         for (final OnAcceptingPath<L1> inPreviousRelation : previousWitnessRelation) {
             final L2 intermediateLocation = locationsPreviousToCurrent.get(inPreviousRelation.getIntermediate());
 
@@ -88,7 +88,7 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
                 witnessRelation.add(currentHypothesis.getInitialLocation(), intermediateLocation, inPreviousRelation.getWitnessToIntermediate(), inPreviousRelation.getWitnessFromIntermediate());
             }
         }
-        System.out.println("Number of elements in Rel after adding still valid: " + witnessRelation.size());
+        LOGGER.info("Number of elements in Rel after adding still valid: " + witnessRelation.size());
 
         return computeWitnessRelationLoop(currentHypothesis, reachabilityRelation, witnessRelation, computeWitnesses);
     }
