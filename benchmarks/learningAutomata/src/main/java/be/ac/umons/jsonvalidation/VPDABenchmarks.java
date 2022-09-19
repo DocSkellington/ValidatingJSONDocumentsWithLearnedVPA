@@ -76,7 +76,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
 
         final TTTLearnerVPDA<JSONSymbol> learner = new TTTLearnerVPDA<>(alphabet, membershipOracle,
                 AcexAnalyzers.LINEAR_FWD);
-        final StoppableExperiment<OneSEVPA<?, JSONSymbol>> experiment = new StoppableExperiment<>(learner, equivalenceOracle, alphabet);
+        final StoppableExperiment<OneSEVPA<?, JSONSymbol>> experiment = new StoppableExperiment<>(learner, equivalenceOracle, alphabet, this, schemaName, currentId);
         experiment.setLogModels(false);
         experiment.setProfile(true);
 

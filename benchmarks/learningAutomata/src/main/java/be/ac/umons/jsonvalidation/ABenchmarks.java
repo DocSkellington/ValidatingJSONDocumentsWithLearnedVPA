@@ -122,14 +122,23 @@ public abstract class ABenchmarks {
         return new DefaultVPDAlphabet<>(internalSymbols, callSymbols, returnSymbols);
     }
 
-    protected void writeModelToDot(Graph<?, ?> automaton, String schemaName, int currentId)
+    protected <A> void writeModelToDot(A automaton, String schemaName, int currentId) throws IOException {
+        if (automaton instanceof Graph) {
+            writeModelToDotGraph((Graph<?, ?>)automaton, schemaName, currentId);
+        }
+        else if (automaton instanceof GraphViewable) {
+            writeModelToDotGraphViewable((GraphViewable)automaton, schemaName, currentId);
+        }
+    }
+
+    private void writeModelToDotGraph(Graph<?, ?> automaton, String schemaName, int currentId)
             throws IOException {
         Path pathToDotFile = pathToDotFiles.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
         FileWriter writer = new FileWriter(pathToDotFile.toFile());
         GraphDOT.write(automaton, writer);
     }
 
-    protected void writeModelToDot(GraphViewable automaton, String schemaName, int currentId)
+    private void writeModelToDotGraphViewable(GraphViewable automaton, String schemaName, int currentId)
             throws IOException {
         Path pathToDotFile = pathToDotFiles.resolve(schemaName + "-" + String.valueOf(currentId) + ".dot");
         FileWriter writer = new FileWriter(pathToDotFile.toFile());
