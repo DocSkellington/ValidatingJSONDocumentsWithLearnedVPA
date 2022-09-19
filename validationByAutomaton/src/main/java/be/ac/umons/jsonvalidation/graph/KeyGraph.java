@@ -380,14 +380,14 @@ public class KeyGraph<L> {
             Collection<L> locationsBeforeCall, Collection<NodeInGraph<L>> rejectedNodes) {
         final Set<L> locationsReadingClosing = new LinkedHashSet<>();
         for (NodeInGraph<L> initial : startingNodes) {
-            depthFirstExploreForAcceptingNodes(initial, new LinkedList<>(), locationsReadingClosing, seenKeys,
+            depthFirstExploreForAcceptingNodes(initial, new LinkedHashSet<>(), locationsReadingClosing, seenKeys,
                     locationsBeforeCall, rejectedNodes);
         }
         return locationsReadingClosing;
     }
 
     private void depthFirstExploreForAcceptingNodes(final NodeInGraph<L> current,
-            final LinkedList<JSONSymbol> seenKeysInExploration, final Set<L> locationsReadingClosing,
+            final Set<JSONSymbol> seenKeysInExploration, final Set<L> locationsReadingClosing,
             final Set<JSONSymbol> seenKeysInAutomaton, final Collection<L> locationsBeforeCall,
             final Collection<NodeInGraph<L>> rejectedNodes) {
         // The path has a node that is rejected
@@ -411,7 +411,10 @@ public class KeyGraph<L> {
         if (!seenKeysInAutomaton.contains(key)) {
             return;
         }
-        seenKeysInExploration.addFirst(key);
+        // We have a problem in the graph. We just ignore this path
+        if (!seenKeysInExploration.add(key)) {
+            return;
+        }
 
         boolean acceptingForOneLocation = false;
         for (final L locationBeforeCall : locationsBeforeCall) {
@@ -444,6 +447,6 @@ public class KeyGraph<L> {
                     seenKeysInAutomaton, locationsBeforeCall, rejectedNodes);
         }
 
-        seenKeysInExploration.removeFirst();
+        seenKeysInExploration.remove(key);
     }
 }

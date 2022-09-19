@@ -774,4 +774,27 @@ public class TestValidationByAutomaton {
         builder.add(JSONSymbol.closingCurlyBraceSymbol);
         Assert.assertTrue(validationByAutomaton.accepts(builder.toWord()));
     }
+
+    @Test
+    public void testAutomatonWithCycle() {
+        DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithCycleReadingAKey();
+        ValidationByAutomaton<Location> validationByAutomaton = new ValidationByAutomaton<>(automaton);
+        
+        WordBuilder<JSONSymbol> builder = new WordBuilder<>();
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k1"));
+        builder.add(JSONSymbol.stringSymbol);
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        Assert.assertTrue(validationByAutomaton.accepts(builder.toWord()));
+
+        builder.clear();
+        builder.add(JSONSymbol.openingCurlyBraceSymbol);
+        builder.add(JSONSymbol.toSymbol("k1"));
+        builder.add(JSONSymbol.stringSymbol);
+        builder.add(JSONSymbol.commaSymbol);
+        builder.add(JSONSymbol.toSymbol("k1"));
+        builder.add(JSONSymbol.stringSymbol);
+        builder.add(JSONSymbol.closingCurlyBraceSymbol);
+        Assert.assertFalse(validationByAutomaton.accepts(builder.toWord()));
+    }
 }
