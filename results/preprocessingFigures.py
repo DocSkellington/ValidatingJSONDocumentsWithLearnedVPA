@@ -16,14 +16,15 @@ df = pandas.read_csv(filepath)
 
 # Numerical values
 columns = [
-    "Relation time",
-    "Relation memory",
+    "Reachability time",
+    "Reachability memory",
+    "Reachability size",
+    "OnPath time",
+    "OnPath memory",
+    "OnPath size",
     "Graph time",
     "Graph memory",
-    "Automaton time",
-    "Automaton memory",
-    "Size relation",
-    "Size graph"
+    "Graph size",
 ]
 numbers = df[columns]
 numbers = numbers.drop(numbers[numbers[columns[0]] == "Timeout"].index)
@@ -44,8 +45,11 @@ number_true_booleans = booleans.sum(axis=0)
 
 statistics_df = pandas.DataFrame(
     {
-        "Time (s)": [numbers_mean["Relation time"] + numbers_mean["Graph time"]],
-        "Memory (kB)": [numbers_mean["Relation memory"] + numbers_mean["Graph memory"]],
+        "$\\accRelation$ time (s)": [numbers_mean["Reachability time"]],
+        "$\\accRelation$ memory (kB)": [numbers_mean["Reachability memory"]],
+        "$|\\accRelation|$": [numbers_mean["Reachability size"]],
+        "$\\keyGraph$ time (s)": [numbers_mean["OnPath time"] + numbers_mean["Graph time"]],
+        "$\\keyGraph$ memory (kB)": [numbers_mean["OnPath memory"] + numbers_mean["Graph memory"]],
         "$|\\keyGraph|$": [numbers_mean["Size graph"]]
     }
 )

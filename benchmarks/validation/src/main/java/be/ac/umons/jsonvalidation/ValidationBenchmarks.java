@@ -70,9 +70,9 @@ public class ValidationBenchmarks {
             "Reachability time",
             "Reachability memory",
             "Reachability size",
-            "Witness time",
-            "Witness memory",
-            "Witness size",
+            "OnPath time",
+            "OnPath memory",
+            "OnPath size",
             "Graph time",
             "Graph memory",
             "Graph size"
