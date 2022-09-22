@@ -75,4 +75,14 @@ public class TestWitnessRelation {
 
         Assert.assertNull(witnessRelation.identifyBinLocation(vpa));
     }
+
+    @Test
+    public void testDetectBinLocation() {
+        final DefaultOneSEVPA<JSONSymbol> vpa = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
+        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, true);
+        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(vpa, reachabilityRelation, true);
+
+        Assert.assertEquals(witnessRelation.size(), 12);
+        Assert.assertEquals(witnessRelation.identifyBinLocation(vpa), vpa.getLocation(12));
+    }
 }
