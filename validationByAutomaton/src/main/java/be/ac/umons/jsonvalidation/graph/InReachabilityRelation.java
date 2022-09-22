@@ -5,6 +5,13 @@ import java.util.Objects;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import net.automatalib.words.Word;
 
+/**
+ * Stores two locations such that it is possible to go from the first location
+ * to the second, alongside a witness of that fact.
+ * 
+ * @param <L> Location type
+ * @author Gaëtan Staquet
+ */
 class InReachabilityRelation<L> {
     private final L start, target;
     private final Word<JSONSymbol> witness;
@@ -29,7 +36,7 @@ class InReachabilityRelation<L> {
 
     @Override
     public String toString() {
-        return "(" +  witness + ")";
+        return "(" + witness + ")";
     }
 
     @Override
@@ -38,7 +45,7 @@ class InReachabilityRelation<L> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
         }
@@ -46,7 +53,8 @@ class InReachabilityRelation<L> {
             return false;
         }
 
-        InReachabilityRelation<?> other = (InReachabilityRelation<?>)obj;
-        return Objects.equals(other.witness, this.witness) && Objects.equals(other.start, this.start) && Objects.equals(other.target, this.target);
+        final InReachabilityRelation<?> other = (InReachabilityRelation<?>) obj;
+        return Objects.equals(other.witness, this.witness) && Objects.equals(other.start, this.start)
+                && Objects.equals(other.target, this.target);
     }
 }

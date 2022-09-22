@@ -5,7 +5,21 @@ import java.util.Set;
 
 import com.google.common.graph.EndpointPair;
 
-public class DotWriter {
+/**
+ * Implements utilities to write a {@link KeyGraph} as the contents of a DOT
+ * file.
+ * 
+ * @author Gaëtan Staquet
+ */
+public class KeyGraphToDot {
+    /**
+     * Describes the provided key graph using DOT file format.
+     * 
+     * @param <L>    The type of locations used in the vertices of the key graph
+     * @param graph  The key graph
+     * @param output Where to write the DOT file in
+     * @throws IOException
+     */
     public static <L> void write(final KeyGraph<L> graph, final Appendable output) throws IOException {
         final Set<NodeInGraph<L>> nodes = graph.nodes();
         final Set<EndpointPair<NodeInGraph<L>>> edges = graph.edges();

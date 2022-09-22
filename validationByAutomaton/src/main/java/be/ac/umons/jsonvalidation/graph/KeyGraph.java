@@ -28,27 +28,48 @@ import net.automatalib.words.WordBuilder;
 import net.automatalib.words.impl.Alphabets;
 
 /**
- * A reachability graph is a directed acyclic graph constructed from
- * {@link ReachabilityRelation}'s comma, internal, and well-matched relations.
+ * A key graph is a directed graph constructed from {@link ReachabilityRelation}
+ * for a 1-SEVPA recognizing JSON documents.
  * 
- * Its nodes are the triplets from the composition of the internal relation
- * and the well-matched relation. That is, a node in the graph gives the
- * information that we can go from a state {@code q} in the VPA to a state
- * {@code p} by reading a key {@code k} and its corresponding value.
+ * <p>
+ * The nodes of the graph are triplets {@code (p, k, q)} such that, from the
+ * location {@code p}, it is possible to reach the location {@code q} by reading
+ * a word {@code k v} with v a well-matched word.
+ * That is, the triplets store the fact that there is a key-value pair that can
+ * go from p to q.
+ * </p>
  * 
+ * <p>
  * There is an edge going from {@code (q, k, q')} to {@code (p, k', p')} if and
- * only if the comma relation contains {@code (q', ,, p)}.
+ * only if there is an internal transition reading the comma symbol from the
+ * location {@code q'} to the location {@code p'}.
+ * </p>
  * 
+ * <p>
  * Once created, it is guaranteed that the graph is never modified.
+ * </p>
  * 
+ * <p>
+ * If the 1-SEVPA is correctly built, the key graph is acyclic and, on every
+ * path in the graph, each key is seen at most once.
+ * However, it may happen that the graph contains a cycle or a path on which the
+ * same key is seen twice (typically, if the learning process is stopped before
+ * obtaining a valid hypothesis).
+ * This implementation correctly handles this case, i.e., it is guaranteed that
+ * all the algorithms eventually stop even if the graph is not "correct".
+ * </p>
+ * 
+ * <p>
  * The class also maintains a list giving the nodes containing the initial
- * state of the VPA as the starting state, and two maps:
+ * location of the VPA to mark the paths' start points, and two maps:
  * <ul>
  * <li>One giving, for all {@code k}, the nodes {@code (s, k, s')}.</li>
  * <li>One giving, for all {@code k}, the locations {@code s} such that
  * {@code (s, k, s')} is a node.</li>
  * </ul>
+ * </p>
  * 
+ * @param <L> Location type
  * @author Gaëtan Staquet
  */
 public class KeyGraph<L> {
@@ -62,9 +83,31 @@ public class KeyGraph<L> {
     private final boolean hasPathWithDuplicateKeys;
     private final Word<JSONSymbol> witnessInvalid;
 
-    public static <L> KeyGraph<L> graphFor(OneSEVPA<L, JSONSymbol> automaton, boolean checkGraph, boolean computeWitnesses) {
-        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, computeWitnesses);
-        final OnAcceptingPathRelation<L> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(automaton, reachabilityRelation, computeWitnesses);
+    /**
+     * Constructs the key graph for the provided automaton.
+     * 
+     * <p>
+     * This function computes the reachability relation of the VPA.
+     * </p>
+     * 
+     * <p>
+     * Since the key graph may contain paths where one key is seen twice, it is
+     * possible to check that the graph is actually valid.
+     * If that check must be performed, witnesses of the reachability relation are
+     * computed.
+     * </p>
+     * 
+     * @param <L>        Location type
+     * @param automaton  The 1-SEVPA
+     * @param checkGraph Whether to check that the graph is valid, i.e., there is no
+     *                   path on which we can see the same key twice.
+     * @return The key graph
+     */
+    public static <L> KeyGraph<L> graphFor(final OneSEVPA<L, JSONSymbol> automaton, final boolean checkGraph) {
+        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton,
+                checkGraph);
+        final OnAcceptingPathRelation<L> witnessRelation = OnAcceptingPathRelation.computeRelation(automaton,
+                reachabilityRelation, checkGraph);
         if (reachabilityRelation.size() == 0) {
             return null;
         }
@@ -72,16 +115,31 @@ public class KeyGraph<L> {
         return new KeyGraph<>(automaton, reachabilityRelation, witnessRelation, checkGraph);
     }
 
-    public KeyGraph(OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation, final OnAcceptingPathRelation<L> witnessRelation, boolean checkGraph) {
+    /**
+     * Constructs the key graph using the VPA, its {@link ReachabilityRelation}, and
+     * its {@link OnAcceptingPathRelation}.
+     * 
+     * @see #graphFor(OneSEVPA, boolean)
+     * @param automaton               The 1-SEVPA
+     * @param reachabilityRelation    Its reachability relation
+     * @param onAcceptingPathRelation Its relation that indicates whether a location
+     *                                is on an accepting path
+     * @param checkGraph              If true, checks that the graph does not
+     *                                contain a path where a key is seen multiple
+     *                                times
+     */
+    public KeyGraph(final OneSEVPA<L, JSONSymbol> automaton, final ReachabilityRelation<L> reachabilityRelation,
+            final OnAcceptingPathRelation<L> onAcceptingPathRelation, final boolean checkGraph) {
         this.automaton = automaton;
 
-        this.graph = constructGraph(reachabilityRelation, witnessRelation);
+        this.graph = constructGraph(reachabilityRelation, onAcceptingPathRelation);
         propagateIsOnPathToAcceptingForLocations(automaton.getLocations());
 
         if (checkGraph) {
             final List<NodeInGraph<L>> pathWithDuplicateKeys = hasPathWithDuplicateKeys();
             this.hasPathWithDuplicateKeys = !pathWithDuplicateKeys.isEmpty();
-            witnessInvalid = constructWitnessDuplicate(pathWithDuplicateKeys, reachabilityRelation, witnessRelation);
+            witnessInvalid = constructWitnessDuplicate(pathWithDuplicateKeys, reachabilityRelation,
+                    onAcceptingPathRelation);
         } else {
             hasPathWithDuplicateKeys = false;
             witnessInvalid = null;
@@ -99,10 +157,12 @@ public class KeyGraph<L> {
         // @formatter:on
     }
 
-    private ImmutableGraph<NodeInGraph<L>> constructGraph(ReachabilityRelation<L> reachabilityRelation, OnAcceptingPathRelation<L> witnessRelation) {
+    private ImmutableGraph<NodeInGraph<L>> constructGraph(final ReachabilityRelation<L> reachabilityRelation,
+            final OnAcceptingPathRelation<L> witnessRelation) {
         final L binLocation = witnessRelation.identifyBinLocation(automaton);
 
-        final ReachabilityRelation<L> valueReachabilityRelation = reachabilityRelation.computePotentialValueReachabilityRelation(automaton, false);
+        final ReachabilityRelation<L> valueReachabilityRelation = reachabilityRelation
+                .computePotentialValueReachabilityRelation(automaton, false);
 
         // @formatter:off
         final ImmutableGraph.Builder<NodeInGraph<L>> builder = GraphBuilder
@@ -128,13 +188,16 @@ public class KeyGraph<L> {
                 if (locationAfterKey == null || Objects.equals(locationAfterKey, binLocation)) {
                     continue;
                 }
-                for (final InReachabilityRelation<L> inValueRelation : valueReachabilityRelation.getLocationsAndInfoInRelationWithStart(locationAfterKey)) {
+
+                for (final InReachabilityRelation<L> inValueRelation : valueReachabilityRelation
+                        .getLocationsAndInfoInRelationWithStart(locationAfterKey)) {
                     if (Objects.equals(inValueRelation.getTarget(), binLocation)) {
                         continue;
                     }
 
                     final L locationAfterValue = inValueRelation.getTarget();
-                    final NodeInGraph<L> node = new NodeInGraph<>(startLocation, locationAfterValue, key, automaton, binLocation);
+                    final NodeInGraph<L> node = new NodeInGraph<>(startLocation, locationAfterValue, key, automaton,
+                            binLocation);
                     builder.addNode(node);
                     nodes.add(node);
 
@@ -174,8 +237,8 @@ public class KeyGraph<L> {
     }
 
     private List<NodeInGraph<L>> hasPathWithDuplicateKeys() {
-        for (NodeInGraph<L> start : startingNodes) {
-            List<NodeInGraph<L>> seenNodes = new LinkedList<>();
+        for (final NodeInGraph<L> start : startingNodes) {
+            final List<NodeInGraph<L>> seenNodes = new LinkedList<>();
             if (hasPathWithDuplicateKeys(start, seenNodes, new LinkedHashSet<>())) {
                 return seenNodes;
             }
@@ -183,9 +246,9 @@ public class KeyGraph<L> {
         return Collections.emptyList();
     }
 
-    private boolean hasPathWithDuplicateKeys(NodeInGraph<L> currentNode, List<NodeInGraph<L>> seenNodes,
-            Set<JSONSymbol> keys) {
-        // We have a loop
+    private boolean hasPathWithDuplicateKeys(final NodeInGraph<L> currentNode, final List<NodeInGraph<L>> seenNodes,
+            final Set<JSONSymbol> keys) {
+        // We have a loop and we see the same key twice
         if (seenNodes.contains(currentNode)) {
             seenNodes.add(currentNode);
             return true;
@@ -197,7 +260,7 @@ public class KeyGraph<L> {
             return true;
         }
 
-        for (NodeInGraph<L> successor : graph.successors(currentNode)) {
+        for (final NodeInGraph<L> successor : graph.successors(currentNode)) {
             if (hasPathWithDuplicateKeys(successor, seenNodes, keys)) {
                 return true;
             }
@@ -213,13 +276,12 @@ public class KeyGraph<L> {
             return null;
         }
 
-        final L start = path.get(0).getStartLocation();
         final L target = path.get(path.size() - 1).getTargetLocation();
-        assert witnessRelation.getWitnessToIntermediate(start, target) != null : start + " " + target;
-        assert witnessRelation.getWitnessFromIntermediate(start, target) != null;
+        assert witnessRelation.getWitnessToIntermediate(target) != null : target;
+        assert witnessRelation.getWitnessFromIntermediate(target) != null;
 
         final WordBuilder<JSONSymbol> builder = new WordBuilder<>();
-        builder.append(witnessRelation.getWitnessToIntermediate(start, target));
+        builder.append(witnessRelation.getWitnessToIntermediate(target));
         int i = 0;
         for (final NodeInGraph<L> node : path) {
             builder.append(node.getSymbol());
@@ -229,27 +291,37 @@ public class KeyGraph<L> {
                 builder.append(JSONSymbol.commaSymbol);
             }
         }
-        builder.append(witnessRelation.getWitnessFromIntermediate(start, target));
+        builder.append(witnessRelation.getWitnessFromIntermediate(target));
 
         return builder.toWord();
     }
 
+    /**
+     * Whether the graph does not contain a path where the same key is seen multiple
+     * times.
+     * 
+     * @return True if and only if the graph does not contain a path where the same
+     *         key is seen multiple times
+     */
     public boolean isValid() {
         return !hasPathWithDuplicateKeys;
     }
 
-    public Word<JSONSymbol> getWitnessCycle() {
+    /**
+     * If the graph is invalid, provides a witness.
+     * 
+     * @return A witness that the key graph is invalid
+     */
+    public Word<JSONSymbol> getWitnessInvalid() {
         return witnessInvalid;
     }
 
-    private void propagateIsOnPathToAcceptingForLocations(Collection<L> locations) {
-        Iterable<NodeInGraph<L>> exploration = Traverser.forGraph(graph).depthFirstPostOrder(startingNodes);
-
-        for (NodeInGraph<L> node : exploration) {
-            Set<NodeInGraph<L>> successors = graph.successors(node);
-            for (NodeInGraph<L> successor : successors) {
-                for (L location : locations) {
-                    int locationId = automaton.getLocationId(location);
+    private void propagateIsOnPathToAcceptingForLocations(final Collection<L> locations) {
+        for (final NodeInGraph<L> node : Traverser.forGraph(graph).depthFirstPostOrder(startingNodes)) {
+            final Set<NodeInGraph<L>> successors = graph.successors(node);
+            for (final NodeInGraph<L> successor : successors) {
+                for (final L location : locations) {
+                    final int locationId = automaton.getLocationId(location);
                     if (successor.isOnPathToAcceptingForLocation(locationId)) {
                         node.setOnPathToAcceptingLocation(locationId);
                     }
@@ -270,18 +342,23 @@ public class KeyGraph<L> {
         return this.graph.edges();
     }
 
+    /**
+     * The size of the key graph, i.e., the number of vertices.
+     * 
+     * @return The number of vertices
+     */
     public int size() {
         return nodes().size();
     }
 
     @Nullable
-    NodeInGraph<L> getNode(L sourceLocation, JSONSymbol key, L targetLocation) {
+    private NodeInGraph<L> getNode(final L sourceLocation, final JSONSymbol key, final L targetLocation) {
         return getNode(PairSourceToReached.of(sourceLocation, targetLocation), key);
     }
 
     @Nullable
-    NodeInGraph<L> getNode(PairSourceToReached<L> pairSourceToReached, JSONSymbol key) {
-        for (NodeInGraph<L> node : nodes()) {
+    private NodeInGraph<L> getNode(final PairSourceToReached<L> pairSourceToReached, final JSONSymbol key) {
+        for (final NodeInGraph<L> node : nodes()) {
             if (Objects.equals(node.getSymbol(), key) && Objects.equals(node.getPairLocations(), pairSourceToReached)) {
                 return node;
             }
@@ -299,7 +376,7 @@ public class KeyGraph<L> {
      * @param locationBeforeCall The location before the call
      * @return
      */
-    boolean isAcceptingForLocation(NodeInGraph<L> node, L locationBeforeCall) {
+    private boolean isAcceptingForLocation(final NodeInGraph<L> node, final L locationBeforeCall) {
         return node.isAcceptingForLocation(automaton.getLocationId(locationBeforeCall));
     }
 
@@ -316,25 +393,9 @@ public class KeyGraph<L> {
      * @param locationBeforeCall The location before the call
      * @return
      */
-    public boolean isAcceptingForLocation(L sourceLocation, JSONSymbol key, L targetLocation, L locationBeforeCall) {
+    boolean isAcceptingForLocation(final L sourceLocation, final JSONSymbol key, final L targetLocation,
+            final L locationBeforeCall) {
         return isAcceptingForLocation(getNode(sourceLocation, key, targetLocation), locationBeforeCall);
-    }
-
-    /**
-     * Tests whether the node in the graph corresponding to the given pair of states
-     * and the key can read a return symbol that pops a stack symbol that was pushed
-     * by reading { from {@code locationBeforeCall}.
-     * 
-     * This assumes the return symbol is } (meaning the push symbol has to be {).
-     * 
-     * @param pairSourceToReached The pair of source-to-reached locations
-     * @param key                 The key
-     * @param locationBeforeCall  The location before the call
-     * @return
-     */
-    public boolean isAcceptingForLocation(PairSourceToReached<L> pairSourceToReached, JSONSymbol key,
-            L locationBeforeCall) {
-        return isAcceptingForLocation(getNode(pairSourceToReached, key), locationBeforeCall);
     }
 
     /**
@@ -343,7 +404,7 @@ public class KeyGraph<L> {
      * @param key The key
      * @return A list with the nodes
      */
-    public List<NodeInGraph<L>> getNodesForKey(JSONSymbol key) {
+    public List<NodeInGraph<L>> getNodesForKey(final JSONSymbol key) {
         return keyToNodes.getOrDefault(key, Collections.emptyList());
     }
 
@@ -354,7 +415,7 @@ public class KeyGraph<L> {
      * @param key The key
      * @return
      */
-    public Set<L> getLocationsReadingKey(JSONSymbol key) {
+    public Set<L> getLocationsReadingKey(final JSONSymbol key) {
         return keyToLocations.getOrDefault(key, Collections.emptySet());
     }
 
@@ -376,10 +437,10 @@ public class KeyGraph<L> {
      * @return The set of locations from which the VPA can read the closing curly
      *         brace
      */
-    public Set<L> getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(Set<JSONSymbol> seenKeys,
-            Collection<L> locationsBeforeCall, Collection<NodeInGraph<L>> rejectedNodes) {
+    public Set<L> getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(final Set<JSONSymbol> seenKeys,
+            final Collection<L> locationsBeforeCall, final Collection<NodeInGraph<L>> rejectedNodes) {
         final Set<L> locationsReadingClosing = new LinkedHashSet<>();
-        for (NodeInGraph<L> initial : startingNodes) {
+        for (final NodeInGraph<L> initial : startingNodes) {
             depthFirstExploreForAcceptingNodes(initial, new LinkedHashSet<>(), locationsReadingClosing, seenKeys,
                     locationsBeforeCall, rejectedNodes);
         }
@@ -398,7 +459,7 @@ public class KeyGraph<L> {
         // We know we will never be able to reach a state from which we can read a
         // return symbol matching the locations before the call
         // @formatter:off
-        boolean canReachAnAcceptingLocation = locationsBeforeCall.stream()
+        final boolean canReachAnAcceptingLocation = locationsBeforeCall.stream()
             .filter(location -> current.isOnPathToAcceptingForLocation(automaton.getLocationId(location)))
             .findAny().isPresent();
         // @formatter:on
@@ -416,26 +477,22 @@ public class KeyGraph<L> {
             return;
         }
 
-        boolean acceptingForOneLocation = false;
-        for (final L locationBeforeCall : locationsBeforeCall) {
-            if (current.isAcceptingForLocation(automaton.getLocationId(locationBeforeCall))) {
-                acceptingForOneLocation = true;
-                break;
-            }
-        }
+        // @formatter:off
+        final boolean acceptingForOneLocation = locationsBeforeCall.stream()
+            .map(locationBeforeCall -> automaton.getLocationId(locationBeforeCall))
+            .filter(locationId -> current.isAcceptingForLocation(locationId))
+            .findAny().isPresent()
+        ;
+        // @formatter:on
 
         if (acceptingForOneLocation) {
             // All the keys seen from the input must be on the path and vice-versa
             if (seenKeysInAutomaton.size() == seenKeysInExploration.size()) {
-                boolean allKeys = true;
-                for (final JSONSymbol seenKey : seenKeysInExploration) {
-                    if (!seenKeysInAutomaton.contains(seenKey)) {
-                        allKeys = false;
-                        break;
-                    }
-                }
+                final boolean missingKey = seenKeysInExploration.stream()
+                        .filter(seenKey -> !seenKeysInAutomaton.contains(seenKey))
+                        .findAny().isPresent();
 
-                if (allKeys) {
+                if (!missingKey) {
                     locationsReadingClosing.add(current.getTargetLocation());
                 }
             }

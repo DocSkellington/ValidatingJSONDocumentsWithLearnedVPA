@@ -14,9 +14,11 @@ public class TestWitnessRelation {
     public void testWitnessRelationSmallTwoBranchesAutomaton() {
         final DefaultOneSEVPA<JSONSymbol> vpa = Automata.constructSmallTwoBranchesAutomaton();
 
-        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, true);
+        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(vpa, true);
 
-        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(vpa, reachabilityRelation, true);
+        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(vpa,
+                reachabilityRelation, true);
 
         final JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
@@ -32,44 +34,43 @@ public class TestWitnessRelation {
             if (start.equals(vpa.getLocation(0))) {
                 if (target.equals(vpa.getLocation(0)) || target.equals(vpa.getLocation(6))) {
                     Assert.assertEquals(witnessToStart, Word.epsilon());
-                }
-                else {
+                } else {
                     Assert.assertEquals(witnessToStart, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol));
                 }
-            }
-            else {
+            } else {
                 Assert.fail();
             }
 
             if (target.equals(vpa.getLocation(0))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
-            }
-            else if (target.equals(vpa.getLocation(1))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.integerSymbol, JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
-            }
-            else if (target.equals(vpa.getLocation(2))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
-            }
-            else if (target.equals(vpa.getLocation(3))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
-            }
-            else if (target.equals(vpa.getLocation(4))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
-            }
-            else if (target.equals(vpa.getLocation(5))) {
+                Assert.assertEquals(witnessFromTarget,
+                        Word.fromSymbols(JSONSymbol.openingCurlyBraceSymbol, k1Sym, JSONSymbol.integerSymbol,
+                                JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol,
+                                JSONSymbol.closingCurlyBraceSymbol));
+            } else if (target.equals(vpa.getLocation(1))) {
+                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.integerSymbol,
+                        JSONSymbol.commaSymbol, k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
+            } else if (target.equals(vpa.getLocation(2))) {
+                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym,
+                        JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
+            } else if (target.equals(vpa.getLocation(3))) {
+                Assert.assertEquals(witnessFromTarget,
+                        Word.fromSymbols(k2Sym, JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
+            } else if (target.equals(vpa.getLocation(4))) {
+                Assert.assertEquals(witnessFromTarget,
+                        Word.fromSymbols(JSONSymbol.trueSymbol, JSONSymbol.closingCurlyBraceSymbol));
+            } else if (target.equals(vpa.getLocation(5))) {
                 Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.closingCurlyBraceSymbol));
-            }
-            else if (target.equals(vpa.getLocation(6))) {
+            } else if (target.equals(vpa.getLocation(6))) {
                 Assert.assertEquals(witnessFromTarget, Word.epsilon());
-            }
-            else if (target.equals(vpa.getLocation(7))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym, JSONSymbol.stringSymbol, JSONSymbol.closingCurlyBraceSymbol));
-            }
-            else if (target.equals(vpa.getLocation(8))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(k2Sym, JSONSymbol.stringSymbol, JSONSymbol.closingCurlyBraceSymbol));
-            }
-            else if (target.equals(vpa.getLocation(9))) {
-                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.closingCurlyBraceSymbol));
+            } else if (target.equals(vpa.getLocation(7))) {
+                Assert.assertEquals(witnessFromTarget, Word.fromSymbols(JSONSymbol.commaSymbol, k2Sym,
+                        JSONSymbol.stringSymbol, JSONSymbol.closingCurlyBraceSymbol));
+            } else if (target.equals(vpa.getLocation(8))) {
+                Assert.assertEquals(witnessFromTarget,
+                        Word.fromSymbols(k2Sym, JSONSymbol.stringSymbol, JSONSymbol.closingCurlyBraceSymbol));
+            } else if (target.equals(vpa.getLocation(9))) {
+                Assert.assertEquals(witnessFromTarget,
+                        Word.fromSymbols(JSONSymbol.stringSymbol, JSONSymbol.closingCurlyBraceSymbol));
             }
         }
 
@@ -79,8 +80,10 @@ public class TestWitnessRelation {
     @Test
     public void testDetectBinLocation() {
         final DefaultOneSEVPA<JSONSymbol> vpa = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
-        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, true);
-        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(vpa, reachabilityRelation, true);
+        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(vpa, true);
+        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(vpa,
+                reachabilityRelation, true);
 
         Assert.assertEquals(witnessRelation.size(), 12);
         Assert.assertEquals(witnessRelation.identifyBinLocation(vpa), vpa.getLocation(12));

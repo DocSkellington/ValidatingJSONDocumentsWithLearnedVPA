@@ -8,9 +8,24 @@ import java.util.Objects;
 
 import javax.annotation.Nullable;
 
+/**
+ * A matrix for {@link ReachabilityRelation} and
+ * {@link OnAcceptingPathRelation}.
+ * 
+ * @param <L> Location type
+ * @param <C> Type of the data stored in the matrix
+ * @author Gaëtan Staquet
+ */
 class ReachabilityMatrix<L, C> implements Iterable<C> {
     private final Map<L, Map<L, C>> matrix = new LinkedHashMap<>();
 
+    /**
+     * Tests whether the two locations are in relation.
+     * 
+     * @param start  The first location
+     * @param target The second location
+     * @return True if and only if start and target are in relation
+     */
     public boolean areInRelation(final L start, final L target) {
         return getCell(start, target) != null;
     }
@@ -29,7 +44,7 @@ class ReachabilityMatrix<L, C> implements Iterable<C> {
     }
 
     @Nullable
-    public C getCell(final L start, final L target) {
+    C getCell(final L start, final L target) {
         final Map<L, C> row = matrix.get(start);
         if (row == null) {
             return null;
@@ -37,6 +52,11 @@ class ReachabilityMatrix<L, C> implements Iterable<C> {
         return row.get(target);
     }
 
+    /**
+     * Returns the size of the relation, i.e., the number of cells in the matrix.
+     * 
+     * @return The size
+     */
     public int size() {
         // @formatter:off
         return matrix.values().stream()
@@ -45,7 +65,7 @@ class ReachabilityMatrix<L, C> implements Iterable<C> {
         // @formatter:on
     }
 
-    public Collection<C> getLocationsAndInfoInRelationWithStart(final L start) {
+    Collection<C> getLocationsAndInfoInRelationWithStart(final L start) {
         return matrix.get(start).values();
     }
 
@@ -60,7 +80,7 @@ class ReachabilityMatrix<L, C> implements Iterable<C> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
         }
@@ -68,7 +88,7 @@ class ReachabilityMatrix<L, C> implements Iterable<C> {
             return false;
         }
 
-        ReachabilityMatrix<?,?> other = (ReachabilityMatrix<?,?>)obj;
+        final ReachabilityMatrix<?, ?> other = (ReachabilityMatrix<?, ?>) obj;
         return Objects.equals(other.matrix, this.matrix);
     }
 

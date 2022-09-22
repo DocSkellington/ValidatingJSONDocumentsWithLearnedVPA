@@ -5,12 +5,20 @@ import java.util.Objects;
 import be.ac.umons.jsonvalidation.JSONSymbol;
 import net.automatalib.words.Word;
 
+/**
+ * Stores a location that is on an accepting path, alongside a witness from the
+ * initial location to that location, and from the location to a final location.
+ * 
+ * @param <L> Location type
+ * @author Gaëtan Staquet
+ */
 class OnAcceptingPath<L> {
     private final L intermediate;
     private final Word<JSONSymbol> witnessToIntermediate;
     private final Word<JSONSymbol> witnessFromIntermediate;
 
-    public OnAcceptingPath(final L intermediate, final Word<JSONSymbol> witnessToIntermediate, final Word<JSONSymbol> witnessFromIntermediate) {
+    public OnAcceptingPath(final L intermediate, final Word<JSONSymbol> witnessToIntermediate,
+            final Word<JSONSymbol> witnessFromIntermediate) {
         this.intermediate = intermediate;
         this.witnessToIntermediate = witnessToIntermediate;
         this.witnessFromIntermediate = witnessFromIntermediate;
@@ -39,7 +47,7 @@ class OnAcceptingPath<L> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (obj == this) {
             return true;
         }
@@ -47,7 +55,8 @@ class OnAcceptingPath<L> {
             return false;
         }
 
-        OnAcceptingPath<?> other = (OnAcceptingPath<?>)obj;
-        return Objects.equals(other.witnessToIntermediate, this.witnessToIntermediate) && Objects.equals(other.witnessFromIntermediate, this.witnessFromIntermediate);
+        final OnAcceptingPath<?> other = (OnAcceptingPath<?>) obj;
+        return Objects.equals(other.witnessToIntermediate, this.witnessToIntermediate)
+                && Objects.equals(other.witnessFromIntermediate, this.witnessFromIntermediate);
     }
 }

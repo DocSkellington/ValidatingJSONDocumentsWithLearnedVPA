@@ -156,7 +156,8 @@ public class TestReachabilityRelation {
     @Test
     public void testSmallTwoBranchesAutomatonReachabilityRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
         checkElementsInRelationForSmallTwoBranchesAutomaton(automaton, reachabilityRelation);
     }
 
@@ -181,8 +182,10 @@ public class TestReachabilityRelation {
     @Test
     public void testSmallTwoBranchesAutomatonValueReachabilityRelation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, true);
-        ReachabilityRelation<Location> valueReachabilityRelation = reachabilityRelation.computePotentialValueReachabilityRelation(automaton, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+        ReachabilityRelation<Location> valueReachabilityRelation = reachabilityRelation
+                .computePotentialValueReachabilityRelation(automaton, true);
 
         Assert.assertEquals(valueReachabilityRelation.size(), 5);
 

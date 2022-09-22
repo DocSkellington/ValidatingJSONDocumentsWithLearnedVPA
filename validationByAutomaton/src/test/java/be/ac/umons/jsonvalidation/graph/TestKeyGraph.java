@@ -20,8 +20,10 @@ public class TestKeyGraph {
     @Test
     public void testStraightforwardAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, true);
-        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(automaton, reachabilityRelation, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(automaton,
+                reachabilityRelation, true);
         KeyGraph<Location> graph = new KeyGraph<>(automaton, reachabilityRelation, witnessRelation, true);
         Assert.assertTrue(graph.isValid());
         Set<NodeInGraph<Location>> nodes = graph.nodes();
@@ -44,15 +46,14 @@ public class TestKeyGraph {
 
         Assert.assertEquals(edges.size(), 1);
         Assert.assertTrue(graph.getGraph().hasEdgeConnecting(q0Toq2, q3Toq5));
-        
+
         for (Location location : automaton.getLocations()) {
             Assert.assertFalse(graph.isAcceptingForLocation(q0, k1Sym, q2, location));
         }
         for (Location location : automaton.getLocations()) {
             if (location.getIndex() == 0) {
                 Assert.assertTrue(graph.isAcceptingForLocation(q3, k2Sym, q5, location));
-            }
-            else {
+            } else {
                 Assert.assertFalse(graph.isAcceptingForLocation(q3, k2Sym, q5, location));
             }
         }
@@ -61,8 +62,10 @@ public class TestKeyGraph {
     @Test
     public void testSmallTwoBranchesAutomatonGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, true);
-        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(automaton, reachabilityRelation, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(automaton,
+                reachabilityRelation, true);
         KeyGraph<Location> graph = new KeyGraph<>(automaton, reachabilityRelation, witnessRelation, true);
         Assert.assertTrue(graph.isValid());
         Set<NodeInGraph<Location>> nodes = graph.nodes();
@@ -102,15 +105,15 @@ public class TestKeyGraph {
             if (location.getIndex() == 0) {
                 Assert.assertTrue(graph.isAcceptingForLocation(q3, k2Sym, q5, location));
                 Assert.assertTrue(graph.isAcceptingForLocation(q8, k2Sym, q5, location));
-            }
-            else {
+            } else {
                 Assert.assertFalse(graph.isAcceptingForLocation(q3, k2Sym, q5, location));
                 Assert.assertFalse(graph.isAcceptingForLocation(q8, k2Sym, q5, location));
             }
         }
     }
 
-    private void checkNodesInAutomatonWithOptionalKeysGraph(DefaultOneSEVPA<JSONSymbol> automaton, KeyGraph<Location> graph) {
+    private void checkNodesInAutomatonWithOptionalKeysGraph(DefaultOneSEVPA<JSONSymbol> automaton,
+            KeyGraph<Location> graph) {
         Assert.assertTrue(graph.isValid());
 
         Set<NodeInGraph<Location>> nodes = graph.nodes();
@@ -145,21 +148,19 @@ public class TestKeyGraph {
         Assert.assertTrue(actualGraph.hasEdgeConnecting(q0Toq2, q3Toq7));
         Assert.assertTrue(actualGraph.hasEdgeConnecting(q0Toq6, q3Toq7));
         Assert.assertTrue(actualGraph.hasEdgeConnecting(q3Toq7, q8Toq10));
-        
+
         for (Location location : automaton.getLocations()) {
             if (location.getIndex() == 0) {
                 Assert.assertTrue(graph.isAcceptingForLocation(q0, k1Sym, q2, location));
                 Assert.assertFalse(graph.isAcceptingForLocation(q0, k2Sym, q6, location));
                 Assert.assertTrue(graph.isAcceptingForLocation(q3, o1Sym, q7, location));
                 Assert.assertTrue(graph.isAcceptingForLocation(q8, o2Sym, q10, location));
-            }
-            else if (location.getIndex() == 4) {
+            } else if (location.getIndex() == 4) {
                 Assert.assertFalse(graph.isAcceptingForLocation(q0, k1Sym, q2, location));
                 Assert.assertTrue(graph.isAcceptingForLocation(q0, k2Sym, q6, location));
                 Assert.assertTrue(graph.isAcceptingForLocation(q3, o1Sym, q7, location));
                 Assert.assertTrue(graph.isAcceptingForLocation(q8, o2Sym, q10, location));
-            }
-            else {
+            } else {
                 Assert.assertFalse(graph.isAcceptingForLocation(q0, k1Sym, q2, location));
                 Assert.assertFalse(graph.isAcceptingForLocation(q0, k2Sym, q6, location));
                 Assert.assertFalse(graph.isAcceptingForLocation(q3, o1Sym, q7, location));
@@ -171,8 +172,10 @@ public class TestKeyGraph {
     @Test
     public void testAutomatonWithOptionalKeysGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeys();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, true);
-        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(automaton, reachabilityRelation, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(automaton,
+                reachabilityRelation, true);
         KeyGraph<Location> graph = new KeyGraph<>(automaton, reachabilityRelation, witnessRelation, true);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
@@ -180,8 +183,10 @@ public class TestKeyGraph {
     @Test
     public void testAutomatonWithOptionalKeysAndExplicitBinStateGraph() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, true);
-        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(automaton, reachabilityRelation, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(automaton,
+                reachabilityRelation, true);
         KeyGraph<Location> graph = new KeyGraph<>(automaton, reachabilityRelation, witnessRelation, true);
         checkNodesInAutomatonWithOptionalKeysGraph(automaton, graph);
     }
@@ -189,31 +194,38 @@ public class TestKeyGraph {
     @Test
     public void testAutomatonWithDuplicateKeys() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithDuplicateKeys();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, true);
-        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(automaton, reachabilityRelation, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(automaton,
+                reachabilityRelation, true);
         KeyGraph<Location> graph = new KeyGraph<>(automaton, reachabilityRelation, witnessRelation, true);
         Assert.assertFalse(graph.isValid());
-        Assert.assertNotNull(graph.getWitnessCycle());
+        Assert.assertNotNull(graph.getWitnessInvalid());
     }
 
     @Test
     public void testAutomatonWithCycle() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithCycleReadingAKey();
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(automaton, true);
-        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(automaton, reachabilityRelation, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(automaton, true);
+        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(automaton,
+                reachabilityRelation, true);
         KeyGraph<Location> graph = new KeyGraph<>(automaton, reachabilityRelation, witnessRelation, true);
         Assert.assertFalse(graph.isValid());
-        Assert.assertNotNull(graph.getWitnessCycle());
+        Assert.assertNotNull(graph.getWitnessInvalid());
     }
 
     @Test
     public void testWitnessCycleInGraph() throws IOException {
-        final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers.oneSEVPA(JSONSymbol::toSymbol);
+        final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers
+                .oneSEVPA(JSONSymbol::toSymbol);
         final DefaultOneSEVPA<JSONSymbol> vpa = parser.readModel(getClass().getResource("/automaton.dot")).model;
-        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, true);
-        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(vpa, reachabilityRelation, true);
+        ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa,
+                true);
+        OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(vpa,
+                reachabilityRelation, true);
         KeyGraph<Location> graph = new KeyGraph<>(vpa, reachabilityRelation, witnessRelation, true);
-        Assert.assertNotNull(graph.getWitnessCycle());
-        Assert.assertTrue(vpa.accepts(graph.getWitnessCycle()));
+        Assert.assertNotNull(graph.getWitnessInvalid());
+        Assert.assertTrue(vpa.accepts(graph.getWitnessInvalid()));
     }
 }

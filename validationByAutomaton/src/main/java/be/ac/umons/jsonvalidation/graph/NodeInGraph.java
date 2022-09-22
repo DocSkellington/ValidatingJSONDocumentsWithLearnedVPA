@@ -15,6 +15,7 @@ import net.automatalib.automata.vpda.OneSEVPA;
  * the triplet can read a return symbol and pop the stack symbol corresponding
  * to {@code p}.
  * 
+ * @param <L> Location type
  * @author Gaëtan Staquet
  */
 public class NodeInGraph<L> {
@@ -24,7 +25,8 @@ public class NodeInGraph<L> {
     private final BitSet acceptingForLocation;
     private final BitSet onPathToAcceptingForLocation;
 
-    public NodeInGraph(L startLocation, L targetLocation, JSONSymbol symbol, OneSEVPA<L, JSONSymbol> automaton, L binLocation) {
+    public NodeInGraph(final L startLocation, final L targetLocation, final JSONSymbol symbol,
+            final OneSEVPA<L, JSONSymbol> automaton, final L binLocation) {
         this.pairLocations = PairSourceToReached.of(startLocation, targetLocation);
         this.symbol = symbol;
         this.acceptingForLocation = new BitSet(automaton.size());
@@ -79,14 +81,14 @@ public class NodeInGraph<L> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
         if (!(obj instanceof NodeInGraph)) {
             return false;
         }
-        NodeInGraph<?> other = (NodeInGraph<?>) obj;
+        final NodeInGraph<?> other = (NodeInGraph<?>) obj;
         return Objects.equals(this.pairLocations, other.pairLocations) && Objects.equals(this.symbol, other.symbol);
     }
 
