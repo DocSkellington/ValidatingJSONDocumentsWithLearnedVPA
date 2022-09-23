@@ -16,7 +16,8 @@ import net.automatalib.words.VPDAlphabet;
 
 public class ExplorationVCABenchmarks extends VCABenchmarks {
 
-    public ExplorationVCABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout, int maxProperties, int maxItems)
+    public ExplorationVCABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout,
+            int maxProperties, int maxItems)
             throws IOException {
         super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
     }

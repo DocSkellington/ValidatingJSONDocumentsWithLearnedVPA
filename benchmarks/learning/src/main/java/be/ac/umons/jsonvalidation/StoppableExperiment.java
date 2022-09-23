@@ -22,8 +22,8 @@ public class StoppableExperiment<A> extends AbstractExperiment<A> {
     private final int identifier;
 
     public <I, D> StoppableExperiment(LearningAlgorithm<? extends A, I, D> learningAlgorithm,
-                             EquivalenceOracle<? super A, I, D> equivalenceAlgorithm,
-                             Alphabet<I> inputs, ABenchmarks benchmarks, String schemaName, int identifier) {
+            EquivalenceOracle<? super A, I, D> equivalenceAlgorithm,
+            Alphabet<I> inputs, ABenchmarks benchmarks, String schemaName, int identifier) {
         this.benchmarks = benchmarks;
         this.schemaName = schemaName;
         this.identifier = identifier;
@@ -42,8 +42,8 @@ public class StoppableExperiment<A> extends AbstractExperiment<A> {
         public final Alphabet<I> inputs;
 
         ExperimentImpl(LearningAlgorithm<? extends A, I, D> learningAlgorithm,
-                       EquivalenceOracle<? super A, I, D> equivalenceAlgorithm,
-                       Alphabet<I> inputs) {
+                EquivalenceOracle<? super A, I, D> equivalenceAlgorithm,
+                Alphabet<I> inputs) {
             this.learningAlgorithm = learningAlgorithm;
             this.equivalenceAlgorithm = equivalenceAlgorithm;
             this.inputs = inputs;
@@ -99,5 +99,5 @@ public class StoppableExperiment<A> extends AbstractExperiment<A> {
     public A getCurrentHypothesis() {
         return impl.learningAlgorithm.getHypothesisModel();
     }
-    
+
 }

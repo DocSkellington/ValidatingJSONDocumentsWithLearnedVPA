@@ -30,10 +30,11 @@ public class Benchmarks {
         DEPTH
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException, JSONSchemaException, JSONException, GeneratorException, URISyntaxException {
+    public static void main(String[] args) throws InterruptedException, IOException, JSONSchemaException, JSONException,
+            GeneratorException, URISyntaxException {
         final Goal goal = Goal.valueOf(args[0].toUpperCase());
 
-        switch(goal) {
+        switch (goal) {
             case DEPTH:
                 System.out.println(getSchemaDepth(args));
                 break;
@@ -46,15 +47,18 @@ public class Benchmarks {
         }
     }
 
-    private static int getSchemaDepth(String[] args) throws MalformedURLException, FileNotFoundException, JSONSchemaException, URISyntaxException {
+    private static int getSchemaDepth(String[] args)
+            throws MalformedURLException, FileNotFoundException, JSONSchemaException, URISyntaxException {
         final Path pathToSchema = Paths.get(args[1]);
         final JSONSchema schema = loadSchema(pathToSchema, true);
         return schema.depth();
     }
 
-    private static GenerateDocuments getGenerateDocuments(String[] args) throws IOException, JSONSchemaException, URISyntaxException {
+    private static GenerateDocuments getGenerateDocuments(String[] args)
+            throws IOException, JSONSchemaException, URISyntaxException {
         final Path pathToSchema = Paths.get(args[1]);
-        final GenerateDocuments.GenerationType generationType = GenerateDocuments.GenerationType.valueOf(args[2].toUpperCase());
+        final GenerateDocuments.GenerationType generationType = GenerateDocuments.GenerationType
+                .valueOf(args[2].toUpperCase());
         final Path pathToDocuments = Paths.get(args[3]);
         final int nDocuments = Integer.valueOf(args[4]);
         final int maxDocumentDepth = Integer.valueOf(args[5]);
@@ -68,10 +72,12 @@ public class Benchmarks {
         final JSONSchema schema = loadSchema(pathToSchema, ignoreAdditionalProperties);
         final String schemaName = pathToSchema.getFileName().toString();
 
-        return new GenerateDocuments(schema, schemaName, generationType, pathToDocuments, nDocuments, maxDocumentDepth, maxProperties, maxItems);
+        return new GenerateDocuments(schema, schemaName, generationType, pathToDocuments, nDocuments, maxDocumentDepth,
+                maxProperties, maxItems);
     }
 
-    private static ValidationBenchmarks getValidationBenchmarks(String[] args) throws JSONSchemaException, URISyntaxException, IOException {
+    private static ValidationBenchmarks getValidationBenchmarks(String[] args)
+            throws JSONSchemaException, URISyntaxException, IOException {
         final Path pathToSchema = Paths.get(args[1]);
         final Path pathToVPA = Paths.get(args[2]);
         final Path pathToDocuments = Paths.get(args[3]);
@@ -82,10 +88,11 @@ public class Benchmarks {
 
         final String schemaName = pathToSchema.getFileName().toString();
         final String VPAName = pathToVPA.getFileName().toString();
-        
+
         final JSONSchema schema = loadSchema(pathToSchema, false);
 
-        final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers.oneSEVPA(JSONSymbol::toSymbol);
+        final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers
+                .oneSEVPA(JSONSymbol::toSymbol);
         final DefaultOneSEVPA<JSONSymbol> vpa = parser.readModel(pathToVPA.toFile()).model;
 
         LOGGER.info("Starting validation by automaton benchmarks");
@@ -98,12 +105,16 @@ public class Benchmarks {
 
         final Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "Validation");
         pathToCSVFolder.toFile().mkdirs();
-        final Path pathToValidationCSVFile = pathToCSVFolder.resolve("" + schemaName + "-" + VPAName + "-" + nExperiments + "-validation-" + dtf.format(now) + ".csv");
-        final Path pathToPreprocessingCSVFile = pathToCSVFolder.resolve("" + schemaName + "-" + VPAName + "-" + nExperiments + "-preprocessing-" + dtf.format(now) + ".csv");
-        return new ValidationBenchmarks(pathToPreprocessingCSVFile, pathToValidationCSVFile, schema, vpa, pathToDocuments, nExperiments);
+        final Path pathToValidationCSVFile = pathToCSVFolder.resolve(
+                "" + schemaName + "-" + VPAName + "-" + nExperiments + "-validation-" + dtf.format(now) + ".csv");
+        final Path pathToPreprocessingCSVFile = pathToCSVFolder.resolve(
+                "" + schemaName + "-" + VPAName + "-" + nExperiments + "-preprocessing-" + dtf.format(now) + ".csv");
+        return new ValidationBenchmarks(pathToPreprocessingCSVFile, pathToValidationCSVFile, schema, vpa,
+                pathToDocuments, nExperiments);
     }
 
-    private static JSONSchema loadSchema(Path pathToSchema, boolean ignoreAdditionalProperties) throws MalformedURLException, FileNotFoundException, JSONSchemaException, URISyntaxException {
+    private static JSONSchema loadSchema(Path pathToSchema, boolean ignoreAdditionalProperties)
+            throws MalformedURLException, FileNotFoundException, JSONSchemaException, URISyntaxException {
         final JSONSchemaStore schemaStore = new JSONSchemaStore(ignoreAdditionalProperties);
         URL url = pathToSchema.toUri().toURL();
         return schemaStore.load(url.toURI());

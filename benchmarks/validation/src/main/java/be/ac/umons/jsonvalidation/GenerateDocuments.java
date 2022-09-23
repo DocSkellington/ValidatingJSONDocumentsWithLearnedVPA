@@ -37,7 +37,8 @@ public class GenerateDocuments {
     private final int maxProperties;
     private final int maxItems;
 
-    public GenerateDocuments(JSONSchema schema, String schemaName, GenerationType generationType, Path pathToDocuments, int nDocuments, int maxDocumentDepth, int maxProperties, int maxItems) {
+    public GenerateDocuments(JSONSchema schema, String schemaName, GenerationType generationType, Path pathToDocuments,
+            int nDocuments, int maxDocumentDepth, int maxProperties, int maxItems) {
         this.schema = schema;
         this.schemaName = schemaName;
         this.generationType = generationType;
@@ -53,10 +54,11 @@ public class GenerateDocuments {
         for (boolean valid : List.of(true, false)) {
             final Iterator<JSONObject> iterator = createIterator(valid);
 
-            for (int i = 0 ; i < nDocuments && iterator.hasNext() ; i++) {
-                System.out.println(valid + " " + (i+1) + " / " + nDocuments);
+            for (int i = 0; i < nDocuments && iterator.hasNext(); i++) {
+                System.out.println(valid + " " + (i + 1) + " / " + nDocuments);
                 final JSONObject document = iterator.next();
-                final int length = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random()).length();
+                final int length = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random())
+                        .length();
                 sizeToNumber.put(length, sizeToNumber.getOrDefault(length, 0) + 1);
                 writeDocument(document, pathToDocuments, schemaName, i, valid);
             }
@@ -90,13 +92,13 @@ public class GenerateDocuments {
         return generator.createIterator(schema, maxDocumentDepth, valid, random);
     }
 
-    private static void writeDocument(final JSONObject document, final Path pathToDocuments, final String schemaName, final int id, final boolean valid) throws IOException {
+    private static void writeDocument(final JSONObject document, final Path pathToDocuments, final String schemaName,
+            final int id, final boolean valid) throws IOException {
         StringBuilder fileNameBuilder = new StringBuilder();
         fileNameBuilder.append(schemaName);
         if (valid) {
             fileNameBuilder.append("-valid-");
-        }
-        else {
+        } else {
             fileNameBuilder.append("-invalid-");
         }
         fileNameBuilder.append(id);

@@ -36,7 +36,8 @@ import net.automatalib.words.VPDAlphabet;
 public abstract class VPDABenchmarks extends ABenchmarks {
     private static final LearnLogger LOGGER = LearnLogger.getLogger(VPDABenchmarks.class);
 
-    public VPDABenchmarks(Path pathToCSVFile, Path pathToDotFiles, Duration timeout, int maxProperties, int maxItems) throws IOException {
+    public VPDABenchmarks(Path pathToCSVFile, Path pathToDotFiles, Duration timeout, int maxProperties, int maxItems)
+            throws IOException {
         super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
     }
 
@@ -76,7 +77,8 @@ public abstract class VPDABenchmarks extends ABenchmarks {
 
         final TTTLearnerVPDA<JSONSymbol> learner = new TTTLearnerVPDA<>(alphabet, membershipOracle,
                 AcexAnalyzers.LINEAR_FWD);
-        final StoppableExperiment<OneSEVPA<?, JSONSymbol>> experiment = new StoppableExperiment<>(learner, equivalenceOracle, alphabet, this, schemaName, currentId);
+        final StoppableExperiment<OneSEVPA<?, JSONSymbol>> experiment = new StoppableExperiment<>(learner,
+                equivalenceOracle, alphabet, this, schemaName, currentId);
         experiment.setLogModels(false);
         experiment.setProfile(true);
 
@@ -96,8 +98,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
         if (results.finished) {
             hypothesis = experiment.getFinalHypothesis();
             statistics.add(results.timeInMillis);
-        }
-        else { // Timeout
+        } else { // Timeout
             hypothesis = experiment.getCurrentHypothesis();
             statistics.add("Timeout");
         }
@@ -130,14 +131,12 @@ public abstract class VPDABenchmarks extends ABenchmarks {
         final List<List<Integer>> distances = floydWarshall(graph, nodes);
 
         return distances.stream()
-            .map(list -> list.stream()
+                .map(list -> list.stream()
+                        .max(Comparator.naturalOrder())
+                        .orElseThrow())
+                .filter(value -> value != Integer.MAX_VALUE)
                 .max(Comparator.naturalOrder())
-                .orElseThrow()
-            )
-            .filter(value -> value != Integer.MAX_VALUE)
-            .max(Comparator.naturalOrder())
-            .orElseThrow()
-        ;
+                .orElseThrow();
     }
 
     private <L> List<List<Integer>> floydWarshall(Graph<L, SevpaViewEdge<L, JSONSymbol>> graph, List<L> nodes) {
@@ -149,25 +148,22 @@ public abstract class VPDABenchmarks extends ABenchmarks {
             for (L target : nodes) {
                 if (source == target) {
                     dist.add(0);
-                }
-                else if (adjacent.contains(target)) {
+                } else if (adjacent.contains(target)) {
                     dist.add(1);
-                }
-                else {
+                } else {
                     dist.add(Integer.MAX_VALUE);
                 }
             }
             distances.add(dist);
         }
 
-        for (int k = 0 ; k < nodes.size() ; k++) {
-            for (int i = 0 ; i < nodes.size() ; i++) {
-                for (int j = 0 ; j < nodes.size() ; j++) {
+        for (int k = 0; k < nodes.size(); k++) {
+            for (int i = 0; i < nodes.size(); i++) {
+                for (int j = 0; j < nodes.size(); j++) {
                     final int sumByK;
                     if (distances.get(i).get(k) == Integer.MAX_VALUE || distances.get(k).get(j) == Integer.MAX_VALUE) {
                         sumByK = Integer.MAX_VALUE;
-                    }
-                    else {
+                    } else {
                         sumByK = distances.get(i).get(k) + distances.get(k).get(j);
                     }
                     if (distances.get(i).get(j) > sumByK) {
@@ -179,14 +175,16 @@ public abstract class VPDABenchmarks extends ABenchmarks {
 
         return distances;
     }
-            
-    private <L> DefaultOneSEVPA<JSONSymbol> removeBinState(OneSEVPA<L, JSONSymbol> learned) {
-        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(learned, false);
-        LOGGER.info("Reachability relation computed");
-        final OnAcceptingPathRelation<L> witnessRelation = OnAcceptingPathRelation.computeRelation(learned, reachabilityRelation, false);
-        LOGGER.info("Witness relation computed");
 
-        final L binLocation = witnessRelation.identifyBinLocation(learned);
+    private <L> DefaultOneSEVPA<JSONSymbol> removeBinState(OneSEVPA<L, JSONSymbol> learned) {
+        final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(learned,
+                false);
+        LOGGER.info("Reachability relation computed");
+        final OnAcceptingPathRelation<L> onAcceptingPathRelation = OnAcceptingPathRelation.computeRelation(learned,
+                reachabilityRelation, false);
+        LOGGER.info("Z_A relation computed");
+
+        final L binLocation = onAcceptingPathRelation.identifyBinLocation(learned);
         LOGGER.info("Bin location " + binLocation);
 
         final VPDAlphabet<JSONSymbol> alphabet = learned.getInputAlphabet();
@@ -198,8 +196,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
                 final boolean accepting = learned.isAcceptingLocation(location);
                 if (learned.getInitialLocation() == location) {
                     newLocation = withoutBin.addInitialLocation(accepting);
-                }
-                else {
+                } else {
                     newLocation = withoutBin.addLocation(accepting);
                 }
                 oldToNewLocations.put(location, newLocation);
@@ -215,7 +212,8 @@ public abstract class VPDABenchmarks extends ABenchmarks {
                 final L target = learned.getInternalSuccessor(source, internalSymbol);
                 assert target != null;
                 if (!Objects.equals(target, binLocation)) {
-                    withoutBin.setInternalSuccessor(oldToNewLocations.get(source), internalSymbol, oldToNewLocations.get(target));
+                    withoutBin.setInternalSuccessor(oldToNewLocations.get(source), internalSymbol,
+                            oldToNewLocations.get(target));
                 }
             }
 
@@ -227,8 +225,10 @@ public abstract class VPDABenchmarks extends ABenchmarks {
                         assert target != null;
 
                         if (!Objects.equals(target, binLocation)) {
-                            final int stackSymNew = withoutBin.encodeStackSym(oldToNewLocations.get(locationBeforeCall), callSymbol);
-                            withoutBin.setReturnSuccessor(oldToNewLocations.get(source), returnSymbol, stackSymNew, oldToNewLocations.get(target));
+                            final int stackSymNew = withoutBin.encodeStackSym(oldToNewLocations.get(locationBeforeCall),
+                                    callSymbol);
+                            withoutBin.setReturnSuccessor(oldToNewLocations.get(source), returnSymbol, stackSymNew,
+                                    oldToNewLocations.get(target));
                         }
                     }
                 }

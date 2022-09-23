@@ -27,7 +27,8 @@ import net.automatalib.words.Alphabet;
 
 public abstract class ROCABenchmarks extends ABenchmarks {
 
-    public ROCABenchmarks(Path pathToCSVFile, Path pathToDotFiles, Duration timeout, int maxProperties, int maxItems) throws IOException {
+    public ROCABenchmarks(Path pathToCSVFile, Path pathToDotFiles, Duration timeout, int maxProperties, int maxItems)
+            throws IOException {
         super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
     }
 

@@ -59,7 +59,7 @@ public class Benchmarks {
         final int nRepetitions = Integer.valueOf(args[10]);
 
         final Set<JSONObject> documentsToTest = new LinkedHashSet<>();
-        for (int i = 11 ; i < args.length ; i++) {
+        for (int i = 11; i < args.length; i++) {
             JSONObject document = new JSONObject(new JSONTokener(new FileReader(args[i])));
             documentsToTest.add(document);
         }
@@ -85,10 +85,12 @@ public class Benchmarks {
         LOGGER.info("Are true additional properties ignored: " + ignoreAdditionalProperties);
         LOGGER.info("Number of repetitions: " + nRepetitions);
 
-        Path pathToDotFiles = Paths.get(System.getProperty("user.dir"), "Results", "Learning", equivalenceType.toString(), "DOT", automatonType.toString());
+        Path pathToDotFiles = Paths.get(System.getProperty("user.dir"), "Results", "Learning",
+                equivalenceType.toString(), "DOT", automatonType.toString());
         pathToDotFiles.toFile().mkdirs();
 
-        Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "Learning", equivalenceType.toString());
+        Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "Learning",
+                equivalenceType.toString());
         pathToCSVFolder.toFile().mkdirs();
         // @formatter:off
         Path pathToCSVFile = pathToCSVFolder.resolve("" + timeLimit + "s-"
@@ -107,21 +109,27 @@ public class Benchmarks {
         ABenchmarks benchmarks;
         if (automatonType == AutomatonType.VPA) {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomVPDABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems, documentsToTest);
+                benchmarks = new RandomVPDABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems,
+                        documentsToTest);
             } else {
-                benchmarks = new ExplorationVPDABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
+                benchmarks = new ExplorationVPDABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties,
+                        maxItems);
             }
         } else if (automatonType == AutomatonType.VCA) {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomVCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
+                benchmarks = new RandomVCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems,
+                        documentsToTest);
             } else {
-                benchmarks = new ExplorationVCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
+                benchmarks = new ExplorationVCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties,
+                        maxItems);
             }
         } else {
             if (equivalenceType == EquivalenceType.RANDOM) {
-                benchmarks = new RandomROCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
+                benchmarks = new RandomROCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems,
+                        documentsToTest);
             } else {
-                benchmarks = new ExplorationROCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
+                benchmarks = new ExplorationROCABenchmarks(pathToCSVFile, pathToDotFiles, timeout, maxProperties,
+                        maxItems);
             }
         }
         benchmarks.runBenchmarks(schema, schemaName, nTests, canGenerateInvalid, maxDocumentDepth, nRepetitions,

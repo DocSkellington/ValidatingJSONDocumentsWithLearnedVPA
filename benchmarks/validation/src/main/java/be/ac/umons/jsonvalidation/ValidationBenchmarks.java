@@ -44,8 +44,11 @@ public class ValidationBenchmarks {
     private final Path pathToDocuments;
     private final int nExperiments;
 
-    public ValidationBenchmarks(final Path pathToPreprocessingCSVFile, final Path pathToValidationCSVFile, final JSONSchema schema, final DefaultOneSEVPA<JSONSymbol> vpa, final Path pathToDocuments, final int nExperiments) throws IOException {
-        this.preprocessingCSVPrinter = new CSVPrinter(new FileWriter(pathToPreprocessingCSVFile.toFile()), CSVFormat.DEFAULT);
+    public ValidationBenchmarks(final Path pathToPreprocessingCSVFile, final Path pathToValidationCSVFile,
+            final JSONSchema schema, final DefaultOneSEVPA<JSONSymbol> vpa, final Path pathToDocuments,
+            final int nExperiments) throws IOException {
+        this.preprocessingCSVPrinter = new CSVPrinter(new FileWriter(pathToPreprocessingCSVFile.toFile()),
+                CSVFormat.DEFAULT);
         this.validationCSVPrinter = new CSVPrinter(new FileWriter(pathToValidationCSVFile.toFile()), CSVFormat.DEFAULT);
         this.schema = schema;
         this.vpa = vpa;
@@ -55,7 +58,8 @@ public class ValidationBenchmarks {
         final List<String> preprocessingHeader = getPreprocessingHeader();
         this.nPreprocessingColumns = preprocessingHeader.size();
         preprocessingCSVPrinter.printRecord(preprocessingHeader);
-        preprocessingCSVPrinter.flush();;
+        preprocessingCSVPrinter.flush();
+        ;
 
         final List<String> validationHeader = getValidationHeader();
         this.nValidationColumns = validationHeader.size();
@@ -100,7 +104,7 @@ public class ValidationBenchmarks {
     }
 
     public void runBenchmarks() throws JSONException, IOException, JSONSchemaException {
-        for (int experimentId = 0 ; experimentId < nExperiments ; experimentId++) {
+        for (int experimentId = 0; experimentId < nExperiments; experimentId++) {
             LOGGER.info((experimentId + 1) + " / " + nExperiments);
 
             ValidationByAutomaton<Location> automaton = constructAutomaton(vpa);
@@ -110,8 +114,8 @@ public class ValidationBenchmarks {
 
             Validator validator = new DefaultValidator();
             File[] listFiles = pathToDocuments.toFile().listFiles();
-            for (int i = 0 ; i < listFiles.length ; i++) {
-                LOGGER.info("File " + (i+1) + " / " + listFiles.length);
+            for (int i = 0; i < listFiles.length; i++) {
+                LOGGER.info("File " + (i + 1) + " / " + listFiles.length);
                 final File file = listFiles[i];
                 if (file.isFile()) {
                     final JSONObject document = new JSONObject(new JSONTokener(new FileReader(file)));
@@ -126,19 +130,21 @@ public class ValidationBenchmarks {
         final long memoryAtStart = getMemoryUse();
         final Stopwatch watch = Stopwatch.createStarted();
 
-        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(vpa, false);
+        final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
+                .computeReachabilityRelation(vpa, false);
 
         final long timeReachability = watch.stop().elapsed().toMillis();
         final long memoryForReachability = getMemoryUse() - memoryAtStart;
 
         watch.reset().start();
-        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(vpa, reachabilityRelation, false);
+        final OnAcceptingPathRelation<Location> onAcceptingPathRelation = OnAcceptingPathRelation.computeRelation(vpa,
+                reachabilityRelation, false);
 
-        final long timeWitness = watch.stop().elapsed().toMillis();
-        final long memoryForWitness = getMemoryUse() - memoryAtStart;
+        final long timeAcceptingPath = watch.stop().elapsed().toMillis();
+        final long memoryForAcceptingPath = getMemoryUse() - memoryAtStart;
 
         watch.reset().start();
-        final KeyGraph<Location> graph = new KeyGraph<>(vpa, reachabilityRelation, witnessRelation, false);
+        final KeyGraph<Location> graph = new KeyGraph<>(vpa, reachabilityRelation, onAcceptingPathRelation, false);
 
         final long timeGraph = watch.stop().elapsed().toMillis();
         final long memoryForGraph = getMemoryUse() - memoryForReachability;
@@ -150,36 +156,36 @@ public class ValidationBenchmarks {
         final List<Object> statistics = new ArrayList<>(nPreprocessingColumns);
         if (!graph.isValid()) {
             LOGGER.error("The automaton can not be used for our algorithm");
-            
+
             statistics.add(false);
-        }
-        else {
+        } else {
             statistics.add(true);
         }
         statistics.add(timeReachability);
         statistics.add(memoryForReachability);
         statistics.add(reachabilityRelation.size());
 
-        statistics.add(timeWitness);
-        statistics.add(memoryForWitness);
-        statistics.add(witnessRelation.size());
+        statistics.add(timeAcceptingPath);
+        statistics.add(memoryForAcceptingPath);
+        statistics.add(onAcceptingPathRelation.size());
 
         statistics.add(timeGraph);
         statistics.add(memoryForGraph);
         statistics.add(graph.size());
-        
+
         preprocessingCSVPrinter.printRecord(statistics);
         preprocessingCSVPrinter.flush();
 
         if (graph.isValid()) {
             return new ValidationByAutomaton<>(vpa, graph);
-        }
-        else {
+        } else {
             return null;
         }
     }
 
-    private void runExperiment(final ValidationByAutomaton<Location> automaton, final Validator validator, final JSONSchema schema, final JSONObject document, final String documentName) throws IOException, JSONSchemaException {
+    private void runExperiment(final ValidationByAutomaton<Location> automaton, final Validator validator,
+            final JSONSchema schema, final JSONObject document, final String documentName)
+            throws IOException, JSONSchemaException {
         final Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random());
         assert word.length() != 0;
 
@@ -197,8 +203,7 @@ public class ValidationBenchmarks {
         try {
             validatorOutput = validator.validate(schema, document);
             validatorError = false;
-        }
-        catch (JSONSchemaException e) {
+        } catch (JSONSchemaException e) {
             validatorOutput = false;
             validatorError = true;
         }
@@ -223,8 +228,7 @@ public class ValidationBenchmarks {
             statistics.add(validatorTime);
             statistics.add(validator.getMaxMemoryUsed());
             statistics.add("Error");
-        }
-        else {
+        } else {
             statistics.add(validatorTime);
             statistics.add(validator.getMaxMemoryUsed());
             statistics.add(validatorOutput);
@@ -234,7 +238,8 @@ public class ValidationBenchmarks {
         validationCSVPrinter.flush();
     }
 
-    private Pair<Boolean, Long> runValidationByAutomaton(final ValidationByAutomaton<Location> automaton, final Word<JSONSymbol> word) {
+    private Pair<Boolean, Long> runValidationByAutomaton(final ValidationByAutomaton<Location> automaton,
+            final Word<JSONSymbol> word) {
         final long memoryStart = getMemoryUse();
 
         long maxMemory = memoryStart;
@@ -243,7 +248,7 @@ public class ValidationBenchmarks {
         }
         JSONSymbol currentSymbol = word.getSymbol(0);
         ValidationState<Location> validationState = automaton.getInitialState();
-        for (int i = 1 ; i < word.size() ; i++) {
+        for (int i = 1; i < word.size(); i++) {
             final JSONSymbol nextSymbol = word.getSymbol(i);
 
             validationState = automaton.getSuccessor(validationState, currentSymbol, nextSymbol);
@@ -266,8 +271,8 @@ public class ValidationBenchmarks {
             if (symbol.equals(JSONSymbol.openingCurlyBraceSymbol) || symbol.equals(JSONSymbol.openingBracketSymbol)) {
                 depth++;
                 maxDepth = Math.max(maxDepth, depth);
-            }
-            else if (symbol.equals(JSONSymbol.closingCurlyBraceSymbol) || symbol.equals(JSONSymbol.closingBracketSymbol)) {
+            } else if (symbol.equals(JSONSymbol.closingCurlyBraceSymbol)
+                    || symbol.equals(JSONSymbol.closingBracketSymbol)) {
                 depth--;
                 assert depth >= 0;
             }

@@ -24,7 +24,8 @@ import net.automatalib.words.VPDAlphabet;
 
 public abstract class VCABenchmarks extends ABenchmarks {
 
-    public VCABenchmarks(Path pathToCSVFile, Path pathToDotFiles, Duration timeout, int maxProperties, int maxItems) throws IOException {
+    public VCABenchmarks(Path pathToCSVFile, Path pathToDotFiles, Duration timeout, int maxProperties, int maxItems)
+            throws IOException {
         super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
     }
 

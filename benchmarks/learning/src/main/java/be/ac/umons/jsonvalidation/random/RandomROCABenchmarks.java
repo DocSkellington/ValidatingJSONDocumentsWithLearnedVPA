@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Random;
+import java.util.Set;
+
+import org.json.JSONObject;
 
 import be.ac.umons.jsonlearning.random.JSONPartialEquivalenceOracle;
 import be.ac.umons.jsonlearning.random.ROCAJSONEquivalenceOracle;
@@ -16,9 +19,13 @@ import net.automatalib.words.Alphabet;
 
 public class RandomROCABenchmarks extends ROCABenchmarks {
 
-    public RandomROCABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout, int maxProperties, int maxItems)
+    private final Set<JSONObject> documentsToTest;
+
+    public RandomROCABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout,
+            int maxProperties, int maxItems, final Set<JSONObject> documentsToTest)
             throws IOException {
         super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
+        this.documentsToTest = documentsToTest;
     }
 
     @Override
@@ -34,7 +41,6 @@ public class RandomROCABenchmarks extends ROCABenchmarks {
             int maxDocumentDepth, int maxProperties, int maxItems, JSONSchema schema, Random random,
             boolean shuffleKeys, Alphabet<JSONSymbol> alphabet) {
         return new ROCAJSONEquivalenceOracle(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems,
-                schema, random,
-                shuffleKeys, alphabet);
+                schema, random, shuffleKeys, alphabet, documentsToTest);
     }
 }

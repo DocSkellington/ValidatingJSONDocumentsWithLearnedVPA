@@ -44,7 +44,8 @@ public abstract class ABenchmarks {
     private final int maxItems;
     private final Path pathToDotFiles;
 
-    public ABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout, int maxProperties, int maxItems)
+    public ABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout, int maxProperties,
+            int maxItems)
             throws IOException {
         this.pathToDotFiles = pathToDotFiles;
         this.maxProperties = maxProperties;
@@ -124,10 +125,9 @@ public abstract class ABenchmarks {
 
     protected <A> void writeModelToDot(A automaton, String schemaName, int currentId) throws IOException {
         if (automaton instanceof Graph) {
-            writeModelToDotGraph((Graph<?, ?>)automaton, schemaName, currentId);
-        }
-        else if (automaton instanceof GraphViewable) {
-            writeModelToDotGraphViewable((GraphViewable)automaton, schemaName, currentId);
+            writeModelToDotGraph((Graph<?, ?>) automaton, schemaName, currentId);
+        } else if (automaton instanceof GraphViewable) {
+            writeModelToDotGraphViewable((GraphViewable) automaton, schemaName, currentId);
         }
     }
 

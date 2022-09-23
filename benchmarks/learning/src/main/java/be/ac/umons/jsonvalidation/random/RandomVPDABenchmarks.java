@@ -39,7 +39,8 @@ public class RandomVPDABenchmarks extends VPDABenchmarks {
 
     private final Set<JSONObject> documentsToTest;
 
-    public RandomVPDABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout, int maxProperties, int maxItems, final Set<JSONObject> documentsToTest)
+    public RandomVPDABenchmarks(final Path pathToCSVFile, final Path pathToDotFiles, final Duration timeout,
+            int maxProperties, int maxItems, final Set<JSONObject> documentsToTest)
             throws IOException {
         super(pathToCSVFile, pathToDotFiles, timeout, maxProperties, maxItems);
         this.documentsToTest = documentsToTest;
