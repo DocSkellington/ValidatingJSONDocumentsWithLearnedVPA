@@ -19,15 +19,31 @@ import net.automatalib.ts.acceptors.DeterministicAcceptorTS;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
+/**
+ * Base class for conformance testing-based equivalence oracles using an
+ * exhaustive JSON document generator.
+ * 
+ * <p>
+ * When performing an equivalence check, the following tests are performed, in
+ * this order:
+ * <ol>
+ * <li>Is there a valid document that is rejected by the hypothesis?</li>
+ * <li>Is there an invalid document that is accepted by the hypothesis?</li>
+ * <li>Is there a gibberish word that is accepted by the hypothesis?</li>
+ * </ol>
+ * </p>
+ * 
+ * @param <A> Automaton type
+ * @author Gaëtan Staquet
+ */
 abstract class AbstractExplorationJSONConformance<A extends DeterministicAcceptorTS<?, JSONSymbol>>
         extends AbstractJSONConformance<A> implements EquivalenceOracle<A, JSONSymbol, Boolean> {
 
     private final static LearnLogger LOGGER = LearnLogger.getLogger(AbstractExplorationJSONConformance.class);
 
     private final ExplorationGenerator generator;
-    private Iterator<JSONObject> iteratorValidDocuments;
+    private Iterator<JSONObject> iteratorValidDocuments = null;
     private Iterator<JSONObject> iteratorInvalidDocuments = null;
-    private int numberGeneratedValidDocuments = 0;
     private int numberGeneratedInvalidDocuments = 0;
 
     protected AbstractExplorationJSONConformance(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
@@ -58,12 +74,12 @@ abstract class AbstractExplorationJSONConformance<A extends DeterministicAccepto
     protected int numberGibberish() {
         if (numberTests() == -1) {
             return 10;
-        }
-        else {
+        } else {
             return numberTests();
         }
     }
 
+    @Nullable
     protected DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypothesis) {
         while (iteratorValidDocuments.hasNext() && continueValidGeneration()) {
             if (Thread.interrupted()) {

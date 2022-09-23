@@ -22,7 +22,7 @@ import net.automatalib.words.Word;
 /**
  * Counter value oracle for JSON documents.
  * 
- * It counts the number of unmatched {@code {} and {@code [}.
+ * It counts the number of unmatched { and [.
  * 
  * @author Gaëtan Staquet
  */
@@ -33,5 +33,5 @@ public class JSONCounterValueOracle implements SingleQueryCounterValueOracle<JSO
         Word<JSONSymbol> word = prefix.concat(suffix);
         return Utils.countUnmatched(WordConversion.fromJSONSymbolWordToString(word));
     }
-    
+
 }

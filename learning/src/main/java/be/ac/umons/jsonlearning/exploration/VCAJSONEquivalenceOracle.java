@@ -8,6 +8,17 @@ import de.learnlib.api.oracle.EquivalenceOracle;
 import net.automatalib.automata.oca.automatoncountervalues.VCAFromDescription;
 import net.automatalib.words.VPDAlphabet;
 
+/**
+ * Specialization of {@link AbstractExplorationJSONConformanceVisiblyAlphabet}
+ * for VCAs.
+ * 
+ * <p>
+ * See {@link AbstractExplorationJSONConformanceVisiblyAlphabet} for the tests
+ * performed during an equivalence query.
+ * </p>
+ * 
+ * @author Gaëtan Staquet
+ */
 public class VCAJSONEquivalenceOracle
         extends AbstractExplorationJSONConformanceVisiblyAlphabet<VCAFromDescription<?, JSONSymbol>>
         implements EquivalenceOracle.VCAEquivalenceOracle<JSONSymbol> {

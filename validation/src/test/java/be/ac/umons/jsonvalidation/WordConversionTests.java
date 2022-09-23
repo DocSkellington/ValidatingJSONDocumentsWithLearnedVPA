@@ -36,16 +36,20 @@ public class WordConversionTests {
     @Test
     public void fromStringToSymbols() {
         String base = "{\"string\": \"hello\"}";
-        Word<JSONSymbol> result = WordConversion.fromJSONDocumentToJSONSymbolWord(new JSONObject(base), false, new Random());
-        Word<JSONSymbol> target = Word.fromSymbols(toSymbol("{"), toSymbol("\"string\":"), toSymbol("\"hello\""), toSymbol("}"));
+        Word<JSONSymbol> result = WordConversion.fromJSONDocumentToJSONSymbolWord(new JSONObject(base), false,
+                new Random());
+        Word<JSONSymbol> target = Word.fromSymbols(toSymbol("{"), toSymbol("\"string\":"), toSymbol("\"hello\""),
+                toSymbol("}"));
         Assert.assertEquals(result, target);
 
         base = "{\"pro\":{\"i\":\"\\\\I\"},\"other\":\"\\\\D\"}";
         result = WordConversion.fromJSONDocumentToJSONSymbolWord(new JSONObject(base), false, new Random());
-        Word<JSONSymbol> target1 = target = JSONSymbol.toWord("{", "\"pro\":", "{", "\"i\":", "\"\\I\"", "}", ",", "\"other\":", "\"\\D\"", "}");
-        Word<JSONSymbol> target2 = target = JSONSymbol.toWord("{", "\"other\":", "\"\\D\"", ",", "\"pro\":", "{", "\"i\":", "\"\\I\"", "}", "}");
+        Word<JSONSymbol> target1 = target = JSONSymbol.toWord("{", "\"pro\":", "{", "\"i\":", "\"\\I\"", "}", ",",
+                "\"other\":", "\"\\D\"", "}");
+        Word<JSONSymbol> target2 = target = JSONSymbol.toWord("{", "\"other\":", "\"\\D\"", ",", "\"pro\":", "{",
+                "\"i\":", "\"\\I\"", "}", "}");
         assertEqualsOr(result, target1, target2);
-        
+
         // We ignore some spaces
         base = "{ \"pro\" : { \"i\" : \"\\\\I\" } , \"other\" : \"\\\\D\" }";
         result = WordConversion.fromJSONDocumentToJSONSymbolWord(new JSONObject(base), false, new Random());
@@ -54,12 +58,18 @@ public class WordConversionTests {
         // Arrays and booleans
         base = "{\"arrays\": [\"\\\\I\", \"\\\\I\", \"\\\\I\"], \"boolean\": false, \"other\": true}";
         result = WordConversion.fromJSONDocumentToJSONSymbolWord(new JSONObject(base), false, new Random());
-        target1 = JSONSymbol.toWord("{", "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", ",", "\"boolean\":", "false", ",", "\"other\":", "true", "}");
-        target2 = JSONSymbol.toWord("{", "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", ",", "\"other\":", "true", ",", "\"boolean\":", "false", "}");
-        Word<JSONSymbol> target3 = JSONSymbol.toWord("{", "\"boolean\":", "false", ",", "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", ",", "\"other\":", "true", "}");
-        Word<JSONSymbol> target4 = JSONSymbol.toWord("{", "\"other\":", "true", ",", "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", ",", "\"boolean\":", "false", "}");
-        Word<JSONSymbol> target5 = JSONSymbol.toWord("{", "\"boolean\":", "false", ",", "\"other\":", "true", ",", "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", "}");
-        Word<JSONSymbol> target6 = JSONSymbol.toWord("{", "\"other\":", "true", ",", "\"boolean\":", "false", ",", "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", "}");
+        target1 = JSONSymbol.toWord("{", "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", ",",
+                "\"boolean\":", "false", ",", "\"other\":", "true", "}");
+        target2 = JSONSymbol.toWord("{", "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", ",",
+                "\"other\":", "true", ",", "\"boolean\":", "false", "}");
+        Word<JSONSymbol> target3 = JSONSymbol.toWord("{", "\"boolean\":", "false", ",", "\"arrays\":", "[", "\"\\I\"",
+                ",", "\"\\I\"", ",", "\"\\I\"", "]", ",", "\"other\":", "true", "}");
+        Word<JSONSymbol> target4 = JSONSymbol.toWord("{", "\"other\":", "true", ",", "\"arrays\":", "[", "\"\\I\"", ",",
+                "\"\\I\"", ",", "\"\\I\"", "]", ",", "\"boolean\":", "false", "}");
+        Word<JSONSymbol> target5 = JSONSymbol.toWord("{", "\"boolean\":", "false", ",", "\"other\":", "true", ",",
+                "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", "}");
+        Word<JSONSymbol> target6 = JSONSymbol.toWord("{", "\"other\":", "true", ",", "\"boolean\":", "false", ",",
+                "\"arrays\":", "[", "\"\\I\"", ",", "\"\\I\"", ",", "\"\\I\"", "]", "}");
         assertEqualsOr(result, target1, target2, target3, target4, target5, target6);
 
         // Empty array
@@ -84,12 +94,15 @@ public class WordConversionTests {
 
     @Test
     public void fromSymbolToCharacter() {
-        Word<JSONSymbol> base = Word.fromSymbols(toSymbol("h"), toSymbol('e'), toSymbol('l'), toSymbol('l'), toSymbol('o'));
+        Word<JSONSymbol> base = Word.fromSymbols(toSymbol("h"), toSymbol('e'), toSymbol('l'), toSymbol('l'),
+                toSymbol('o'));
         String result = WordConversion.fromJSONSymbolWordToString(base);
         String target = "hello";
         Assert.assertEquals(result, target);
 
-        base = Word.fromSymbols(toSymbol('"'), toSymbol('p'), toSymbol('r'), toSymbol('o'), toSymbol('"'), toSymbol(':'), toSymbol('{'), toSymbol('"'), toSymbol('i'), toSymbol("\":"), toSymbol('1'), toSymbol('}'));
+        base = Word.fromSymbols(toSymbol('"'), toSymbol('p'), toSymbol('r'), toSymbol('o'), toSymbol('"'),
+                toSymbol(':'), toSymbol('{'), toSymbol('"'), toSymbol('i'), toSymbol("\":"), toSymbol('1'),
+                toSymbol('}'));
         result = WordConversion.fromJSONSymbolWordToString(base);
         target = "\"pro\":{\"i\":1}";
         Assert.assertEquals(result, target);

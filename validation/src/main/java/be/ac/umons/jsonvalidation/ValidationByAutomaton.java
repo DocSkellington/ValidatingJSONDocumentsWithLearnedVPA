@@ -14,21 +14,27 @@ import net.automatalib.words.VPDAlphabet;
 import net.automatalib.words.Word;
 
 /**
- * An automaton that allows permutations of pairs key-value inside a JSON
- * document.
+ * An automaton-like object that checks whether a JSON document satisfies a JSON
+ * schema using an automaton, no matter the key-value pairs order.
  *
+ * <p>
  * It is constructed from a visibly pushdown automaton (VPA). Such an automaton
  * can be constructed by hand or learned through an active learning algorithm
- * (see the other project in the repository).
+ * (see the learning module in the repository).
+ * </p>
  * 
+ * <p>
  * A JSON document is accepted if there is a path from the initial location with
  * empty stack to an accepting location with empty stack.
+ * </p>
  * 
+ * <p>
  * Due to the permutations, it is not possible in general to know the exact
  * current locations in the VPA. Therefore, the permutation automaton performs a
  * kind of subset construction. This means that the permutation automaton is
  * deterministic, i.e., it is never required to backtrack while reading a
  * document.
+ * </p>
  * 
  * @author Gaëtan Staquet
  */
@@ -185,7 +191,8 @@ public class ValidationByAutomaton<L> {
                 .push(sourceToReachedLocations, currentCallSymbol, currentStack);
 
         final Set<PairSourceToReached<L>> successorSourceToReachedLocations;
-        if (currentCallSymbol.equals(JSONSymbol.openingCurlyBraceSymbol) && !nextSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
+        if (currentCallSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)
+                && !nextSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)) {
             successorSourceToReachedLocations = PairSourceToReached
                     .getIdentityPairs(graph.getLocationsReadingKey(nextSymbol));
             newStack.addKey(nextSymbol);
@@ -227,7 +234,7 @@ public class ValidationByAutomaton<L> {
             final Set<L> acceptingLocations = graph.getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
                     currentStack.peekSeenKeys(), currentStack.peekReachedLocationsBeforeCall(),
                     currentStack.peekRejectedNodes());
-            long time = watch.stop().elapsed().toMillis();
+            final long time = watch.stop().elapsed().toMillis();
             maxTimePathsKeyGraph = Math.max(time, maxTimePathsKeyGraph);
             totalTimePathsKeyGraph += time;
             numberPathsKeyGraph++;
@@ -242,11 +249,14 @@ public class ValidationByAutomaton<L> {
                     }
                 }
             }
-        } else if (retSymbol.equals(JSONSymbol.closingBracketSymbol) || (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol) && currentStack.peekCurrentKey() == null)) {
-            if (retSymbol.equals(JSONSymbol.closingBracketSymbol) && !callSymbol.equals(JSONSymbol.openingBracketSymbol)) {
+        } else if (retSymbol.equals(JSONSymbol.closingBracketSymbol)
+                || (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol) && currentStack.peekCurrentKey() == null)) {
+            if (retSymbol.equals(JSONSymbol.closingBracketSymbol)
+                    && !callSymbol.equals(JSONSymbol.openingBracketSymbol)) {
                 return null;
             }
-            if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol) && !callSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
+            if (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol)
+                    && !callSymbol.equals(JSONSymbol.openingCurlyBraceSymbol)) {
                 return null;
             }
 

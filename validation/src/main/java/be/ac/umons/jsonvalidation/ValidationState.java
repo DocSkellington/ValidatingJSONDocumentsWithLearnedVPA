@@ -4,9 +4,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * A state used in a {@link ValidationByAutomaton}.
+ * The current state in an execution of {@link ValidationByAutomaton}.
  * 
+ * <p>
  * It contains a set with the source and reached locations in the VPA and a stack.
+ * </p>
  * 
  * @author Gaëtan Staquet
  */

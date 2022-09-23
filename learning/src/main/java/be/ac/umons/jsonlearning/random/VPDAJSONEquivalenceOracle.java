@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.json.JSONObject;
@@ -12,8 +11,8 @@ import org.json.JSONObject;
 import be.ac.umons.jsonlearning.IVPDAJSONEquivalenceOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonvalidation.JSONSymbol;
-import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import be.ac.umons.jsonvalidation.graph.OnAcceptingPathRelation;
+import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import de.learnlib.api.logging.LearnLogger;
 import de.learnlib.api.query.DefaultQuery;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
@@ -21,39 +20,49 @@ import net.automatalib.automata.vpda.Location;
 import net.automatalib.automata.vpda.OneSEVPA;
 import net.automatalib.words.Alphabet;
 
+/**
+ * Specialization of {@link AbstractJSONEquivalenceOracle} for VPDAs.
+ * 
+ * <p>
+ * When performing an equivalence check, the following tests are performed, in
+ * this order:
+ * <ol>
+ * <li>Is there a loop over the initial location reading an internal symbol? See
+ * {@link IVPDAJSONEquivalenceOracle#counterexampleByLoopingOverInitial(OneSEVPA, Random)}</li>
+ * <li>Is there a valid document that is rejected by the hypothesis?</li>
+ * <li>Is there an invalid document that is accepted by the hypothesis?</li>
+ * <li>Is there a gibberish word that is accepted by the hypothesis?</li>
+ * <li>Is the key graph valid? Note that this implementation reuses previously
+ * computed relations.</li>
+ * </ol>
+ * </p>
+ * 
+ * @author Gaëtan Staquet
+ */
 public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<OneSEVPA<?, JSONSymbol>>
         implements IVPDAJSONEquivalenceOracle {
 
     private static final LearnLogger LOGGER = LearnLogger.getLogger(VPDAJSONEquivalenceOracle.class);
 
-    private final Set<JSONObject> documentsToTest;
     private DefaultOneSEVPA<JSONSymbol> previousHypothesis = null;
     private ReachabilityRelation<Location> previousReachabilityRelation = null;
-    private OnAcceptingPathRelation<Location> previousWitnessRelation = null;
+    private OnAcceptingPathRelation<Location> previousOnAcceptingPathRelation = null;
 
     public VPDAJSONEquivalenceOracle(int numberTests, boolean canGenerateInvalid, int maxDocumentDepth,
             int maxProperties, int maxItems, JSONSchema schema, Random random, boolean shuffleKeys,
-            Alphabet<JSONSymbol> alphabet, Set<JSONObject> documentsToTest) {
+            Alphabet<JSONSymbol> alphabet, Collection<JSONObject> documentsToTest) {
         super(numberTests, canGenerateInvalid, maxDocumentDepth, maxProperties, maxItems, schema, random, shuffleKeys,
-                alphabet);
-        this.documentsToTest = documentsToTest;
+                alphabet, documentsToTest);
     }
 
     @Override
     public @Nullable DefaultQuery<JSONSymbol, Boolean> findCounterExample(OneSEVPA<?, JSONSymbol> hypo,
             Collection<? extends JSONSymbol> inputs) {
-        for (JSONObject document : documentsToTest) {
-            DefaultQuery<JSONSymbol, Boolean> query = checkDocument(hypo, document);
-            if (query != null) {
-                return query;
-            }
-        }
-
         DefaultQuery<JSONSymbol, Boolean> query = counterexampleByLoopingOverInitial(hypo, getRandom());
         if (query != null) {
             return query;
         }
-        
+
         query = super.findCounterExample(hypo);
         if (query != null) {
             return query;
@@ -63,14 +72,15 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
         return findCounterExampleFromKeyGraph(hypothesis);
     }
 
-    private DefaultQuery<JSONSymbol, Boolean> findCounterExampleFromKeyGraph(DefaultOneSEVPA<JSONSymbol> currentHypothesis) {
+    private DefaultQuery<JSONSymbol, Boolean> findCounterExampleFromKeyGraph(
+            DefaultOneSEVPA<JSONSymbol> currentHypothesis) {
         LOGGER.info("Creating graph");
         final CounterexampleWithRelations<Location> queryAndRelations;
         if (previousHypothesis == null) {
             queryAndRelations = counterexampleAndRelationFromKeyGraph(currentHypothesis);
-        }
-        else {
-            queryAndRelations = counterexampleAndRelationFromKeyGraph(previousHypothesis, previousReachabilityRelation, previousWitnessRelation, currentHypothesis);
+        } else {
+            queryAndRelations = counterexampleAndRelationFromKeyGraph(previousHypothesis, previousReachabilityRelation,
+                    previousOnAcceptingPathRelation, currentHypothesis);
         }
 
         if (queryAndRelations == null) {
@@ -78,7 +88,7 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
         }
 
         this.previousReachabilityRelation = queryAndRelations.reachabilityRelation;
-        this.previousWitnessRelation = queryAndRelations.witnessRelation;
+        this.previousOnAcceptingPathRelation = queryAndRelations.onAcceptingPathRelation;
         this.previousHypothesis = currentHypothesis;
         return queryAndRelations.counterexample;
     }
@@ -89,7 +99,8 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
         final Alphabet<JSONSymbol> callAlphabet = original.getInputAlphabet().getCallAlphabet();
         final Alphabet<JSONSymbol> returnAlphabet = original.getInputAlphabet().getReturnAlphabet();
 
-        final DefaultOneSEVPA<JSONSymbol> converted = new DefaultOneSEVPA<>(original.getInputAlphabet(), original.size());
+        final DefaultOneSEVPA<JSONSymbol> converted = new DefaultOneSEVPA<>(original.getInputAlphabet(),
+                original.size());
 
         final Map<L, Location> originalToConvertedLocations = new LinkedHashMap<>();
         for (final L location : original.getLocations()) {
@@ -97,8 +108,7 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
             final Location convertedLocation;
             if (location == original.getInitialLocation()) {
                 convertedLocation = converted.addInitialLocation(accepting);
-            }
-            else {
+            } else {
                 convertedLocation = converted.addLocation(accepting);
             }
             originalToConvertedLocations.put(location, convertedLocation);
@@ -120,7 +130,8 @@ public class VPDAJSONEquivalenceOracle extends AbstractJSONEquivalenceOracle<One
                         final int originalStackSym = original.encodeStackSym(originalBeforeCall, callSym);
                         final int convertedStackSym = converted.encodeStackSym(convertedBeforeCall, callSym);
 
-                        final L originalTarget = original.getReturnSuccessor(originalLocation, returnSym, originalStackSym);
+                        final L originalTarget = original.getReturnSuccessor(originalLocation, returnSym,
+                                originalStackSym);
                         final Location convertedTarget = originalToConvertedLocations.get(originalTarget);
 
                         converted.setReturnSuccessor(convertedLocation, returnSym, convertedStackSym, convertedTarget);

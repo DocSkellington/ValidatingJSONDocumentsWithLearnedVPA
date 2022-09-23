@@ -17,6 +17,18 @@ import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 
+/**
+ * Base class for equivalence checks based on conformance testing of JSON
+ * documents.
+ * 
+ * <p>
+ * In our case, conformance testing means that we generate JSON documents and
+ * check that the hypothesis and the classical validator agree on whether the
+ * document is valid.
+ * </p>
+ * 
+ * @author Gaëtan Staquet
+ */
 public abstract class AbstractJSONConformance<A extends DeterministicAcceptorTS<?, JSONSymbol>> {
     protected static final int MAX_NUMBER_SYMBOLS_GIBBERISH = 5;
 

@@ -9,23 +9,26 @@ import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.Word;
 
-public class TestWitnessRelation {
+/**
+ * @author Gaëtan Staquet
+ */
+public class TestOnAcceptingPathRelation {
     @Test
-    public void testWitnessRelationSmallTwoBranchesAutomaton() {
+    public void testOnAcceptingRelationRelationSmallTwoBranchesAutomaton() {
         final DefaultOneSEVPA<JSONSymbol> vpa = Automata.constructSmallTwoBranchesAutomaton();
 
         final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
                 .computeReachabilityRelation(vpa, true);
 
-        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(vpa,
+        final OnAcceptingPathRelation<Location> onAcceptingRelation = OnAcceptingPathRelation.computeRelation(vpa,
                 reachabilityRelation, true);
 
         final JSONSymbol k1Sym = JSONSymbol.toSymbol("k1");
         final JSONSymbol k2Sym = JSONSymbol.toSymbol("k2");
 
-        Assert.assertEquals(witnessRelation.size(), vpa.size());
+        Assert.assertEquals(onAcceptingRelation.size(), vpa.size());
 
-        for (OnAcceptingPath<Location> inRelation : witnessRelation) {
+        for (OnAcceptingPath<Location> inRelation : onAcceptingRelation) {
             Location start = vpa.getInitialLocation();
             Location target = inRelation.getIntermediate();
             Word<JSONSymbol> witnessToStart = inRelation.getWitnessToIntermediate();
@@ -74,7 +77,7 @@ public class TestWitnessRelation {
             }
         }
 
-        Assert.assertNull(witnessRelation.identifyBinLocation(vpa));
+        Assert.assertNull(onAcceptingRelation.identifyBinLocation(vpa));
     }
 
     @Test
@@ -82,10 +85,10 @@ public class TestWitnessRelation {
         final DefaultOneSEVPA<JSONSymbol> vpa = Automata.constructAutomatonWithOptionalKeysAndExplicitBinState();
         final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
                 .computeReachabilityRelation(vpa, true);
-        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(vpa,
+        final OnAcceptingPathRelation<Location> onAcceptingRelation = OnAcceptingPathRelation.computeRelation(vpa,
                 reachabilityRelation, true);
 
-        Assert.assertEquals(witnessRelation.size(), 12);
-        Assert.assertEquals(witnessRelation.identifyBinLocation(vpa), vpa.getLocation(12));
+        Assert.assertEquals(onAcceptingRelation.size(), 12);
+        Assert.assertEquals(onAcceptingRelation.identifyBinLocation(vpa), vpa.getLocation(12));
     }
 }

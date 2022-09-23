@@ -9,9 +9,12 @@ import java.util.stream.Collectors;
  * A pair of two locations such that it is possible to go from the first to the
  * second.
  * 
+ * <p>
  * Such a pair is used in the {@link ValidationByAutomaton} to store the
  * locations from which we started reading a word and the locations reached
  * after reading that word.
+ * See {@link ValidationState}.
+ * </p>
  * 
  * @author Gaëtan Staquet
  */
@@ -32,6 +35,13 @@ public class PairSourceToReached<L> {
         return reachedLocation;
     }
 
+    /**
+     * Creates a new pair with the current source location, and the new reached
+     * location.
+     * 
+     * @param reachedLocation The newly reached location
+     * @return The new pair of locations
+     */
     public PairSourceToReached<L> transitionToReached(final L reachedLocation) {
         return PairSourceToReached.of(this.sourceLocation, reachedLocation);
     }

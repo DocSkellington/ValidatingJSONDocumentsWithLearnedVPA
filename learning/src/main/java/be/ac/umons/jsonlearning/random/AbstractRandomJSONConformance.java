@@ -16,6 +16,17 @@ import net.automatalib.ts.acceptors.DeterministicAcceptorTS;
 import net.automatalib.words.Alphabet;
 import net.automatalib.words.Word;
 
+/**
+ * Base class for (partial) equivalence queries using a random generator.
+ * 
+ * <p>
+ * It generates a fixed number of JSON documents (up to the fixed maximal depth)
+ * and checks whether the hypothesis and the classical validator agrees on their
+ * validity.
+ * </p>
+ * 
+ * @author Gaëtan Staquet
+ */
 public abstract class AbstractRandomJSONConformance<A extends DeterministicAcceptorTS<?, JSONSymbol>>
         extends AbstractJSONConformance<A> implements EquivalenceOracle<A, JSONSymbol, Boolean> {
     private final RandomGenerator generator;
@@ -30,8 +41,8 @@ public abstract class AbstractRandomJSONConformance<A extends DeterministicAccep
         this.invalidIterator = generator.createIterator(schema, -1, canGenerateInvalid, random);
     }
 
-    protected DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypothesis, int maxTreeSize) {
-        if (maxTreeSize == 0) {
+    protected DefaultQuery<JSONSymbol, Boolean> findCounterExample(A hypothesis, int maxDocumentDepth) {
+        if (maxDocumentDepth == 0) {
             if (hypothesis.accepts(Word.epsilon())) {
                 return new DefaultQuery<>(Word.epsilon(), false);
             } else {

@@ -14,6 +14,24 @@ import net.automatalib.words.VPDAlphabet;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 
+/**
+ * Specialization of {@link AbstractExplorationJSONConformance} for automata
+ * using a pushdown alphabet.
+ * 
+ * <p>
+ * When performing an equivalence check, the following tests are performed, in
+ * this order:
+ * <ol>
+ * <li>Is there a valid document that is rejected by the hypothesis?</li>
+ * <li>Is there an invalid document that is accepted by the hypothesis?</li>
+ * <li>Is there a gibberish word that is accepted by the hypothesis?</li>
+ * <li>Is there a gibberish word using only internal symbols that is accepted by
+ * the hypothesis?</li>
+ * </ol>
+ * </p>
+ * 
+ * @author Gaëtan Staquet
+ */
 abstract class AbstractExplorationJSONConformanceVisiblyAlphabet<A extends DeterministicAcceptorTS<?, JSONSymbol>>
         extends AbstractExplorationJSONConformance<A> {
 

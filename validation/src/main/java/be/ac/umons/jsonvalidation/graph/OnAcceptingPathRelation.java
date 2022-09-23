@@ -129,13 +129,14 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
             final OneSEVPA<L1, JSONSymbol> previousHypothesis, final OnAcceptingPathRelation<L1> previousRelation,
             final OneSEVPA<L2, JSONSymbol> currentHypothesis, final ReachabilityRelation<L2> reachabilityRelation,
             final boolean computeWitnesses) {
-        LOGGER.info("Witness relation: start");
-        final OnAcceptingPathRelation<L2> witnessRelation = initializeRelation(currentHypothesis, reachabilityRelation,
+        LOGGER.info("Z_A relation: start");
+        final OnAcceptingPathRelation<L2> onAcceptingRelation = initializeRelation(currentHypothesis,
+                reachabilityRelation,
                 computeWitnesses);
         final Map<L1, L2> locationsPreviousToCurrent = Utils.createMapLocationsOfPreviousToCurrent(previousHypothesis,
                 currentHypothesis);
 
-        LOGGER.info("Number of elements in Rel before adding still valid: " + witnessRelation.size());
+        LOGGER.info("Number of elements in Rel before adding still valid: " + onAcceptingRelation.size());
         for (final OnAcceptingPath<L1> inPreviousRelation : previousRelation) {
             final L2 intermediateLocation = locationsPreviousToCurrent.get(inPreviousRelation.getIntermediate());
 
@@ -150,13 +151,13 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
                     new State<L2>(intermediateLocation, toIntermediateState.getStackContents()),
                     inPreviousRelation.getWitnessFromIntermediate());
             if (fromIntermediateState != null && currentHypothesis.isAccepting(fromIntermediateState)) {
-                witnessRelation.add(currentHypothesis.getInitialLocation(), intermediateLocation,
+                onAcceptingRelation.add(currentHypothesis.getInitialLocation(), intermediateLocation,
                         inPreviousRelation.getWitnessToIntermediate(), inPreviousRelation.getWitnessFromIntermediate());
             }
         }
-        LOGGER.info("Number of elements in Rel after adding still valid: " + witnessRelation.size());
+        LOGGER.info("Number of elements in Rel after adding still valid: " + onAcceptingRelation.size());
 
-        return computeRelationLoop(currentHypothesis, reachabilityRelation, witnessRelation, computeWitnesses);
+        return computeRelationLoop(currentHypothesis, reachabilityRelation, onAcceptingRelation, computeWitnesses);
     }
 
     /**
@@ -171,15 +172,15 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
      */
     public static <L> OnAcceptingPathRelation<L> computeRelation(final OneSEVPA<L, JSONSymbol> automaton,
             final ReachabilityRelation<L> reachabilityRelation, final boolean computeWitnesses) {
-        LOGGER.info("Witness relation: start");
-        final OnAcceptingPathRelation<L> witnessRelation = initializeRelation(automaton, reachabilityRelation,
+        LOGGER.info("Z_A relation: start");
+        final OnAcceptingPathRelation<L> onAcceptingRelation = initializeRelation(automaton, reachabilityRelation,
                 computeWitnesses);
-        return computeRelationLoop(automaton, reachabilityRelation, witnessRelation, computeWitnesses);
+        return computeRelationLoop(automaton, reachabilityRelation, onAcceptingRelation, computeWitnesses);
     }
 
     private static <L> OnAcceptingPathRelation<L> initializeRelation(final OneSEVPA<L, JSONSymbol> automaton,
             final ReachabilityRelation<L> reachabilityRelation, final boolean computeWitnesses) {
-        final OnAcceptingPathRelation<L> witnessRelation = new OnAcceptingPathRelation<>(
+        final OnAcceptingPathRelation<L> onAcceptingRelation = new OnAcceptingPathRelation<>(
                 automaton.getInitialLocation());
         final L initialLocation = automaton.getInitialLocation();
         for (final L location : automaton.getLocations()) {
@@ -190,15 +191,15 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
                 } else {
                     witness = null;
                 }
-                witnessRelation.add(initialLocation, location, witness, witness);
+                onAcceptingRelation.add(initialLocation, location, witness, witness);
             }
         }
-        LOGGER.info("Witness relation: init done");
-        return witnessRelation;
+        LOGGER.info("Z_A relation: init done");
+        return onAcceptingRelation;
     }
 
     private static <L> OnAcceptingPathRelation<L> computeRelationLoop(final OneSEVPA<L, JSONSymbol> automaton,
-            final ReachabilityRelation<L> reachabilityRelation, final OnAcceptingPathRelation<L> witnessRelation,
+            final ReachabilityRelation<L> reachabilityRelation, final OnAcceptingPathRelation<L> onAcceptingRelation,
             final boolean computeWitnesses) {
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
         final L initialLocation = automaton.getInitialLocation();
@@ -206,15 +207,15 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
         while (true) {
             final OnAcceptingPathRelation<L> newInRelation = new OnAcceptingPathRelation<>(
                     automaton.getInitialLocation());
-            for (final OnAcceptingPath<L> inWitnessRelation : witnessRelation) {
+            for (final OnAcceptingPath<L> onAcceptingPath : onAcceptingRelation) {
                 for (final InReachabilityRelation<L> inReachabilityRelation : reachabilityRelation) {
-                    if (inReachabilityRelation.getTarget() == inWitnessRelation.getIntermediate()) {
+                    if (inReachabilityRelation.getTarget() == onAcceptingPath.getIntermediate()) {
                         final Word<JSONSymbol> witnessToIntermediate, witnessFromIntermediate;
 
                         if (computeWitnesses) {
-                            witnessToIntermediate = inWitnessRelation.getWitnessToIntermediate();
+                            witnessToIntermediate = onAcceptingPath.getWitnessToIntermediate();
                             witnessFromIntermediate = inReachabilityRelation.getWitness()
-                                    .concat(inWitnessRelation.getWitnessFromIntermediate());
+                                    .concat(onAcceptingPath.getWitnessFromIntermediate());
                         } else {
                             witnessToIntermediate = witnessFromIntermediate = null;
                         }
@@ -234,7 +235,7 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
 
                         final Word<JSONSymbol> witnessToIntermediate;
                         if (computeWitnesses) {
-                            witnessToIntermediate = inWitnessRelation.getWitnessToIntermediate()
+                            witnessToIntermediate = onAcceptingPath.getWitnessToIntermediate()
                                     .concat(inRelationWithInitial.getWitness()).append(callSymbol);
                         } else {
                             witnessToIntermediate = null;
@@ -243,10 +244,10 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
                         for (final L locationBeforeReturn : automaton.getLocations()) {
                             final L locationAfterReturn = automaton.getReturnSuccessor(locationBeforeReturn,
                                     returnSymbol, stackSym);
-                            if (Objects.equals(locationAfterReturn, inWitnessRelation.getIntermediate())) {
+                            if (Objects.equals(locationAfterReturn, onAcceptingPath.getIntermediate())) {
                                 final Word<JSONSymbol> witnessFromIntermediate;
                                 if (computeWitnesses) {
-                                    witnessFromIntermediate = inWitnessRelation.getWitnessFromIntermediate()
+                                    witnessFromIntermediate = onAcceptingPath.getWitnessFromIntermediate()
                                             .prepend(returnSymbol);
                                 } else {
                                     witnessFromIntermediate = null;
@@ -260,13 +261,13 @@ public class OnAcceptingPathRelation<L> extends ReachabilityMatrix<L, OnAcceptin
                 }
             }
 
-            if (!witnessRelation.addAll(newInRelation, initialLocation)) {
+            if (!onAcceptingRelation.addAll(newInRelation, initialLocation)) {
                 break;
             }
-            LOGGER.info("Witness relation: end loop");
+            LOGGER.info("Z_A relation: end loop");
         }
 
-        LOGGER.info("Size: " + witnessRelation.size());
-        return witnessRelation;
+        LOGGER.info("Size: " + onAcceptingRelation.size());
+        return onAcceptingRelation;
     }
 }

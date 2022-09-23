@@ -9,6 +9,9 @@ import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.Word;
 
+/**
+ * @author Gaëtan Staquet
+ */
 public class TestReachabilityRelation {
     private void checkElementsInRelationForSmallTwoBranchesAutomaton(final DefaultOneSEVPA<JSONSymbol> automaton,
             final ReachabilityRelation<Location> reachabilityRelation) {

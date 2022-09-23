@@ -1,17 +1,3 @@
-/* Copyright (C) 2021 – University of Mons, University Antwerpen
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package be.ac.umons.jsonlearning;
 
 import net.automatalib.words.Word;
@@ -22,13 +8,16 @@ import net.automatalib.words.Word;
  * @author Gaëtan Staquet
  */
 public class Utils {
+    private Utils() {
+    }
+
     /**
      * Converts an Automatalib's Word into a Java String.
      * 
      * @param word The word
      * @return The string constructed from the word.
      */
-    public static String wordToString(Word<Character> word) {
+    public static String wordToString(final Word<Character> word) {
         StringBuilder builder = new StringBuilder(word.size());
         for (Character character : word) {
             builder.append(character);
@@ -37,12 +26,12 @@ public class Utils {
     }
 
     /**
-     * Counts the number of unmatched {@code {} and {@code [} in a String.
+     * Counts the number of unmatched { and [ in a String.
      * 
      * @param word The string
-     * @return The number of unmatched {@code {} and {@code [}
+     * @return The number of unmatched { and [
      */
-    public static int countUnmatched(String word) {
+    public static int countUnmatched(final String word) {
         int numberUnmatchedOpen = 0;
         boolean inString = false;
         boolean previousWasEscape = false;
@@ -67,10 +56,11 @@ public class Utils {
      * Tests whether the provided string encodes a valid JSON document.
      * 
      * That is, the string must begin by {@code {} and end by {@code \}}.
+     * 
      * @param word
      * @return
      */
-    public static boolean validWord(String word) {
+    public static boolean validWord(final String word) {
         if (word.isEmpty() || word.charAt(0) != '{' || word.charAt(word.length() - 1) != '}') {
             return false;
         }
@@ -95,8 +85,7 @@ public class Utils {
                     }
                     numberUnmatchedOpen++;
                     previousWasComma = false;
-                }
-                else if (character == '}' || character == ']') {
+                } else if (character == '}' || character == ']') {
                     if (numberUnmatchedOpen == 0) {
                         return false;
                     }
@@ -105,14 +94,12 @@ public class Utils {
                     }
                     numberUnmatchedOpen--;
                     previousWasComma = false;
-                }
-                else if (character == ',') {
+                } else if (character == ',') {
                     if (previousWasComma) {
                         return false;
                     }
                     previousWasComma = true;
-                }
-                else {
+                } else {
                     previousWasComma = false;
                 }
             }
@@ -124,12 +111,14 @@ public class Utils {
     }
 
     /**
-     * We escape the "\S", "\E", "\I", and "\D" symbols in the document (to avoid errors from JSONObject).
+     * We escape the "\S", "\E", "\I", and "\D" symbols in the document (to avoid
+     * errors from JSONObject).
      * 
      * That means we replace every \\([SIDE]) by \\\\$1.
+     * 
      * @param string The string to escape
      * @return The escaped string
-     */ 
+     */
     public static String escapeSymbolsForJSON(String string) {
         // We need to escape each \ in the Java code.
         return string.replaceAll("\\\\([SIDE])", "\\\\\\\\$1");

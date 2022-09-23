@@ -8,8 +8,11 @@ import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.Word;
 import net.automatalib.words.WordBuilder;
 
+/**
+ * @author Gaëtan Staquet
+ */
 public class TestValidationByAutomaton {
-    
+
     @Test
     public void testStraightforwardAutomatonWithPermutation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructStraightforwardAutomaton();
@@ -80,7 +83,7 @@ public class TestValidationByAutomaton {
         builder.add(JSONSymbol.integerSymbol);
         Assert.assertFalse(validationByAutomaton.accepts(builder.toWord()));
     }
-    
+
     @Test
     public void testSmallTwoBranchesAutomatonWithPermutation() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructSmallTwoBranchesAutomaton();
@@ -779,7 +782,7 @@ public class TestValidationByAutomaton {
     public void testAutomatonWithCycle() {
         DefaultOneSEVPA<JSONSymbol> automaton = Automata.constructAutomatonWithCycleReadingAKey();
         ValidationByAutomaton<Location> validationByAutomaton = new ValidationByAutomaton<>(automaton);
-        
+
         WordBuilder<JSONSymbol> builder = new WordBuilder<>();
         builder.add(JSONSymbol.openingCurlyBraceSymbol);
         builder.add(JSONSymbol.toSymbol("k1"));

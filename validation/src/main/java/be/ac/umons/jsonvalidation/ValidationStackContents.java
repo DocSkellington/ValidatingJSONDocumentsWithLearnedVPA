@@ -11,9 +11,11 @@ import be.ac.umons.jsonvalidation.graph.NodeInGraph;
 /**
  * The stack used in a {@link ValidationState}.
  * 
+ * <p>
  * It contains a set with the source-to-reached locations before the call
  * symbol, the call symbol, the set with all the keys seen so far, a set of
  * nodes to reject in the graph, and a pointer to the rest of the stack.
+ * </p>
  * 
  * @author Gaëtan Staquet
  */
