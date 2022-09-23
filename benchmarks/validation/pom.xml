@@ -15,6 +15,10 @@
     <name>Benchmarks for validation algorithm</name>
     <description>Benchmarks for validation based learned VPAs.</description>
 
+    <properties>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+    </properties>
+
     <dependencies>
         <!-- Internal dependencies -->
         <dependency>

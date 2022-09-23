@@ -12,10 +12,11 @@
 
     <artifactId>jsonlearning-benchmarks</artifactId>
 
-    <name>JSON schema learning benchmarks</name>
-    <description>Benchmarks for learning algorithms for JSON Schemas.</description>
+    <name>Benchmarks for JSON documents learning</name>
+    <description>Benchmarks for automata learning algorithms for JSON Schemas.</description>
         
     <properties>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
     </properties>
 
     <!--

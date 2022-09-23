@@ -39,7 +39,7 @@
     <distributionManagement>
         <site>
             <id>apidoc</id>
-            <url>file:${project.basedir}/docs/api/</url>
+            <url>file:${user.dir}/docs/api/</url>
         </site>
     </distributionManagement>
 
