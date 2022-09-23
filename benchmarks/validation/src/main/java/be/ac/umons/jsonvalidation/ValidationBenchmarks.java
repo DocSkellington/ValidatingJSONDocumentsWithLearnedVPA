@@ -22,7 +22,7 @@ import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
 import be.ac.umons.jsonschematools.validator.DefaultValidator;
 import be.ac.umons.jsonschematools.validator.Validator;
-import be.ac.umons.jsonvalidation.graph.DotWriter;
+import be.ac.umons.jsonvalidation.graph.KeyGraphToDot;
 import be.ac.umons.jsonvalidation.graph.KeyGraph;
 import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import be.ac.umons.jsonvalidation.graph.OnAcceptingPathRelation;
@@ -132,7 +132,7 @@ public class ValidationBenchmarks {
         final long memoryForReachability = getMemoryUse() - memoryAtStart;
 
         watch.reset().start();
-        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(vpa, reachabilityRelation, false);
+        final OnAcceptingPathRelation<Location> witnessRelation = OnAcceptingPathRelation.computeRelation(vpa, reachabilityRelation, false);
 
         final long timeWitness = watch.stop().elapsed().toMillis();
         final long memoryForWitness = getMemoryUse() - memoryAtStart;
@@ -144,7 +144,7 @@ public class ValidationBenchmarks {
         final long memoryForGraph = getMemoryUse() - memoryForReachability;
 
         final StringBuilder builder = new StringBuilder();
-        DotWriter.write(graph, builder);
+        KeyGraphToDot.write(graph, builder);
         LOGGER.logModel(builder);
 
         final List<Object> statistics = new ArrayList<>(nPreprocessingColumns);

@@ -9,18 +9,12 @@
         <version>2.0</version>
     </parent>
 
-    <artifactId>jsonlearning</artifactId>
+    <artifactId>jsonvalidation</artifactId>
 
-    <name>Learning an automaton from a JSON schema</name>
-    <description>Oracles to learn an automaton validating a JSON document assuming a fixed order on the keys</description>
+    <name>Validation of a JSON document using an automaton</name>
+    <description>A validating algorithm using a learned automaton to decide whether a JSON document is valid for a JSON schema</description>
 
     <dependencies>
-        <!-- Internal -->
-        <dependency>
-            <groupId>be.ac.umons.validatingjsonbylearning</groupId>
-            <artifactId>jsonvalidation</artifactId>
-        </dependency>
-
         <!-- AutomataLib and LearnLib -->
         <dependency>
             <groupId>net.automatalib.distribution</groupId>

@@ -183,7 +183,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
     private <L> DefaultOneSEVPA<JSONSymbol> removeBinState(OneSEVPA<L, JSONSymbol> learned) {
         final ReachabilityRelation<L> reachabilityRelation = ReachabilityRelation.computeReachabilityRelation(learned, false);
         LOGGER.info("Reachability relation computed");
-        final OnAcceptingPathRelation<L> witnessRelation = OnAcceptingPathRelation.computeWitnessRelation(learned, reachabilityRelation, false);
+        final OnAcceptingPathRelation<L> witnessRelation = OnAcceptingPathRelation.computeRelation(learned, reachabilityRelation, false);
         LOGGER.info("Witness relation computed");
 
         final L binLocation = witnessRelation.identifyBinLocation(learned);

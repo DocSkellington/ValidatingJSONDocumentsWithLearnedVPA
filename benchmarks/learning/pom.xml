@@ -10,22 +10,36 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>jsonvalidation-benchmarks</artifactId>
+    <artifactId>jsonlearning-benchmarks</artifactId>
 
-    <name>Benchmarks for validation algorithm</name>
-    <description>Benchmarks for validation based learned VPAs.</description>
+    <name>JSON schema learning benchmarks</name>
+    <description>Benchmarks for learning algorithms for JSON Schemas.</description>
+        
+    <properties>
+    </properties>
 
+    <!--
+    ================================= DEPENDENCIES ==============================
+    -->
     <dependencies>
         <!-- Internal dependencies -->
         <dependency>
             <groupId>be.ac.umons.validatingjsonbylearning</groupId>
             <artifactId>jsonvalidation</artifactId>
         </dependency>
+        <dependency>
+            <groupId>be.ac.umons.validatingjsonbylearning</groupId>
+            <artifactId>jsonlearning</artifactId>
+        </dependency>
 
         <!-- JSON schema -->
         <dependency>
             <groupId>be.ac.umons.jsonschematools</groupId>
             <artifactId>jsonschematools-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>be.ac.umons.jsonschematools</groupId>
+            <artifactId>jsonschematools-generator</artifactId>
         </dependency>
         <dependency>
             <groupId>be.ac.umons.jsonschematools</groupId>
@@ -49,18 +63,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
         </dependency>
-
+        
         <!-- Logger -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-        </dependency>
-
-        <!-- Force garbage collector -->
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava-testlib</artifactId>
-            <version>31.1-jre</version>
         </dependency>
 
         <!-- TestNG -->
