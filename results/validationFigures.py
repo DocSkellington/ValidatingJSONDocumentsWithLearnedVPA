@@ -15,8 +15,6 @@ filepath = sys.argv[1]
 name = sys.argv[2]
 df = pandas.read_csv(filepath)
 
-# print(df["Automaton time (ms)"].to_string())
-
 document_description = [
     "Length document",
     "Depth document",
@@ -26,7 +24,16 @@ numerical_columns = [
     "Automaton time (ms)",
     "Automaton memory",
     "Validator time (ms)",
-    "Validator memory"
+    "Validator memory",
+    "Paths max time",
+    "Paths total time",
+    "Paths number",
+    "Successor object max time",
+    "Successor object total time",
+    "Successor object number",
+    "Successor array max time",
+    "Successor array total time",
+    "Successor array number",
 ]
 operations = ["mean", "median", "min", "max"]
 numerical_agg = {key: operations for key in numerical_columns}
@@ -72,6 +79,17 @@ rename_dict.update({
 rename_dict.update({
     ("{} output".format(algo), "sum"): "{}Output".format(algo)
     for algo in ["Automaton", "Validator"]
+})
+rename_dict.update({
+    ("Paths {}".format(type_paths), operation): "Paths{}{}".format(type_paths.capitalize().replace(" ", ""), operation.capitalize())
+    for operation in operations
+    for type_paths in ["max time", "total time", "number"]
+})
+rename_dict.update({
+    ("Successor {} {}".format(type_object, type_operation), operation): "Successor{}{}{}".format(type_object.capitalize(), type_operation.capitalize().replace(" ", ""), operation.capitalize())
+    for operation in operations
+    for type_object in ["object", "array"]
+    for type_operation in ["max time", "total time", "number"]
 })
 
 whole_grouped.rename(rename_dict, axis="columns", inplace=True)

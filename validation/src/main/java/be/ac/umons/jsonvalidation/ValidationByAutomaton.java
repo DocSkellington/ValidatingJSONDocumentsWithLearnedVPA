@@ -45,6 +45,12 @@ public class ValidationByAutomaton<L> {
     private long maxTimePathsKeyGraph = 0;
     private long totalTimePathsKeyGraph = 0;
     private long numberPathsKeyGraph = 0;
+    private long maxTimeSuccessorObject = 0;
+    private long totalTimeSuccessorObject = 0;
+    private long numberSuccessorObject = 0;
+    private long maxTimeSuccessorArray = 0;
+    private long totalTimeSuccessorArray = 0;
+    private long numberSuccessorArray = 0;
 
     public ValidationByAutomaton(final OneSEVPA<L, JSONSymbol> automaton) {
         this(automaton, KeyGraph.graphFor(automaton, false));
@@ -86,8 +92,38 @@ public class ValidationByAutomaton<L> {
         return numberPathsKeyGraph;
     }
 
-    public long getMeanTimePathsKeyGraph() {
-        return totalTimePathsKeyGraph / numberPathsKeyGraph;
+    public long getTotalTimePathsKeyGraph() {
+        return totalTimePathsKeyGraph;
+    }
+
+    public long getMaximalTimeSuccessorObject() {
+        return maxTimeSuccessorObject;
+    }
+
+    public long getNumberOfTimesSuccessorObject() {
+        return numberSuccessorObject;
+    }
+
+    public long getTotalTimeSuccessorObject() {
+        return totalTimeSuccessorObject;
+    }
+
+    public long getMaximalTimeSuccessorArray() {
+        return maxTimeSuccessorArray;
+    }
+
+    public long getNumberOfTimesSuccessorArray() {
+        return numberSuccessorArray;
+    }
+
+    public long getTotalTimeSuccessorArray() {
+        return totalTimeSuccessorArray;
+    }
+
+    public void resetTimeAndNumber() {
+        totalTimePathsKeyGraph = totalTimeSuccessorArray = totalTimeSuccessorObject = 0;
+        maxTimePathsKeyGraph = maxTimeSuccessorArray = maxTimeSuccessorObject = 0;
+        numberPathsKeyGraph = numberSuccessorArray = numberSuccessorObject = 0;
     }
 
     public boolean accepts(List<JSONSymbol> input) {
@@ -234,11 +270,12 @@ public class ValidationByAutomaton<L> {
             final Set<L> acceptingLocations = graph.getLocationsWithReturnTransitionOnUnmarkedPathsWithAllKeysSeen(
                     currentStack.peekSeenKeys(), currentStack.peekReachedLocationsBeforeCall(),
                     currentStack.peekRejectedNodes());
-            final long time = watch.stop().elapsed().toMillis();
+            long time = watch.stop().elapsed().toMillis();
             maxTimePathsKeyGraph = Math.max(time, maxTimePathsKeyGraph);
             totalTimePathsKeyGraph += time;
             numberPathsKeyGraph++;
 
+            watch.reset().start();
             for (final PairSourceToReached<L> sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
                 final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),
                         callSymbol);
@@ -249,6 +286,10 @@ public class ValidationByAutomaton<L> {
                     }
                 }
             }
+            time = watch.stop().elapsed().toMillis();
+            maxTimeSuccessorObject = Math.max(time, maxTimeSuccessorObject);
+            totalTimeSuccessorObject += time;
+            numberSuccessorObject++;
         } else if (retSymbol.equals(JSONSymbol.closingBracketSymbol)
                 || (retSymbol.equals(JSONSymbol.closingCurlyBraceSymbol) && currentStack.peekCurrentKey() == null)) {
             if (retSymbol.equals(JSONSymbol.closingBracketSymbol)
@@ -260,6 +301,7 @@ public class ValidationByAutomaton<L> {
                 return null;
             }
 
+            final Stopwatch watch = Stopwatch.createStarted();
             for (final PairSourceToReached<L> sourceToReachedBeforeCall : sourceToReachedLocationsBeforeCall) {
                 final int stackSymbol = automaton.encodeStackSym(sourceToReachedBeforeCall.getReachedLocation(),
                         callSymbol);
@@ -271,6 +313,10 @@ public class ValidationByAutomaton<L> {
                     }
                 }
             }
+            final long time = watch.stop().elapsed().toMillis();
+            maxTimeSuccessorArray = Math.max(time, maxTimeSuccessorArray);
+            totalTimeSuccessorArray += time;
+            numberSuccessorArray++;
         } else {
             return null;
         }

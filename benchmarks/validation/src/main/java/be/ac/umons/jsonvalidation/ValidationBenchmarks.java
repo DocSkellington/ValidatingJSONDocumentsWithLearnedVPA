@@ -94,8 +94,14 @@ public class ValidationBenchmarks {
             "Automaton memory",
             "Automaton output",
             "Paths max time",
-            "Paths mean time",
+            "Paths total time",
             "Paths number",
+            "Successor object max time",
+            "Successor object total time",
+            "Successor object number",
+            "Successor array max time",
+            "Successor array total time",
+            "Successor array number",
             "Validator time (ms)",
             "Validator memory",
             "Validator output"
@@ -189,6 +195,7 @@ public class ValidationBenchmarks {
         final Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random());
         assert word.length() != 0;
 
+        automaton.resetTimeAndNumber();
         GcFinalization.awaitFullGc();
         final Stopwatch watch = Stopwatch.createStarted();
         final Pair<Boolean, Long> automatonResult = runValidationByAutomaton(automaton, word);
@@ -221,8 +228,16 @@ public class ValidationBenchmarks {
         statistics.add(automatonOutput);
 
         statistics.add(automaton.getMaximalTimePathsKeyGraph());
-        statistics.add(automaton.getMeanTimePathsKeyGraph());
+        statistics.add(automaton.getTotalTimePathsKeyGraph());
         statistics.add(automaton.getNumberOfTimesPathsKeyGraphComputed());
+
+        statistics.add(automaton.getMaximalTimeSuccessorObject());
+        statistics.add(automaton.getTotalTimeSuccessorObject());
+        statistics.add(automaton.getNumberOfTimesSuccessorObject());
+
+        statistics.add(automaton.getMaximalTimeSuccessorArray());
+        statistics.add(automaton.getTotalTimeSuccessorArray());
+        statistics.add(automaton.getNumberOfTimesSuccessorArray());
 
         if (validatorError) {
             statistics.add(validatorTime);
