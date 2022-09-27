@@ -15,7 +15,7 @@ max_items=2
 ignore_additional=false
 n_experiments=10
 
-java -Xmx16g -jar learningautomata-2.0-jar-with-dependencies.jar \
+java -Xmx16g -jar jsonlearning-benchmarks-2.0-jar-with-dependencies.jar \
     ${type} ${equivalence} ${timeLimit} ${schema} ${n_documents} \
     ${can_invalid} ${max_depth} ${max_prop} ${max_items}\
     ${ignore_additional} ${n_experiments} \
