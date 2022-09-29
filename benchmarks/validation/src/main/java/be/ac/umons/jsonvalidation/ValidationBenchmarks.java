@@ -20,12 +20,10 @@ import com.google.common.testing.GcFinalization;
 
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonschematools.validator.DefaultValidator;
-import be.ac.umons.jsonschematools.validator.Validator;
-import be.ac.umons.jsonvalidation.graph.KeyGraphToDot;
 import be.ac.umons.jsonvalidation.graph.KeyGraph;
-import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
+import be.ac.umons.jsonvalidation.graph.KeyGraphToDot;
 import be.ac.umons.jsonvalidation.graph.OnAcceptingPathRelation;
+import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.automata.vpda.Location;
@@ -118,14 +116,13 @@ public class ValidationBenchmarks {
                 return;
             }
 
-            Validator validator = new DefaultValidator();
             File[] listFiles = pathToDocuments.toFile().listFiles();
             for (int i = 0; i < listFiles.length; i++) {
                 LOGGER.info("File " + (i + 1) + " / " + listFiles.length);
                 final File file = listFiles[i];
                 if (file.isFile()) {
                     final JSONObject document = new JSONObject(new JSONTokener(new FileReader(file)));
-                    runExperiment(automaton, validator, schema, document, file.getName());
+                    runExperiment(automaton, schema, document, file.getName());
                 }
             }
         }
@@ -189,30 +186,49 @@ public class ValidationBenchmarks {
         }
     }
 
-    private void runExperiment(final ValidationByAutomaton<Location> automaton, final Validator validator,
+    private void runExperiment(final ValidationByAutomaton<Location> automaton,
             final JSONSchema schema, final JSONObject document, final String documentName)
             throws IOException, JSONSchemaException {
         final Word<JSONSymbol> word = WordConversion.fromJSONDocumentToJSONSymbolWord(document, false, new Random());
         assert word.length() != 0;
 
+        // First, we measure the memory
         automaton.resetTimeAndNumber();
+        LOGGER.info("Starting own validator for memory");
         GcFinalization.awaitFullGc();
-        final Stopwatch watch = Stopwatch.createStarted();
-        final Pair<Boolean, Long> automatonResult = runValidationByAutomaton(automaton, word);
-        final long automatonTime = watch.stop().elapsed().toMillis();
+        Pair<Boolean, Long> automatonResult = runValidationByAutomaton(automaton, word, true);
         final boolean automatonOutput = automatonResult.getFirst();
         final long automatonMemory = automatonResult.getSecond();
 
         GcFinalization.awaitFullGc();
         boolean validatorOutput;
         boolean validatorError;
-        watch.reset().start();
+        ClassicalValidator validator = new ClassicalValidator(true);
+        LOGGER.info("Starting classical validator for memory");
         try {
             validatorOutput = validator.validate(schema, document);
             validatorError = false;
         } catch (JSONSchemaException e) {
             validatorOutput = false;
             validatorError = true;
+        }
+        final long validatorMemory = validator.getMaxMemoryUsed();
+        
+        // Second, we measure the time
+        LOGGER.info("Starting own validator for time");
+        final Stopwatch watch = Stopwatch.createStarted();
+        automatonResult = runValidationByAutomaton(automaton, word, false);
+        final long automatonTime = watch.stop().elapsed().toMillis();
+        assert automatonResult.getFirst() == automatonOutput;
+
+        validator = new ClassicalValidator(false);
+        LOGGER.info("Starting classical validator for time");
+        watch.reset().start();
+        try {
+            validator.validate(schema, document);
+            assert !validatorError;
+        } catch (JSONSchemaException e) {
+            assert validatorError;
         }
         final long validatorTime = watch.stop().elapsed().toMillis();
 
@@ -239,13 +255,11 @@ public class ValidationBenchmarks {
         statistics.add(automaton.getTotalTimeSuccessorArray());
         statistics.add(automaton.getNumberOfTimesSuccessorArray());
 
+        statistics.add(validatorTime);
+        statistics.add(validatorMemory);
         if (validatorError) {
-            statistics.add(validatorTime);
-            statistics.add(validator.getMaxMemoryUsed());
             statistics.add("Error");
         } else {
-            statistics.add(validatorTime);
-            statistics.add(validator.getMaxMemoryUsed());
             statistics.add(validatorOutput);
         }
 
@@ -254,27 +268,42 @@ public class ValidationBenchmarks {
     }
 
     private Pair<Boolean, Long> runValidationByAutomaton(final ValidationByAutomaton<Location> automaton,
-            final Word<JSONSymbol> word) {
-        final long memoryStart = getMemoryUse();
+            final Word<JSONSymbol> word, boolean measureMemory) {
+        final long memoryStart;
+        long maxMemory;
+        
+        if (measureMemory) {
+            memoryStart = getMemoryUse();
+            maxMemory = memoryStart;
+        }
+        else {
+            memoryStart = maxMemory = 0;
+        }
 
-        long maxMemory = memoryStart;
         if (word.isEmpty() || !word.getSymbol(0).equals(JSONSymbol.openingCurlyBraceSymbol)) {
             return Pair.of(false, 0L);
         }
         JSONSymbol currentSymbol = word.getSymbol(0);
         ValidationState<Location> validationState = automaton.getInitialState();
         for (int i = 1; i < word.size(); i++) {
+            if (measureMemory) {
+                System.gc();
+            }
             final JSONSymbol nextSymbol = word.getSymbol(i);
 
             validationState = automaton.getSuccessor(validationState, currentSymbol, nextSymbol);
 
             currentSymbol = nextSymbol;
 
-            maxMemory = Math.max(maxMemory, getMemoryUse());
+            if (measureMemory) {
+                maxMemory = Math.max(maxMemory, getMemoryUse());
+            }
         }
 
         validationState = automaton.getSuccessor(validationState, currentSymbol, null);
-        maxMemory = Math.max(maxMemory, getMemoryUse());
+        if (measureMemory) {
+            maxMemory = Math.max(maxMemory, getMemoryUse());
+        }
 
         return Pair.of(automaton.isAccepting(validationState), maxMemory - memoryStart);
     }
