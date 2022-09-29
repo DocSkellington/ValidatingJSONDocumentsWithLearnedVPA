@@ -66,11 +66,22 @@ public class Benchmarks {
         final int maxItems = Integer.valueOf(args[7]);
         final boolean ignoreAdditionalProperties = Boolean.valueOf(args[8]);
 
-        if (!pathToDocuments.toFile().isDirectory()) {
-            throw new IOException("The path to write the documents in must be a directory");
+        final JSONSchema schema;
+        final String schemaName;
+        if (pathToSchema.toString().equals("WorstCase")) { // TODO: document that "WorstCase" is a reserved schema name
+        final JSONSchemaStore schemaStore = new JSONSchemaStore(ignoreAdditionalProperties);
+            final Integer parameterSize = Integer.valueOf(args[9]);
+            schema = WorstCaseClassical.constructSchema(schemaStore, parameterSize);
+            System.out.println(schema);
+            schemaName = "WorstCase";
         }
-        final JSONSchema schema = loadSchema(pathToSchema, ignoreAdditionalProperties);
-        final String schemaName = pathToSchema.getFileName().toString();
+        else {
+            if (!pathToDocuments.toFile().isDirectory()) {
+                throw new IOException("The path to write the documents in must be a directory");
+            }
+            schema = loadSchema(pathToSchema, ignoreAdditionalProperties);
+            schemaName = pathToSchema.getFileName().toString();
+        }
 
         return new GenerateDocuments(schema, schemaName, generationType, pathToDocuments, nDocuments, maxDocumentDepth,
                 maxProperties, maxItems);
@@ -79,21 +90,36 @@ public class Benchmarks {
     private static ValidationBenchmarks getValidationBenchmarks(String[] args)
             throws JSONSchemaException, URISyntaxException, IOException {
         final Path pathToSchema = Paths.get(args[1]);
-        final Path pathToVPA = Paths.get(args[2]);
         final Path pathToDocuments = Paths.get(args[3]);
         final int nExperiments = Integer.valueOf(args[4]);
 
         final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm");
         final LocalDateTime now = LocalDateTime.now();
 
-        final String schemaName = pathToSchema.getFileName().toString();
-        final String VPAName = pathToVPA.getFileName().toString();
-
-        final JSONSchema schema = loadSchema(pathToSchema, false);
-
-        final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers
-                .oneSEVPA(JSONSymbol::toSymbol);
-        final DefaultOneSEVPA<JSONSymbol> vpa = parser.readModel(pathToVPA.toFile()).model;
+        final JSONSchema schema;
+        final String schemaName;
+        final String VPAName;
+        final DefaultOneSEVPA<JSONSymbol> vpa;
+        if (pathToSchema.toString().equals("WorstCase")) { // TODO: document that "WorstCase" is a reserved schema name
+        final JSONSchemaStore schemaStore = new JSONSchemaStore(false);
+            final int parameterSize = Integer.valueOf(args[2]);
+            schema = WorstCaseClassical.constructSchema(schemaStore, parameterSize);
+            schemaName = "WorstCase";
+            VPAName = "HandWritten";
+            vpa = WorstCaseClassical.constructAutomaton(parameterSize);
+        }
+        else {
+            final Path pathToVPA = Paths.get(args[2]);
+            if (!pathToDocuments.toFile().isDirectory()) {
+                throw new IOException("The path to write the documents in must be a directory");
+            }
+            schema = loadSchema(pathToSchema, false);
+            schemaName = pathToSchema.getFileName().toString();
+            VPAName = pathToVPA.getFileName().toString();
+            final InputModelDeserializer<JSONSymbol, DefaultOneSEVPA<JSONSymbol>> parser = DOTParsers
+                    .oneSEVPA(JSONSymbol::toSymbol);
+            vpa = parser.readModel(pathToVPA.toFile()).model;
+        }
 
         LOGGER.info("Starting validation by automaton benchmarks");
         LOGGER.info("Schema name: " + schemaName + "; VPA Dot file: " + VPAName);
