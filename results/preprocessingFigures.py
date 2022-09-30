@@ -50,12 +50,12 @@ statistics_df = pandas.DataFrame(
         "$|\\accRelation|$": [numbers_mean["Reachability size"]],
         "$\\keyGraph$ time (s)": [numbers_mean["OnPath time"] + numbers_mean["Graph time"]],
         "$\\keyGraph$ memory (kB)": [numbers_mean["OnPath memory"] + numbers_mean["Graph memory"]],
-        "$|\\keyGraph|$": [numbers_mean["Size graph"]]
+        "$|\\keyGraph|$": [numbers_mean["Graph size"]]
     }
 )
 
 styler = statistics_df.style
-styler.format(precision=2)
+styler.format(precision=1)
 styler.hide(level=0, axis="index")
 
 styler.to_latex(

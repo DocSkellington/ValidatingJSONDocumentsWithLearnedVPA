@@ -78,7 +78,7 @@ statistics_df = pandas.DataFrame(
 )
 
 styler = statistics_df.style
-styler.format(precision=2)
+styler.format(precision=1)
 styler.hide(level=0, axis="index")
 
 styler.to_latex(
