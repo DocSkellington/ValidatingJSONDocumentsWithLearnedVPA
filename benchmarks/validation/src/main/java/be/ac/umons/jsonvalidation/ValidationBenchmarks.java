@@ -300,6 +300,9 @@ public class ValidationBenchmarks {
             }
         }
 
+        if (measureMemory) {
+            System.gc();
+        }
         validationState = automaton.getSuccessor(validationState, currentSymbol, null);
         if (measureMemory) {
             maxMemory = Math.max(maxMemory, getMemoryUse());

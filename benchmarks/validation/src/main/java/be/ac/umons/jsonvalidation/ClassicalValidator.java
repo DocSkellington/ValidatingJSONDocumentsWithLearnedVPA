@@ -48,12 +48,15 @@ public class ClassicalValidator extends Validator {
     @Override
     public boolean validateValue(final JSONSchema schema, final Object value) throws JSONSchemaException {
         if (measureMemory) {
-            System.gc();
+            // To have a fair comparison between both algorithms, we measure the memory before cleaning it.
+            // Indeed, for our own algorithm, we also measure the memory before calling System.gc().
             maxMemory = Math.max(maxMemory, getMemoryInUse());
+            System.gc();
         }
         boolean valid = super.validateValue(schema, value);
         if (measureMemory) {
             maxMemory = Math.max(maxMemory, getMemoryInUse());
+            System.gc();
         }
         return valid;
     }
