@@ -12,7 +12,7 @@ schema="WorstCase"
 
 # Validation
 documents=Documents/${schema}-$1/Random
-n_experiments=10
+n_experiments=1
 
 java -Xmx16g -Xlog:gc -jar jsonvalidation-benchmarks-2.0-jar-with-dependencies.jar \
     validate ${schema} ${numberElements} ${documents} ${n_experiments} \

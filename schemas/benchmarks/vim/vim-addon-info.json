@@ -70,9 +70,6 @@
       "properties": {
         "homepage": {
           "type": "string"
-        },
-        "addon-info": {
-          "$ref": "#"
         }
       }
     }

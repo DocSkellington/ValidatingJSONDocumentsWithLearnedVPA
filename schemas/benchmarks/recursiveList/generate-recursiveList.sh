@@ -1,16 +1,16 @@
 #!/bin/bash
 
-schema="codecov.json"
+schema="recursiveList.json"
 
 # Generation of files for validation
 
 documents=Documents/${schema}/Random
 mkdir -p ${documents}
 
-n_documents_validation=10000
-max_depth=6
-max_prop=15
-max_items=2
+n_documents_validation=5000
+max_depth=20
+max_prop=20
+max_items=20
 ignore_additional=false
 
 java -Xmx16g -jar jsonvalidation-benchmarks-2.0-jar-with-dependencies.jar \
