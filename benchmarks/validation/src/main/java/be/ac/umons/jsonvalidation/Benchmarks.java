@@ -20,6 +20,7 @@ import de.learnlib.api.logging.LearnLogger;
 import net.automatalib.automata.vpda.DefaultOneSEVPA;
 import net.automatalib.serialization.InputModelDeserializer;
 import net.automatalib.serialization.dot.DOTParsers;
+import net.automatalib.serialization.dot.GraphDOT;
 
 public class Benchmarks {
     private static final LearnLogger LOGGER = LearnLogger.getLogger(Benchmarks.class);
@@ -69,11 +70,8 @@ public class Benchmarks {
         final JSONSchema schema;
         final String schemaName;
         if (pathToSchema.toString().equals("WorstCase")) { // TODO: document that "WorstCase" is a reserved schema name
-        final JSONSchemaStore schemaStore = new JSONSchemaStore(ignoreAdditionalProperties);
             final Integer parameterSize = Integer.valueOf(args[9]);
-            schema = WorstCaseClassical.constructSchema(schemaStore, parameterSize);
-            System.out.println(schema);
-            schemaName = "WorstCase";
+            return new GenerateWorstCaseDocuments(pathToDocuments, nDocuments, maxDocumentDepth, maxProperties, maxItems, parameterSize);
         }
         else {
             if (!pathToDocuments.toFile().isDirectory()) {
@@ -81,10 +79,8 @@ public class Benchmarks {
             }
             schema = loadSchema(pathToSchema, ignoreAdditionalProperties);
             schemaName = pathToSchema.getFileName().toString();
+            return new GenerateDocuments(schema, schemaName, generationType, pathToDocuments, nDocuments, maxDocumentDepth, maxProperties, maxItems);
         }
-
-        return new GenerateDocuments(schema, schemaName, generationType, pathToDocuments, nDocuments, maxDocumentDepth,
-                maxProperties, maxItems);
     }
 
     private static ValidationBenchmarks getValidationBenchmarks(String[] args)
@@ -107,6 +103,8 @@ public class Benchmarks {
             schemaName = "WorstCase";
             VPAName = "HandWritten";
             vpa = WorstCaseClassical.constructAutomaton(parameterSize);
+            System.out.println(schema);
+            GraphDOT.write(vpa, System.out);
         }
         else {
             final Path pathToVPA = Paths.get(args[2]);

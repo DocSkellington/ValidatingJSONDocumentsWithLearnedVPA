@@ -31,11 +31,11 @@ public class GenerateDocuments {
     private final JSONSchema schema;
     private final String schemaName;
     private final GenerationType generationType;
-    private final Path pathToDocuments;
-    private final int nDocuments;
-    private final int maxDocumentDepth;
-    private final int maxProperties;
-    private final int maxItems;
+    protected final Path pathToDocuments;
+    protected final int nDocuments;
+    protected final int maxDocumentDepth;
+    protected final int maxProperties;
+    protected final int maxItems;
 
     public GenerateDocuments(JSONSchema schema, String schemaName, GenerationType generationType, Path pathToDocuments,
             int nDocuments, int maxDocumentDepth, int maxProperties, int maxItems) {

@@ -18,45 +18,108 @@ import net.automatalib.automata.vpda.Location;
 import net.automatalib.words.VPDAlphabet;
 import net.automatalib.words.impl.DefaultVPDAlphabet;
 
+/**
+ * A worst-case schema for the classical validator, and its corresponding
+ * 1-SEVPA.
+ * 
+ * <p>
+ * The idea of the schema is to create a conjunction of multiple disjunctions
+ * S_i to S_l, with l a fixed parameter.
+ * Each part of the conjunction removes one S_i, up until only S_l remains.
+ * That is, while the schema is large, it can be reduced to only S_l.
+ * In this version, each S_i is an object that contains the keys i to l, and
+ * each value must be a string.
+ * </p>
+ * 
+ * <p>
+ * Since the classical validator implementation we rely on performs a special optimization for conjunctions, we instead negate a disjunction.
+ * That is, instead of using "allOf", we use "not": { "anyOf": ... }.
+ * </p>
+ * 
+ * <p>
+ * The 1-SEVPA corresponding to the schema is pretty simple, as we only have to
+ * consider S_l.
+ * Thus, it can be generated directly without needing to learn it.
+ * </p>
+ * 
+ * @author Gaëtan Staquet
+ */
 public class WorstCaseClassical {
     private WorstCaseClassical() {
 
     }
 
+    /**
+     * Constructs the schema for the given value for l.
+     * 
+     * @param store            The store that will hold the schema
+     * @param numberOfElements The value of the parameter l
+     * @return The schema
+     * @throws JSONSchemaException
+     */
     public static JSONSchema constructSchema(JSONSchemaStore store, int numberOfElements) throws JSONSchemaException {
-        final JSONObject document = constructAllOf(numberOfElements);
+        final JSONObject document = new JSONObject();
+        document.put("not", constructNot(numberOfElements));
         document.put("type", "object");
-        document.put("additionalProperties", false);
+        document.put("additionalProperties", constructEndObject());
 
         return store.loadFromJSONObject(document);
     }
 
-    private static JSONObject constructAllOf(int numberOfElements) {
-        final JSONArray allOf = new JSONArray();
+    private static JSONObject constructNot(int numberOfElements) {
+        final JSONArray inAnyOfInNot = new JSONArray();
         for (int i = 1; i <= numberOfElements; i++) {
-            allOf.put(constructAnyOf(i, numberOfElements));
+            final JSONObject object = new JSONObject();
+            object.put("not", constructAnyOf(i, numberOfElements));
+            inAnyOfInNot.put(object);
         }
-        final JSONObject object = new JSONObject();
-        object.put("allOf", allOf);
-        return object;
+
+        final JSONObject anyOfInNot = new JSONObject();
+        anyOfInNot.put("anyOf", inAnyOfInNot);
+        return anyOfInNot;
     }
 
     private static JSONObject constructAnyOf(int startNumber, int endNumber) {
         final JSONArray anyOf = new JSONArray();
         for (int i = startNumber; i <= endNumber; i++) {
             final JSONObject properties = new JSONObject();
+            final JSONArray requiredKeys = new JSONArray();
             for (int j = i; j <= endNumber; j++) {
-                final JSONObject property = new JSONObject();
-                property.put("type", "string");
-                properties.put(Integer.toString(j), property);
+                final String key = Integer.toString(j);
+                properties.put(key, constructEndObject());
+                requiredKeys.put(key);
             }
 
             final JSONObject inAnyOf = new JSONObject();
             inAnyOf.put("properties", properties);
+            inAnyOf.put("required", requiredKeys);
+            if (i > 1) {
+                final JSONArray requiredOtherKeys = new JSONArray();
+                for (int j = 1; j < i; j++) {
+                    final String key = Integer.toString(j);
+                    final JSONArray requiredArray = new JSONArray();
+                    requiredArray.put(key);
+                    final JSONObject required = new JSONObject();
+                    required.put("required", requiredArray);
+                    requiredOtherKeys.put(required);
+                }
+
+                final JSONObject anyOfOtherKeys = new JSONObject();
+                anyOfOtherKeys.put("anyOf", requiredOtherKeys);
+
+                inAnyOf.put("not", anyOfOtherKeys);
+            }
             anyOf.put(inAnyOf);
         }
+
         final JSONObject object = new JSONObject();
         object.put("anyOf", anyOf);
+        return object;
+    }
+
+    private static JSONObject constructEndObject() {
+        JSONObject object = new JSONObject();
+        object.put("type", "string");
         return object;
     }
 
@@ -70,19 +133,31 @@ public class WorstCaseClassical {
         locations.add(automaton.addLocation(false));
         locations.add(automaton.addLocation(true));
         locations.add(automaton.addLocation(false));
+        locations.add(automaton.addLocation(false));
+        locations.add(automaton.addLocation(false));
+        locations.add(automaton.addLocation(false));
+        final Location binLocation = locations.get(locations.size() - 1);
 
         final int stackSymQ0Curly = automaton.encodeStackSym(locations.get(0), JSONSymbol.openingCurlyBraceSymbol);
         automaton.setInternalSuccessor(locations.get(0), constructKeySymbol(numberOfElements), locations.get(1));
-        automaton.setReturnSuccessor(locations.get(0), JSONSymbol.closingCurlyBraceSymbol, stackSymQ0Curly, locations.get(3));
+
         automaton.setInternalSuccessor(locations.get(1), JSONSymbol.stringSymbol, locations.get(2));
-        automaton.setReturnSuccessor(locations.get(2), JSONSymbol.closingCurlyBraceSymbol, stackSymQ0Curly, locations.get(3));
+
+        automaton.setReturnSuccessor(locations.get(2), JSONSymbol.closingCurlyBraceSymbol, stackSymQ0Curly,
+                locations.get(3));
+        automaton.setInternalSuccessor(locations.get(2), JSONSymbol.commaSymbol, locations.get(4));
+
+        automaton.setInternalSuccessor(locations.get(4), constructAdditionalKeySymbol(), locations.get(5));
+
+        automaton.setInternalSuccessor(locations.get(5), JSONSymbol.stringSymbol, locations.get(6));
+
+        automaton.setReturnSuccessor(locations.get(6), JSONSymbol.closingCurlyBraceSymbol, stackSymQ0Curly,
+                locations.get(3));
 
         for (final Location start : locations) {
             for (final JSONSymbol internalSymbol : alphabet.getInternalAlphabet()) {
                 if (automaton.getInternalSuccessor(start, internalSymbol) == null) {
-                    for (final Location target : locations) {
-                        automaton.setInternalSuccessor(start, internalSymbol, target);
-                    }
+                    automaton.setInternalSuccessor(start, internalSymbol, binLocation);
                 }
             }
 
@@ -91,9 +166,7 @@ public class WorstCaseClassical {
                     final int stackSymbol = automaton.encodeStackSym(beforeCall, callSymbol);
                     for (final JSONSymbol returnSymbol : alphabet.getReturnAlphabet()) {
                         if (automaton.getReturnSuccessor(start, returnSymbol, stackSymbol) == null) {
-                            for (final Location target : locations) {
-                                automaton.setReturnSuccessor(start, returnSymbol, stackSymbol, target);
-                            }
+                            automaton.setReturnSuccessor(start, returnSymbol, stackSymbol, binLocation);
                         }
                     }
                 }
@@ -123,7 +196,7 @@ public class WorstCaseClassical {
         internalSymbols.add(JSONSymbol.numberSymbol);
         internalSymbols.add(JSONSymbol.enumSymbol);
 
-        internalSymbols.add(JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\":"));
+        internalSymbols.add(constructAdditionalKeySymbol());
         // @formatter:off
         IntStream.range(1, numberOfElements + 1)
             .mapToObj(i -> constructKeySymbol(i))
@@ -131,6 +204,10 @@ public class WorstCaseClassical {
         // @formatter:on
 
         return new DefaultVPDAlphabet<>(internalSymbols, callSymbols, returnSymbols);
+    }
+
+    private static JSONSymbol constructAdditionalKeySymbol() {
+        return JSONSymbol.toSymbol("\"" + AbstractConstants.stringConstant + "\":");
     }
 
     private static JSONSymbol constructKeySymbol(int keyNumber) {
