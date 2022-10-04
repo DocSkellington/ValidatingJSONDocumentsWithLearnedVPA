@@ -7,7 +7,6 @@ permalink: /about/
 Main developer: [Gaëtan Staquet](http://informatique.umons.ac.be/staff/Staquet.Gaetan/) ([F.R.S.-FNRS](https://www.frs-fnrs.be/en/), [University of Mons](https://web.umons.ac.be/en/), and [University of Antwerp](https://www.uantwerpen.be/en/)).
 
 ## Licenses
-### JSON Schema tools
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -212,11 +211,11 @@ Main developer: [Gaëtan Staquet](http://informatique.umons.ac.be/staff/Staquet.
 
 ### Site
 This site is served by Jekyll and Github-Pages.
-You can find the source code for Jekyll at GitHub:
+You can find the source code for Jekyll on GitHub:
 [jekyll][jekyll-organization] /
 [jekyll](https://github.com/jekyll/jekyll).
 The theme used is Minima.
-You can find the source code for Minima at GitHub:
+You can find the source code for Minima on GitHub:
 [jekyll][jekyll-organization] /
 [minima](https://github.com/jekyll/minima).
 

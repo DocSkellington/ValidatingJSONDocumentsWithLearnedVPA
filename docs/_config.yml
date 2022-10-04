@@ -31,8 +31,8 @@ plugins:
   - jekyll-font-awesome-sass
 
 header_pages:
-  - learningBenchmarks.md
   - validation.md
+  - learningBenchmarks.md
   - validationBenchmarks.md
   - about.md
 

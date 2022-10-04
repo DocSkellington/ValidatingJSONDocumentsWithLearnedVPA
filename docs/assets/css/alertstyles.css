@@ -1,0 +1,28 @@
+.alert {
+    overflow: hidden;
+    margin-bottom: 10px;
+    margin-top: 10px;
+
+    color: black;
+
+    border: 1px solid transparent;
+    border-color: #000;
+
+    background-color: #fafafa;
+}
+
+.alert a {
+    text-decoration: underline;
+}
+
+.alert-info {
+    background-color: #c5e6f7;
+
+    border-color: #c5f7ef;
+}
+
+.alert-important {
+    background-color: #fcd297;
+
+    border-color: #fc9f97;
+}
