@@ -76,7 +76,8 @@ public class ValidationBenchmarks {
             "OnPath memory",
             "OnPath size",
             "Graph time",
-            "Graph memory",
+            "Graph compute memory",
+            "Graph store memory",
             "Graph size"
         );
         // @formatter:on
@@ -129,28 +130,34 @@ public class ValidationBenchmarks {
     }
 
     private ValidationByAutomaton<Location> constructAutomaton(DefaultOneSEVPA<JSONSymbol> vpa) throws IOException {
-        GcFinalization.awaitFullGc();
-        final long memoryAtStart = getMemoryUse();
+        System.gc();
+        long memoryAtStart = getMemoryUse();
         final Stopwatch watch = Stopwatch.createStarted();
 
         final ReachabilityRelation<Location> reachabilityRelation = ReachabilityRelation
                 .computeReachabilityRelation(vpa, false);
 
-        final long timeReachability = watch.stop().elapsed().toMillis();
         final long memoryForReachability = getMemoryUse() - memoryAtStart;
+        final long timeReachability = watch.stop().elapsed().toMillis();
 
+        System.gc();
+        memoryAtStart = getMemoryUse();
         watch.reset().start();
         final OnAcceptingPathRelation<Location> onAcceptingPathRelation = OnAcceptingPathRelation.computeRelation(vpa,
                 reachabilityRelation, false);
 
-        final long timeAcceptingPath = watch.stop().elapsed().toMillis();
         final long memoryForAcceptingPath = getMemoryUse() - memoryAtStart;
+        final long timeAcceptingPath = watch.stop().elapsed().toMillis();
 
+        System.gc();
+        memoryAtStart = getMemoryUse();
         watch.reset().start();
         final KeyGraph<Location> graph = new KeyGraph<>(vpa, reachabilityRelation, onAcceptingPathRelation, false);
 
+        final long memoryToComputeGraph = getMemoryUse() - memoryAtStart;
+        System.gc();
+        final long memoryToStoreGraph = getMemoryUse() - memoryAtStart;
         final long timeGraph = watch.stop().elapsed().toMillis();
-        final long memoryForGraph = getMemoryUse() - memoryForReachability;
 
         final StringBuilder builder = new StringBuilder();
         KeyGraphToDot.write(graph, builder);
@@ -173,7 +180,8 @@ public class ValidationBenchmarks {
         statistics.add(onAcceptingPathRelation.size());
 
         statistics.add(timeGraph);
-        statistics.add(memoryForGraph);
+        statistics.add(memoryToComputeGraph);
+        statistics.add(memoryToStoreGraph);
         statistics.add(graph.size());
 
         preprocessingCSVPrinter.printRecord(statistics);
@@ -213,7 +221,7 @@ public class ValidationBenchmarks {
             validatorError = true;
         }
         final long validatorMemory = validator.getMaxMemoryUsed();
-        
+
         // Second, we measure the time
         LOGGER.info("Starting own validator for time");
         final Stopwatch watch = Stopwatch.createStarted();
@@ -271,12 +279,11 @@ public class ValidationBenchmarks {
             final Word<JSONSymbol> word, boolean measureMemory) {
         final long memoryStart;
         long maxMemory;
-        
+
         if (measureMemory) {
             memoryStart = getMemoryUse();
             maxMemory = memoryStart;
-        }
-        else {
+        } else {
             memoryStart = maxMemory = 0;
         }
 
@@ -327,7 +334,7 @@ public class ValidationBenchmarks {
         return maxDepth;
     }
 
-    private long getMemoryUse() {
+    public static long getMemoryUse() {
         final Runtime runtime = Runtime.getRuntime();
         return (runtime.totalMemory() - runtime.freeMemory()) / 1024;
     }

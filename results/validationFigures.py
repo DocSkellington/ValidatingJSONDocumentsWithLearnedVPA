@@ -1,7 +1,7 @@
 #!/bin/env python3
 
 """
-This file reads a CSV file produced by a run of the VPDA learning benchmarks.
+This file reads a CSV file produced by a run of the VPDA learning benchmarks, and a CSV file for the memory needed to store the documents.
 """
 
 import sys
@@ -11,9 +11,15 @@ import pandas
 import pandas.io.formats.style
 import numpy as np
 
-filepath = sys.argv[1]
-name = sys.argv[2]
-df = pandas.read_csv(filepath)
+filepath_validation = sys.argv[1]
+filepath_memoryDocuments = sys.argv[2]
+name = sys.argv[3]
+df_validation = pandas.read_csv(filepath_validation)
+df_memoryDocuments = pandas.read_csv(filepath_memoryDocuments)
+
+df = df_memoryDocuments.merge(df_validation)
+
+df["Validator memory"] += df["Memory document"]
 
 document_description = [
     "Length document",

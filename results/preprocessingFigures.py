@@ -23,7 +23,8 @@ columns = [
     "OnPath memory",
     "OnPath size",
     "Graph time",
-    "Graph memory",
+    "Graph compute memory",
+    "Graph store memory",
     "Graph size",
 ]
 numbers = df[columns]
@@ -49,7 +50,8 @@ statistics_df = pandas.DataFrame(
         "$\\accRelation$ memory (kB)": [numbers_mean["Reachability memory"]],
         "$|\\accRelation|$": [numbers_mean["Reachability size"]],
         "$\\keyGraph$ time (s)": [numbers_mean["OnPath time"] + numbers_mean["Graph time"]],
-        "$\\keyGraph$ memory (kB)": [numbers_mean["OnPath memory"] + numbers_mean["Graph memory"]],
+        "$\\keyGraph$ compute memory (kB)": [numbers_mean["OnPath memory"] + numbers_mean["Graph compute memory"]],
+        "$\\keyGraph$ store memory (kB)": [numbers_mean["Graph store memory"]],
         "$|\\keyGraph|$": [numbers_mean["Graph size"]]
     }
 )

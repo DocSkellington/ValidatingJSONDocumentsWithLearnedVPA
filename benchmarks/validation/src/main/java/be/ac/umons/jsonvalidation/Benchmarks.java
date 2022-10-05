@@ -28,7 +28,8 @@ public class Benchmarks {
     private enum Goal {
         GENERATE,
         VALIDATE,
-        DEPTH
+        DEPTH,
+        MEMORY
     }
 
     public static void main(String[] args) throws InterruptedException, IOException, JSONSchemaException, JSONException,
@@ -38,6 +39,9 @@ public class Benchmarks {
         switch (goal) {
             case DEPTH:
                 System.out.println(getSchemaDepth(args));
+                break;
+            case MEMORY:
+                getMemoryForDocuments(args).run();
                 break;
             case GENERATE:
                 getGenerateDocuments(args).generate();
@@ -71,15 +75,16 @@ public class Benchmarks {
         final String schemaName;
         if (pathToSchema.toString().equals("WorstCase")) { // TODO: document that "WorstCase" is a reserved schema name
             final Integer parameterSize = Integer.valueOf(args[9]);
-            return new GenerateWorstCaseDocuments(pathToDocuments, nDocuments, maxDocumentDepth, maxProperties, maxItems, parameterSize);
-        }
-        else {
+            return new GenerateWorstCaseDocuments(pathToDocuments, nDocuments, maxDocumentDepth, maxProperties,
+                    maxItems, parameterSize);
+        } else {
             if (!pathToDocuments.toFile().isDirectory()) {
                 throw new IOException("The path to write the documents in must be a directory");
             }
             schema = loadSchema(pathToSchema, ignoreAdditionalProperties);
             schemaName = pathToSchema.getFileName().toString();
-            return new GenerateDocuments(schema, schemaName, generationType, pathToDocuments, nDocuments, maxDocumentDepth, maxProperties, maxItems);
+            return new GenerateDocuments(schema, schemaName, generationType, pathToDocuments, nDocuments,
+                    maxDocumentDepth, maxProperties, maxItems);
         }
     }
 
@@ -97,7 +102,7 @@ public class Benchmarks {
         final String VPAName;
         final DefaultOneSEVPA<JSONSymbol> vpa;
         if (pathToSchema.toString().equals("WorstCase")) { // TODO: document that "WorstCase" is a reserved schema name
-        final JSONSchemaStore schemaStore = new JSONSchemaStore(false);
+            final JSONSchemaStore schemaStore = new JSONSchemaStore(false);
             final int parameterSize = Integer.valueOf(args[2]);
             schema = WorstCaseClassical.constructSchema(schemaStore, parameterSize);
             schemaName = "WorstCase";
@@ -105,11 +110,10 @@ public class Benchmarks {
             vpa = WorstCaseClassical.constructAutomaton(parameterSize);
             System.out.println(schema);
             GraphDOT.write(vpa, System.out);
-        }
-        else {
+        } else {
             final Path pathToVPA = Paths.get(args[2]);
             if (!pathToDocuments.toFile().isDirectory()) {
-                throw new IOException("The path to write the documents in must be a directory");
+                throw new IOException("The path to read the documents from must be a directory");
             }
             schema = loadSchema(pathToSchema, false);
             schemaName = pathToSchema.getFileName().toString();
@@ -135,6 +139,29 @@ public class Benchmarks {
                 "" + schemaName + "-" + VPAName + "-" + nExperiments + "-preprocessing-" + dtf.format(now) + ".csv");
         return new ValidationBenchmarks(pathToPreprocessingCSVFile, pathToValidationCSVFile, schema, vpa,
                 pathToDocuments, nExperiments);
+    }
+
+    private static MemoryForDocuments getMemoryForDocuments(String[] args) throws IOException {
+        final Path pathToSchema = Paths.get(args[1]);
+        final Path pathToDocuments = Paths.get(args[2]);
+
+        final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm");
+        final LocalDateTime now = LocalDateTime.now();
+
+        final String schemaName;
+        if (pathToSchema.toString().equals("WorstCase")) { // TODO: document that "WorstCase" is a reserved schema name
+            final int parameterSize = Integer.valueOf(args[3]);
+            schemaName = "WorstCase-" + parameterSize;
+        } else {
+            schemaName = pathToSchema.getFileName().toString();
+        }
+
+        final Path pathToCSVFolder = Paths.get(System.getProperty("user.dir"), "Results", "Validation");
+        pathToCSVFolder.toFile().mkdirs();
+        final Path pathToCSVFile = pathToCSVFolder.resolve(
+                "" + schemaName + "-memory-" + dtf.format(now) + ".csv");
+
+        return new MemoryForDocuments(pathToDocuments, pathToCSVFile);
     }
 
     private static JSONSchema loadSchema(Path pathToSchema, boolean ignoreAdditionalProperties)

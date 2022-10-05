@@ -70,9 +70,9 @@ statistics_df = pandas.DataFrame(
         "Equivalence": [numbers_mean["Equivalence queries"]],
         "$|\\automaton|$": [numbers_mean["VPDA size"]],
         "$|\Sigma|$": [numbers_mean["alphabet size"]],
-        "$|\delta_i|$": [numbers_mean["Internal transitions"]],
-        "$|\delta_{r}|$": [numbers_mean["Return transitions"]],
         "$|\delta_{c}|$": [numbers_mean["Call transitions"]],
+        "$|\delta_{r}|$": [numbers_mean["Return transitions"]],
+        "$|\delta_i|$": [numbers_mean["Internal transitions"]],
         "Diameter": [numbers_mean["Diameter"]],
     }
 )
