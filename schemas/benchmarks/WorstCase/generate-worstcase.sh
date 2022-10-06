@@ -1,18 +1,11 @@
 #!/bin/bash
 
-if [[ ! $1 ]]
-then
-    echo "This script excepts the size parameter as its first argument"
-    exit 1
-fi
-
-numberElements=$1
-
 schema="WorstCase"
+numberElements=10
 
 # Generation of files for validation
 
-documents=Documents/${schema}-$1/Random
+documents=Documents/${schema}-$numberElements/Random
 mkdir -p ${documents}
 
 n_documents_validation=5000
