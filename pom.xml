@@ -114,6 +114,7 @@
         <project-reports.version>3.3.0</project-reports.version>
         <site-plugin.version>4.0.0-M1</site-plugin.version>
         <assembly-plugin.version>3.3.0</assembly-plugin.version>
+        <install-plugin.version>3.0.1</install-plugin.version>
 
         <!-- Javadoc links -->
         <java.apidocs>http://docs.oracle.com/javase/8/docs/api/</java.apidocs>
@@ -242,6 +243,11 @@
                         <link>${jsonschematools.apidocs}</link>
                     </links>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>${install-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
