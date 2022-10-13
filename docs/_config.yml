@@ -18,7 +18,7 @@ author: Gaëtan Staquet (F.R.S.-FNRS, UMONS, and UAntwerpen)
 email: gaetan.staquet@umons.ac.be
 description: >- # this means to ignore newlines until "baseurl:"
   Documentation for the implementation of our automata learning algorithm from JSON schema, and our validation algorithm based on automata
-baseurl: "/LearningJSONSchema" # the subpath of your site, e.g. /blog
+baseurl: "/ValidatingJSONDocumentsWithLearnedVPA" # the subpath of your site, e.g. /blog
 url: "https://docskellington.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  DocSkellington
 
