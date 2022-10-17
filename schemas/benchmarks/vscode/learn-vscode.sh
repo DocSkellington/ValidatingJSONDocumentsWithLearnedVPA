@@ -3,7 +3,7 @@
 schema="vscode.json"
 
 # Learning
-# 8hours
+# 8 hours
 timeLimit=28800
 type=vpa
 equivalence=exploration

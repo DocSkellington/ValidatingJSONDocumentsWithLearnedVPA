@@ -3,8 +3,8 @@
 schema="codecov.json"
 
 # Learning
-# 8hours
-timeLimit=28800
+# 1 week
+timeLimit=604800
 type=vpa
 equivalence=random
 n_documents=10000
