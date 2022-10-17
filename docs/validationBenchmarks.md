@@ -170,8 +170,52 @@ This file containing the word `validation` in its name has the following columns
 Moreover, information will be printed in the standard output to show the current progress.
 If the provided scripts are used as-is, Java will also print information about the garbage collector executions.
 
-#### Figures
+### Depth of a schema
+Scripts for this kind of execution are not provided.
+
+#### Input
+If you desire to know the maximal depth of the documents described by a schema (to determine an appropriate upper bound for the learning process or to generate documents, for instance), **the first argument must be `DEPTH`**.
+The only remaining argument is:
+
+{:start="2"}
+  2. **The path to the file containing the schema**.
+
+Note that this does **not** support the *WorstCase* schema, for which the maximal depth is always one.
+
+#### Output
+A single number will be printed in the standard output.
+
+### Memory to store documents
+#### Input
+Finally, the last major part of the JAR file is to measure the memory required to hold a document.
+**The first argument must be `MEMORY`**.
+The remaining arguments are:
+
+{:start="2"}
+  2. **The path to the file containing the schema**.
+  3. **The path to the folder containing the documents**.
+
+Moreover, if the path to the schema is *WorstCase* (the case matters), a new mandatory argument is added:
+
+{:start="4"}
+  4. **The value of $$\ell$$**.
+
+#### Output
+A CSV file will be produced in the directory `Results/Validation`.
+This file has the following columns:
+
+  1. The document's name.
+  2. The memory required to store the document.
+  3. The length of the document, in the number of alphabet symbols.
+
+## Figures
 Finally, let us highlight the fact that we provide Python scripts to generate figures to display both preprocessing and validation results.
+The preprocessing script produces a LaTeX table that can be imported in any document, assuming the `booktabs` package is imported and the following macros are defined:
+
+  - `\def\automaton{\mathcal{A}}`
+  - `\def\accRelation{\mathrm{Reach}_{\automaton}}`
+  - `\def\keyGraph{G_{\automaton}}`
+
 The validation results are given in a data file that is to be used with some graphic generator programs, such as LaTeX (with the PGFPlots library).
 For licensing reasons, we can not provide the LaTeX files we use in our paper.
 So, we give here the main points, in case you desire to recreate them, using [PGFPlots](https://ctan.org/pkg/pgfplots):
@@ -215,45 +259,7 @@ So, we give here the main points, in case you desire to recreate them, using [PG
 ;
       ```
 
-### Depth of a schema
-Scripts for this kind of execution are not provided.
-
-#### Input
-If you desire to know the maximal depth of the documents described by a schema (to determine an appropriate upper bound for the learning process or to generate documents, for instance), **the first argument must be `DEPTH`**.
-The only remaining argument is:
-
-{:start="2"}
-  2. **The path to the file containing the schema**.
-
-Note that this does **not** support the *WorstCase* schema, for which the maximal depth is always one.
-
-#### Output
-A single number will be printed in the standard output.
-
-### Memory to store documents
-#### Input
-Finally, the last major part of the JAR file is to measure the memory required to hold a document.
-**The first argument must be `MEMORY`**.
-The remaining arguments are:
-
-{:start="2"}
-  2. **The path to the file containing the schema**.
-  3. **The path to the folder containing the documents**.
-
-Moreover, if the path to the schema is *WorstCase* (the case matters), a new mandatory argument is added:
-
-{:start="4"}
-  4. **The value of $$\ell$$**.
-
-#### Output
-A CSV file will be produced in the directory `Results/Validation`.
-This file has the following columns:
-
-  1. The document's name.
-  2. The memory required to store the document.
-  3. The length of the document, in the number of alphabet symbols.
-
-### Reproducible results
+## Reproducible results
 As pointed out in the [remarks of the validation documentation](validation.html#remarks), we guarantee reproducible results.
 
 For the generation of documents, we fix the seed of the random generator at the start of the execution, meaning that we always get the same documents.
