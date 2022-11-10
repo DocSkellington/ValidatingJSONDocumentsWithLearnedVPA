@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Random;
 
@@ -147,16 +148,16 @@ public abstract class VPDABenchmarks extends ABenchmarks {
 
     private <L> int computeDiameter(OneSEVPA<L, JSONSymbol> vpda) {
         final Graph<L, SevpaViewEdge<L, JSONSymbol>> graph = vpda.graphView();
-        final List<L> nodes = List.copyOf(graph.getNodes());
+        final List<L> nodes = new ArrayList<>(graph.getNodes());
         final List<List<Integer>> distances = floydWarshall(graph, nodes);
 
         return distances.stream()
                 .map(list -> list.stream()
                         .max(Comparator.naturalOrder())
-                        .orElseThrow())
+                        .orElseThrow(NoSuchElementException::new))
                 .filter(value -> value != Integer.MAX_VALUE)
                 .max(Comparator.naturalOrder())
-                .orElseThrow();
+                .orElseThrow(NoSuchElementException::new);
     }
 
     private <L> List<List<Integer>> floydWarshall(Graph<L, SevpaViewEdge<L, JSONSymbol>> graph, List<L> nodes) {
