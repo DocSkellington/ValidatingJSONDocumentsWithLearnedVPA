@@ -22,6 +22,7 @@ package be.ac.umons.jsonvalidation;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -54,7 +55,7 @@ public abstract class ROCABenchmarks extends ABenchmarks {
     @Override
     protected List<String> getHeader() {
         // @formatter:off
-        return List.of(
+        return Arrays.asList(
             "Total time (ms)",
             "ROCA counterexample time (ms)",
             "DFA counterexample time (ms)",

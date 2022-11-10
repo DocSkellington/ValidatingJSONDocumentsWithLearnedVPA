@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Iterator;
@@ -55,7 +56,7 @@ public class GenerateWorstCaseDocuments extends GenerateDocuments {
         int id = 0;
         while (selectedKeysIterator.hasNext()) {
             final Set<Integer> selectedKeys = selectedKeysIterator.next();
-            for (final boolean additional : List.of(false, true)) {
+            for (final boolean additional : Arrays.asList(false, true)) {
                 final JSONObject document = createObject(selectedKeys, additional);
                 writeDocument(document, pathToDocuments, id++);
             }

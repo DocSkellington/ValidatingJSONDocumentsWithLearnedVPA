@@ -25,6 +25,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
@@ -52,7 +53,7 @@ public class MemoryForDocuments {
 
     private List<String> getHeader() {
         // @formatter:off
-        return List.of(
+        return Arrays.asList(
             "Document ID",
             "Memory document",
             "Length document"

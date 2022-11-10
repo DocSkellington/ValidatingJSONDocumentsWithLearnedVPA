@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -35,8 +36,8 @@ import java.util.Random;
 import be.ac.umons.jsonlearning.JSONMembershipOracle;
 import be.ac.umons.jsonschematools.JSONSchema;
 import be.ac.umons.jsonschematools.JSONSchemaException;
-import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import be.ac.umons.jsonvalidation.graph.OnAcceptingPathRelation;
+import be.ac.umons.jsonvalidation.graph.ReachabilityRelation;
 import de.learnlib.acex.analyzers.AcexAnalyzers;
 import de.learnlib.algorithms.ttt.vpda.TTTLearnerVPDA;
 import de.learnlib.api.logging.LearnLogger;
@@ -63,7 +64,7 @@ public abstract class VPDABenchmarks extends ABenchmarks {
     @Override
     protected List<String> getHeader() {
         // @formatter:off
-        return List.of(
+        return Arrays.asList(
             "Total time (ms)",
             "Membership queries",
             "Equivalence queries",

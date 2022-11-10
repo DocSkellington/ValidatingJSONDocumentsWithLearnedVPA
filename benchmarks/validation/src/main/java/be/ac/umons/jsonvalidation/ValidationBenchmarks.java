@@ -25,6 +25,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -86,7 +87,7 @@ public class ValidationBenchmarks {
 
     private List<String> getPreprocessingHeader() {
         // @formatter:off
-        return List.of(
+        return Arrays.asList(
             "Success",
             "Reachability time",
             "Reachability memory",
@@ -104,7 +105,7 @@ public class ValidationBenchmarks {
 
     private List<String> getValidationHeader() {
         // @formatter:off
-        return List.of(
+        return Arrays.asList(
             "Document ID",
             "Length document",
             "Depth document",

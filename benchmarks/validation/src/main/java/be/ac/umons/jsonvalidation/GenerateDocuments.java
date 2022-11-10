@@ -23,6 +23,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -70,7 +71,7 @@ public class GenerateDocuments {
 
     public void generate() throws IOException, JSONException, JSONSchemaException, GeneratorException {
         final Map<Integer, Integer> sizeToNumber = new HashMap<>();
-        for (boolean valid : List.of(true, false)) {
+        for (boolean valid : Arrays.asList(true, false)) {
             final Iterator<JSONObject> iterator = createIterator(valid);
 
             for (int i = 0; i < nDocuments && iterator.hasNext(); i++) {

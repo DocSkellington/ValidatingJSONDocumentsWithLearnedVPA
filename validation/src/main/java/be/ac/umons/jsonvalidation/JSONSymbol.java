@@ -19,6 +19,7 @@
 
 package be.ac.umons.jsonvalidation;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -58,7 +59,7 @@ public class JSONSymbol extends AbstractSymbol<JSONSymbol> {
 
     static {
         // @formatter:off
-        final List<JSONSymbol> primitiveValuesSymbols = List.of(
+        final List<JSONSymbol> primitiveValuesSymbols = Arrays.asList(
             JSONSymbol.nullSymbol,
             JSONSymbol.integerSymbol,
             JSONSymbol.numberSymbol,
