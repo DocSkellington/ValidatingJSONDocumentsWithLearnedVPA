@@ -15,3 +15,15 @@ authors:
       F.R.S.-FNRS, University of Mons, University of
       Antwerp
     orcid: 'https://orcid.org/0000-0001-5795-3265'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.7309690
+    description: Artifact containing all required dependencies
+repository-code: >-
+  https://github.com/DocSkellington/ValidatingJSONDocumentsWithLearnedVPA
+url: >-
+  https://docskellington.github.io/ValidatingJSONDocumentsWithLearnedVPA/
+abstract: ' Validation of JSON documents in a streaming context, using learned visibly pushdown automata'
+license: Apache-2.0
+commit: ec26b56
+version: v2.0
