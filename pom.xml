@@ -102,7 +102,7 @@
         <automatalib.version>0.11.0-ROCA-FORK</automatalib.version>
         <learnlib.version>0.17.0-ROCA-FORK</learnlib.version>
         <json.version>20210307</json.version>
-        <jsonschema.version>2.0</jsonschema.version>
+        <jsonschema.version>3.0</jsonschema.version>
         <guava.version>31.1-jre</guava.version>
         <guava-testlib.version>31.1-jre</guava-testlib.version>
         <csv.version>1.9.0</csv.version>

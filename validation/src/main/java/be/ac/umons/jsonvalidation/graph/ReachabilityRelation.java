@@ -92,15 +92,18 @@ public class ReachabilityRelation<L> extends ReachabilityMatrix<L, InReachabilit
         final Alphabet<JSONSymbol> primitiveValuesAlphabet = JSONSymbol.primitiveValuesAlphabet;
         final Alphabet<JSONSymbol> callAlphabet = automaton.getInputAlphabet().getCallAlphabet();
         final Alphabet<JSONSymbol> returnAlphabet = automaton.getInputAlphabet().getReturnAlphabet();
+        final Alphabet<JSONSymbol> internalAlphabet = automaton.getInputAlphabet().getInternalAlphabet();
 
         final ReachabilityRelation<L> valueReachabilityRelation = new ReachabilityRelation<>();
 
         for (final L startLocation : automaton.getLocations()) {
             for (final JSONSymbol primitiveValue : primitiveValuesAlphabet) {
-                final L successor = automaton.getInternalSuccessor(startLocation, primitiveValue);
-                if (successor != null) {
-                    final Word<JSONSymbol> witness = constructWitness(primitiveValue, computeWitnesses);
-                    valueReachabilityRelation.add(startLocation, successor, witness);
+                if (internalAlphabet.contains(primitiveValue)) {
+                    final L successor = automaton.getInternalSuccessor(startLocation, primitiveValue);
+                    if (successor != null) {
+                        final Word<JSONSymbol> witness = constructWitness(primitiveValue, computeWitnesses);
+                        valueReachabilityRelation.add(startLocation, successor, witness);
+                    }
                 }
             }
 
